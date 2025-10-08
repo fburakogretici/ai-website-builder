@@ -18,38 +18,56 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // Hızlı session kontrolü
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const loadUserData = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setSession(session);
-        // Kullanıcı metadata'sını al
-        setUserProfile({
-          full_name: session.user.user_metadata?.full_name || "",
-          avatar_url: session.user.user_metadata?.avatar_url || "",
-        });
+        // Get fresh user metadata
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserProfile({
+            full_name: user.user_metadata?.full_name || "",
+            avatar_url: user.user_metadata?.avatar_url || "",
+          });
+        }
       } else {
         router.replace("/login");
       }
-    });
+    };
+
+    loadUserData();
 
     // Auth değişikliklerini dinle
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         if (session) {
           setSession(session);
-          setUserProfile({
-            full_name: session.user.user_metadata?.full_name || "",
-            avatar_url: session.user.user_metadata?.avatar_url || "",
-          });
+          // Get fresh user metadata
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            setUserProfile({
+              full_name: user.user_metadata?.full_name || "",
+              avatar_url: user.user_metadata?.avatar_url || "",
+            });
+          }
         } else {
           router.replace("/login");
         }
       }
     );
 
+    // Listen for profile updates
+    const handleProfileUpdate = () => {
+      loadUserData();
+    };
+
+    window.addEventListener('profile-updated', handleProfileUpdate);
+
     return () => {
       authListener.subscription.unsubscribe();
+      window.removeEventListener('profile-updated', handleProfileUpdate);
     };
-  }, [supabase, router]);
+  }, [router, supabase]);
 
   // Dropdown dışına tıklanınca kapat
   useEffect(() => {
@@ -124,8 +142,16 @@ export default function DashboardPage() {
                   className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold overflow-hidden">
-                    {userProfile.avatar_url ? (
-                      <img src={userProfile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                    {userProfile.avatar_url && userProfile.avatar_url.startsWith('data:image') ? (
+                      <img 
+                        src={userProfile.avatar_url} 
+                        alt="Avatar" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback to initials if image fails to load
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
                     ) : (
                       userProfile.full_name?.charAt(0)?.toUpperCase() || session.user.email?.charAt(0)?.toUpperCase() || "?"
                     )}

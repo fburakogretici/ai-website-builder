@@ -37,6 +37,7 @@ export default function ProfilePage() {
       setMessage(null);
 
       if (!e.target.files || e.target.files.length === 0) {
+        setUploading(false);
         return;
       }
 
@@ -44,11 +45,13 @@ export default function ProfilePage() {
       const fileSize = file.size / 1024 / 1024; // MB cinsinden
 
       if (fileSize > 2) {
+        setUploading(false);
         setMessage({ type: "error", text: "Dosya boyutu 2MB'dan küçük olmalıdır!" });
         return;
       }
 
       if (!file.type.startsWith('image/')) {
+        setUploading(false);
         setMessage({ type: "error", text: "Sadece resim dosyaları yüklenebilir!" });
         return;
       }
@@ -56,29 +59,54 @@ export default function ProfilePage() {
       // Base64'e çevir (Supabase Storage yerine metadata'da saklayacağız)
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        
-        // Profili güncelle
-        const { error } = await supabase.auth.updateUser({
-          data: {
-            avatar_url: base64String,
-          },
-        });
+        try {
+          const base64String = reader.result as string;
+          
+          // Check if base64 string is too large (max ~1.5MB for metadata)
+          if (base64String.length > 2000000) {
+            setUploading(false);
+            setMessage({ type: "error", text: "Resim çok büyük! Lütfen daha küçük bir resim seçin." });
+            return;
+          }
+          
+          // Profili güncelle
+          const { error } = await supabase.auth.updateUser({
+            data: {
+              avatar_url: base64String,
+            },
+          });
 
-        setUploading(false);
+          setUploading(false);
 
-        if (error) {
-          setMessage({ type: "error", text: error.message });
-        } else {
-          setAvatarUrl(base64String);
-          setMessage({ type: "success", text: "Profil fotoğrafı yüklendi!" });
+          if (error) {
+            setMessage({ type: "error", text: error.message });
+          } else {
+            setAvatarUrl(base64String);
+            setMessage({ type: "success", text: "Profil fotoğrafı yüklendi!" });
+            
+            // Notify other components about profile update
+            window.dispatchEvent(new Event('profile-updated'));
+          }
+        } catch (err: unknown) {
+          setUploading(false);
+          setMessage({ type: "error", text: "Avatar yükleme başarısız!" });
+          console.error("Avatar upload error:", err);
         }
       };
       
+      reader.onerror = () => {
+        setUploading(false);
+        setMessage({ type: "error", text: "Dosya okuma hatası!" });
+      };
+      
       reader.readAsDataURL(file);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setUploading(false);
-      setMessage({ type: "error", text: error.message });
+      if (error instanceof Error) {
+        setMessage({ type: "error", text: error.message });
+      } else {
+        setMessage({ type: "error", text: "Bilinmeyen bir hata oluştu!" });
+      }
     }
   };
 
@@ -102,6 +130,9 @@ export default function ProfilePage() {
       setMessage({ type: "error", text: error.message });
     } else {
       setMessage({ type: "success", text: "Profil başarıyla güncellendi!" });
+      
+      // Notify other components about profile update
+      window.dispatchEvent(new Event('profile-updated'));
     }
   };
 
@@ -132,8 +163,16 @@ export default function ProfilePage() {
           <div className="flex items-center space-x-6">
             <div className="relative">
               <div className="w-24 h-24 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold overflow-hidden border-4 border-white dark:border-gray-700 shadow-lg">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                {avatarUrl && avatarUrl.startsWith('data:image') ? (
+                  <img 
+                    src={avatarUrl} 
+                    alt="Avatar" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback to initials if image fails to load
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
                 ) : (
                   fullName?.charAt(0)?.toUpperCase() || email?.charAt(0)?.toUpperCase() || "?"
                 )}
