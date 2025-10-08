@@ -1,0 +1,220 @@
+{
+  "common": {
+    "appName": "NoCodePage",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "logout": "Logout"
+  },
+  "homepage": {
+    "hero": {
+      "title": "Create Your Website Instantly with AI",
+      "subtitle": "No coding required, professional website ready in just a few clicks. Our AI technology creates the perfect design for you.",
+      "cta": "Get Started"
+    },
+    "form": {
+      "projectName": "Site or Project Name",
+      "projectNamePlaceholder": "e.g., Cafe Delight",
+      "category": "Category or Field",
+      "categoryPlaceholder": "e.g., Restaurant & Cafe",
+      "description": "Short Description",
+      "descriptionPlaceholder": "What kind of content would you like on your site?",
+      "createButton": "Create My Website",
+      "loginPrompt": "Already have an account?",
+      "loginLink": "Login"
+    },
+    "features": {
+      "title": "Why NoCodePage?",
+      "ai": {
+        "title": "AI-Powered",
+        "description": "Custom designs with advanced AI algorithms"
+      },
+      "fast": {
+        "title": "Fast and Easy",
+        "description": "Professional website ready in minutes"
+      },
+      "responsive": {
+        "title": "Mobile Responsive",
+        "description": "Perfect view on all devices"
+      },
+      "customizable": {
+        "title": "Customizable",
+        "description": "Edit and modify as you like"
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome",
+    "accountMenu": {
+      "myAccount": "My Account",
+      "settings": "Settings",
+      "logout": "Logout"
+    },
+    "stats": {
+      "totalProjects": "Total Projects",
+      "activeProjects": "Active Projects",
+      "totalVisitors": "Total Visitors",
+      "conversionRate": "Conversion Rate"
+    },
+    "projects": {
+      "title": "My Projects",
+      "newProject": "New Project",
+      "viewAll": "View All"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "createWebsite": "Create Website",
+      "viewAnalytics": "View Analytics",
+      "editTemplate": "Edit Template",
+      "exportCode": "Export Code"
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "viewAll": "View All"
+    }
+  },
+  "auth": {
+    "validation": {
+      "emailRequired": "Please enter your email address",
+      "passwordRequired": "Please enter your password",
+      "fillAllFields": "Please fill in all fields",
+      "invalidEmail": "Please enter a valid email address",
+      "passwordTooShort": "Password must be at least 6 characters"
+    },
+    "login": {
+      "title": "Login",
+      "subtitle": "Sign in to your account",
+      "email": "Email",
+      "emailPlaceholder": "example@email.com",
+      "password": "Password",
+      "passwordPlaceholder": "••••••••",
+      "rememberMe": "Remember Me",
+      "forgotPassword": "Forgot Password?",
+      "loginButton": "Login",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Register",
+      "error": "Login failed. Please check your credentials.",
+      "success": "Login successful! Redirecting..."
+    },
+    "register": {
+      "title": "Register",
+      "subtitle": "Create a new account",
+      "email": "Email",
+      "emailPlaceholder": "example@email.com",
+      "password": "Password",
+      "passwordPlaceholder": "••••••••",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "••••••••",
+      "registerButton": "Register",
+      "hasAccount": "Already have an account?",
+      "loginLink": "Login",
+      "error": "Registration failed. Please check your information.",
+      "success": "Registration successful! Please check your email."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "menu": {
+      "profile": "Profile",
+      "security": "Security",
+      "billing": "Billing",
+      "notifications": "Notifications"
+    },
+    "profile": {
+      "title": "Profile Settings",
+      "subtitle": "Manage your profile information",
+      "uploadAvatar": "Upload Photo",
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "Your Full Name",
+      "username": "Username",
+      "usernamePlaceholder": "username",
+      "email": "Email",
+      "bio": "Bio",
+      "bioPlaceholder": "A short description about yourself...",
+      "saveButton": "Save Changes",
+      "success": "Profile updated successfully!",
+      "error": "An error occurred while updating profile."
+    },
+    "security": {
+      "title": "Security Settings",
+      "subtitle": "Manage your password and security settings",
+      "currentPassword": "Current Password",
+      "currentPasswordPlaceholder": "Your current password",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "Your new password",
+      "confirmPassword": "Confirm New Password",
+      "confirmPasswordPlaceholder": "Re-enter your new password",
+      "updateButton": "Update Password",
+      "twoFactor": "Two-Factor Authentication",
+      "twoFactorDescription": "Add an extra layer of security to your account",
+      "enable": "Enable",
+      "success": "Password updated successfully!",
+      "error": "An error occurred while updating password."
+    },
+    "billing": {
+      "title": "Billing",
+      "subtitle": "Manage your subscription and payment methods",
+      "currentPlan": "Current Plan",
+      "free": "Free",
+      "pro": "Pro",
+      "enterprise": "Enterprise",
+      "planDetails": {
+        "free": {
+          "price": "Free",
+          "features": [
+            "3 Projects",
+            "Basic Templates",
+            "Community Support"
+          ]
+        },
+        "pro": {
+          "price": "$29/month",
+          "features": [
+            "Unlimited Projects",
+            "Premium Templates",
+            "Priority Support",
+            "Custom Domain",
+            "Advanced Analytics"
+          ]
+        },
+        "enterprise": {
+          "price": "Contact Us",
+          "features": [
+            "All Pro Features",
+            "Custom Development",
+            "24/7 Support",
+            "SLA Guarantee",
+            "Team Management"
+          ]
+        }
+      },
+      "upgradeButton": "Upgrade",
+      "currentButton": "Current Plan",
+      "contactButton": "Contact Us",
+      "paymentMethod": "Payment Method",
+      "addPaymentMethod": "Add Payment Method",
+      "billingHistory": "Billing History",
+      "noHistory": "No billing history yet."
+    },
+    "notifications": {
+      "title": "Notification Preferences",
+      "subtitle": "Choose which notifications you want to receive",
+      "emailNotifications": "Email Notifications",
+      "emailDescription": "Receive emails for important updates and announcements",
+      "projectUpdates": "Project Updates",
+      "projectUpdatesDescription": "Receive updates about your projects",
+      "marketingEmails": "Marketing Emails",
+      "marketingEmailsDescription": "Get information about new features and offers",
+      "securityAlerts": "Security Alerts",
+      "securityAlertsDescription": "Receive security alerts about your account",
+      "saveButton": "Save Preferences",
+      "success": "Notification preferences updated!",
+      "error": "An error occurred while updating preferences."
+    }
+  }
+}

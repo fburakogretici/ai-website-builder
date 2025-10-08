@@ -1,0 +1,220 @@
+{
+  "common": {
+    "appName": "NoCodePage",
+    "loading": "Yükleniyor...",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "close": "Kapat",
+    "search": "Ara",
+    "logout": "Çıkış Yap"
+  },
+  "homepage": {
+    "hero": {
+      "title": "Yapay Zeka ile Anında Web Sitenizi Oluşturun",
+      "subtitle": "Kod yazmadan, sadece birkaç tıklama ile profesyonel web siteniz hazır. Yapay zeka teknolojimiz sizin için mükemmel tasarımı yaratır.",
+      "cta": "Hemen Başla"
+    },
+    "form": {
+      "projectName": "Site veya Proje Adı",
+      "projectNamePlaceholder": "Örn: Kafe Lezzet",
+      "category": "Kategori veya Alan",
+      "categoryPlaceholder": "Örn: Restoran & Kafe",
+      "description": "Kısa Açıklama",
+      "descriptionPlaceholder": "Sitenizde ne tür içerik olmasını istersiniz?",
+      "createButton": "Web Sitemi Oluştur",
+      "loginPrompt": "Zaten hesabınız var mı?",
+      "loginLink": "Giriş Yap"
+    },
+    "features": {
+      "title": "Neden NoCodePage?",
+      "ai": {
+        "title": "Yapay Zeka Destekli",
+        "description": "Gelişmiş AI algoritmaları ile size özel tasarımlar"
+      },
+      "fast": {
+        "title": "Hızlı ve Kolay",
+        "description": "Dakikalar içinde profesyonel web siteniz hazır"
+      },
+      "responsive": {
+        "title": "Mobil Uyumlu",
+        "description": "Tüm cihazlarda mükemmel görünüm"
+      },
+      "customizable": {
+        "title": "Özelleştirilebilir",
+        "description": "İstediğiniz gibi düzenleyin ve değiştirin"
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Hoş Geldiniz",
+    "accountMenu": {
+      "myAccount": "Hesabım",
+      "settings": "Ayarlar",
+      "logout": "Çıkış Yap"
+    },
+    "stats": {
+      "totalProjects": "Toplam Projeler",
+      "activeProjects": "Aktif Projeler",
+      "totalVisitors": "Toplam Ziyaretçi",
+      "conversionRate": "Dönüşüm Oranı"
+    },
+    "projects": {
+      "title": "Projelerim",
+      "newProject": "Yeni Proje",
+      "viewAll": "Tümünü Gör"
+    },
+    "quickActions": {
+      "title": "Hızlı İşlemler",
+      "createWebsite": "Web Sitesi Oluştur",
+      "viewAnalytics": "Analizleri Gör",
+      "editTemplate": "Şablon Düzenle",
+      "exportCode": "Kod Dışa Aktar"
+    },
+    "recentActivity": {
+      "title": "Son Aktiviteler",
+      "viewAll": "Tümünü Gör"
+    }
+  },
+  "auth": {
+    "validation": {
+      "emailRequired": "Lütfen e-posta adresinizi girin",
+      "passwordRequired": "Lütfen şifrenizi girin",
+      "fillAllFields": "Lütfen tüm alanları doldurun",
+      "invalidEmail": "Geçerli bir e-posta adresi girin",
+      "passwordTooShort": "Şifre en az 6 karakter olmalıdır"
+    },
+    "login": {
+      "title": "Giriş Yap",
+      "subtitle": "Hesabınıza giriş yapın",
+      "email": "E-posta",
+      "emailPlaceholder": "ornek@email.com",
+      "password": "Şifre",
+      "passwordPlaceholder": "••••••••",
+      "rememberMe": "Beni Hatırla",
+      "forgotPassword": "Şifremi Unuttum?",
+      "loginButton": "Giriş Yap",
+      "noAccount": "Hesabınız yok mu?",
+      "registerLink": "Kayıt Ol",
+      "error": "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.",
+      "success": "Giriş başarılı! Yönlendiriliyorsunuz..."
+    },
+    "register": {
+      "title": "Kayıt Ol",
+      "subtitle": "Yeni hesap oluşturun",
+      "email": "E-posta",
+      "emailPlaceholder": "ornek@email.com",
+      "password": "Şifre",
+      "passwordPlaceholder": "••••••••",
+      "confirmPassword": "Şifre Tekrar",
+      "confirmPasswordPlaceholder": "••••••••",
+      "registerButton": "Kayıt Ol",
+      "hasAccount": "Zaten hesabınız var mı?",
+      "loginLink": "Giriş Yap",
+      "error": "Kayıt başarısız. Lütfen bilgilerinizi kontrol edin.",
+      "success": "Kayıt başarılı! Lütfen e-postanızı kontrol edin."
+    }
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "menu": {
+      "profile": "Profil",
+      "security": "Güvenlik",
+      "billing": "Faturalama",
+      "notifications": "Bildirimler"
+    },
+    "profile": {
+      "title": "Profil Ayarları",
+      "subtitle": "Profil bilgilerinizi yönetin",
+      "uploadAvatar": "Fotoğraf Yükle",
+      "fullName": "Ad Soyad",
+      "fullNamePlaceholder": "Adınız Soyadınız",
+      "username": "Kullanıcı Adı",
+      "usernamePlaceholder": "kullaniciadi",
+      "email": "E-posta",
+      "bio": "Biyografi",
+      "bioPlaceholder": "Kendiniz hakkında kısa bir açıklama...",
+      "saveButton": "Değişiklikleri Kaydet",
+      "success": "Profil başarıyla güncellendi!",
+      "error": "Profil güncellenirken bir hata oluştu."
+    },
+    "security": {
+      "title": "Güvenlik Ayarları",
+      "subtitle": "Şifrenizi ve güvenlik ayarlarınızı yönetin",
+      "currentPassword": "Mevcut Şifre",
+      "currentPasswordPlaceholder": "Mevcut şifreniz",
+      "newPassword": "Yeni Şifre",
+      "newPasswordPlaceholder": "Yeni şifreniz",
+      "confirmPassword": "Yeni Şifre Tekrar",
+      "confirmPasswordPlaceholder": "Yeni şifrenizi tekrar girin",
+      "updateButton": "Şifreyi Güncelle",
+      "twoFactor": "İki Faktörlü Kimlik Doğrulama",
+      "twoFactorDescription": "Hesabınıza ekstra güvenlik katmanı ekleyin",
+      "enable": "Etkinleştir",
+      "success": "Şifre başarıyla güncellendi!",
+      "error": "Şifre güncellenirken bir hata oluştu."
+    },
+    "billing": {
+      "title": "Faturalama",
+      "subtitle": "Aboneliğinizi ve ödeme yöntemlerinizi yönetin",
+      "currentPlan": "Mevcut Plan",
+      "free": "Ücretsiz",
+      "pro": "Pro",
+      "enterprise": "Kurumsal",
+      "planDetails": {
+        "free": {
+          "price": "Ücretsiz",
+          "features": [
+            "3 Proje",
+            "Temel Şablonlar",
+            "Topluluk Desteği"
+          ]
+        },
+        "pro": {
+          "price": "$29/ay",
+          "features": [
+            "Sınırsız Proje",
+            "Premium Şablonlar",
+            "Öncelikli Destek",
+            "Özel Domain",
+            "Gelişmiş Analitik"
+          ]
+        },
+        "enterprise": {
+          "price": "İletişime Geçin",
+          "features": [
+            "Pro'nun Tüm Özellikleri",
+            "Özel Geliştirmeler",
+            "7/24 Destek",
+            "SLA Garantisi",
+            "Takım Yönetimi"
+          ]
+        }
+      },
+      "upgradeButton": "Yükselt",
+      "currentButton": "Mevcut Plan",
+      "contactButton": "İletişime Geç",
+      "paymentMethod": "Ödeme Yöntemi",
+      "addPaymentMethod": "Ödeme Yöntemi Ekle",
+      "billingHistory": "Fatura Geçmişi",
+      "noHistory": "Henüz fatura geçmişi bulunmuyor."
+    },
+    "notifications": {
+      "title": "Bildirim Tercihleri",
+      "subtitle": "Almak istediğiniz bildirimleri seçin",
+      "emailNotifications": "E-posta Bildirimleri",
+      "emailDescription": "Önemli güncellemeler ve duyurular için e-posta alın",
+      "projectUpdates": "Proje Güncellemeleri",
+      "projectUpdatesDescription": "Projelerinizle ilgili güncellemeleri alın",
+      "marketingEmails": "Pazarlama E-postaları",
+      "marketingEmailsDescription": "Yeni özellikler ve teklifler hakkında bilgi alın",
+      "securityAlerts": "Güvenlik Uyarıları",
+      "securityAlertsDescription": "Hesabınızla ilgili güvenlik uyarıları alın",
+      "saveButton": "Tercihleri Kaydet",
+      "success": "Bildirim tercihleri güncellendi!",
+      "error": "Tercihler güncellenirken bir hata oluştu."
+    }
+  }
+}
