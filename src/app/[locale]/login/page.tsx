@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createBrowserClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from 'next-intl';
+import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -17,7 +17,7 @@ export default function LoginPage() {
   const t = useTranslations();
   const locale = useLocale();
 
-  const supabase = createBrowserClient();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

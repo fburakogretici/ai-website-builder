@@ -3,11 +3,14 @@
 import { useRouter, usePathname } from "next/navigation";
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, useEffect, useRef } from 'react';
-import { createBrowserClient } from "@/utils/supabase/client";
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import Avatar from '@/components/Avatar';
+import { useSupabaseClient } from '@/hooks/useSupabaseClient';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import type { Session } from '@supabase/supabase-js';
 
 interface NavbarProps {
-  session?: any;
+  session?: Session | null;
 }
 
 export default function Navbar({ session }: NavbarProps) {
@@ -16,40 +19,16 @@ export default function Navbar({ session }: NavbarProps) {
   const locale = useLocale();
   const t = useTranslations();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>({ full_name: '', avatar_url: '' });
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const supabase = createBrowserClient();
+  const supabase = useSupabaseClient();
+  const { profile } = useUserProfile({ supabase, session });
 
   // Check if we're on login or register page
   const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register');
 
-  useEffect(() => {
-    const loadUserProfile = async () => {
-      if (session) {
-        // Get fresh user data from Supabase
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setUserProfile({
-            full_name: user.user_metadata?.full_name || '',
-            avatar_url: user.user_metadata?.avatar_url || ''
-          });
-        }
-      }
-    };
-
-    loadUserProfile();
-
-    // Listen for profile updates
-    const handleProfileUpdate = () => {
-      loadUserProfile();
-    };
-
-    window.addEventListener('profile-updated', handleProfileUpdate);
-
-    return () => {
-      window.removeEventListener('profile-updated', handleProfileUpdate);
-    };
-  }, [session, supabase]);
+  const displayName = profile.displayName || session?.user?.email?.split('@')[0] || '';
+  const email = profile.email || session?.user?.email || '';
+  const avatarUrl = profile.avatarUrl;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -126,23 +105,16 @@ export default function Navbar({ session }: NavbarProps) {
                   className="group flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border border-indigo-200/50 dark:border-indigo-800/50 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-200 hover:scale-[1.02]"
                 >
                   <div className="w-6 h-6 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white text-xs font-semibold overflow-hidden shadow-md ring-2 ring-white/50 dark:ring-gray-900/50">
-                    {userProfile.avatar_url && userProfile.avatar_url.startsWith('data:image') ? (
-                      <img 
-                        src={userProfile.avatar_url} 
-                        alt="Avatar" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          // Fallback to initials if image fails to load
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      userProfile.full_name?.charAt(0)?.toUpperCase() || session.user.email?.charAt(0)?.toUpperCase() || "?"
-                    )}
+                    <Avatar
+                      src={avatarUrl}
+                      alt="Avatar"
+                      className="h-full w-full rounded-lg"
+                      imageClassName="object-cover"
+                    />
                   </div>
                   <div className="hidden sm:flex flex-col items-start">
                     <span className="text-xs font-medium text-gray-800 dark:text-gray-200 max-w-[80px] truncate">
-                      {userProfile.full_name || session.user.email?.split('@')[0]}
+                      {displayName}
                     </span>
                   </div>
                   <svg
@@ -164,25 +136,18 @@ export default function Navbar({ session }: NavbarProps) {
                     <div className="px-4 py-3 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40 border-b border-indigo-200/40 dark:border-indigo-800/40">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-white/80 dark:ring-gray-900/80">
-                          {userProfile.avatar_url && userProfile.avatar_url.startsWith('data:image') ? (
-                            <img 
-                              src={userProfile.avatar_url} 
-                              alt="Avatar" 
-                              className="w-full h-full object-cover rounded-xl"
-                              onError={(e) => {
-                                // Fallback to initials if image fails to load
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          ) : (
-                            userProfile.full_name?.charAt(0)?.toUpperCase() || session.user.email?.charAt(0)?.toUpperCase() || "?"
-                          )}
+                          <Avatar
+                            src={avatarUrl}
+                            alt="Avatar"
+                            className="h-full w-full rounded-xl"
+                            imageClassName="object-cover"
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
-                            {userProfile.full_name || session.user.email?.split('@')[0]}
+                            {displayName}
                           </p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{session.user.email}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{email}</p>
                         </div>
                       </div>
                     </div>

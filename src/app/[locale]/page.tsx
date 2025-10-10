@@ -1,41 +1,39 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createBrowserClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from 'next-intl';
+import { useSupabaseClient } from '@/hooks/useSupabaseClient';
+import type { Session } from '@supabase/supabase-js';
 
 export default function Home() {
   const [businessName, setBusinessName] = useState("");
   const [industry, setIndustry] = useState("");
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(false); // Changed to false - show content immediately
+  const [session, setSession] = useState<Session | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const router = useRouter();
   const t = useTranslations();
   const locale = useLocale();
 
-  const supabase = createBrowserClient();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     // Check session in background, don't block UI
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
     };
     
     checkSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      }
-    );
+    const { data: authListener } = supabase.auth.onAuthStateChange((_, newSession) => {
+      setSession(newSession);
+    });
 
     return () => {
-      authListener.subscription.unsubscribe();
+      authListener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   // Scroll to top functionality
   useEffect(() => {

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { createBrowserClient } from "@/utils/supabase/client";
 import { useTranslations, useLocale } from 'next-intl';
+import Avatar from '@/components/Avatar';
+import { useSupabaseClient } from '@/hooks/useSupabaseClient';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 export default function ProfilePage() {
   const [email, setEmail] = useState("");
@@ -17,22 +19,21 @@ export default function ProfilePage() {
   const t = useTranslations();
   const locale = useLocale();
 
-  const supabase = createBrowserClient();
+  const supabase = useSupabaseClient();
+  const { profile, refreshProfile } = useUserProfile({ supabase });
 
   useEffect(() => {
-    loadProfile();
-  }, []);
+    const fullNameFromMetadata =
+      getStringMetadata(profile.metadata, 'full_name') ||
+      getStringMetadata(profile.metadata, 'name') ||
+      profile.displayName;
 
-  const loadProfile = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      setEmail(user.email || "");
-      setFullName(user.user_metadata?.full_name || "");
-      setUsername(user.user_metadata?.username || "");
-      setBio(user.user_metadata?.bio || "");
-      setAvatarUrl(user.user_metadata?.avatar_url || "");
-    }
-  };
+    setEmail(profile.email);
+    setFullName(fullNameFromMetadata);
+    setUsername(getStringMetadata(profile.metadata, 'username'));
+    setBio(getStringMetadata(profile.metadata, 'bio'));
+    setAvatarUrl(profile.avatarUrl);
+  }, [profile]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -40,6 +41,7 @@ export default function ProfilePage() {
       setMessage(null);
 
       if (!e.target.files || e.target.files.length === 0) {
+        setUploading(false);
         return;
       }
 
@@ -48,11 +50,13 @@ export default function ProfilePage() {
 
       if (fileSize > 2) {
         setMessage({ type: "error", text: locale === 'tr' ? 'Dosya boyutu 2MB\'dan küçük olmalıdır!' : 'File size must be less than 2MB!' });
+        setUploading(false);
         return;
       }
 
       if (!file.type.startsWith('image/')) {
         setMessage({ type: "error", text: locale === 'tr' ? 'Sadece resim dosyaları yüklenebilir!' : 'Only image files can be uploaded!' });
+        setUploading(false);
         return;
       }
 
@@ -73,13 +77,16 @@ export default function ProfilePage() {
         } else {
           setAvatarUrl(base64String);
           setMessage({ type: "success", text: locale === 'tr' ? 'Profil fotoğrafı yüklendi!' : 'Profile photo uploaded!' });
+          await refreshProfile();
+          window.dispatchEvent(new Event('profile-updated'));
         }
       };
       
       reader.readAsDataURL(file);
-    } catch (error: any) {
+    } catch (error) {
       setUploading(false);
-      setMessage({ type: "error", text: error.message });
+      const errorMessage = error instanceof Error ? error.message : (locale === 'tr' ? 'Beklenmeyen bir hata oluştu.' : 'An unexpected error occurred.');
+      setMessage({ type: "error", text: errorMessage });
     }
   };
 
@@ -91,6 +98,7 @@ export default function ProfilePage() {
     const { error } = await supabase.auth.updateUser({
       data: {
         full_name: fullName,
+        name: fullName,
         username: username,
         bio: bio,
         avatar_url: avatarUrl,
@@ -103,6 +111,8 @@ export default function ProfilePage() {
       setMessage({ type: "error", text: t('settings.profile.error') });
     } else {
       setMessage({ type: "success", text: t('settings.profile.success') });
+      await refreshProfile();
+      window.dispatchEvent(new Event('profile-updated'));
     }
   };
 
@@ -129,13 +139,13 @@ export default function ProfilePage() {
         <form onSubmit={handleSave} className="space-y-6">
           <div className="flex items-center gap-6">
             <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold overflow-hidden shadow-lg">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  fullName?.charAt(0)?.toUpperCase() || email?.charAt(0)?.toUpperCase() || "?"
-                )}
-              </div>
+              <Avatar
+                src={avatarUrl}
+                alt={locale === 'tr' ? 'Profil fotoğrafı' : 'Profile avatar'}
+                className="w-20 h-20 rounded-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 shadow-lg"
+                imageClassName="w-full h-full object-cover"
+                onFallback={() => setAvatarUrl("")}
+              />
               <input
                 ref={fileInputRef}
                 type="file"
@@ -230,7 +240,10 @@ export default function ProfilePage() {
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
-              onClick={loadProfile}
+              onClick={() => {
+                setMessage(null);
+                void refreshProfile();
+              }}
               className="px-4 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200"
             >
               {t('common.cancel')}
@@ -247,4 +260,9 @@ export default function ProfilePage() {
       </div>
     </div>
   );
+}
+
+function getStringMetadata(metadata: Record<string, unknown>, key: string) {
+  const value = metadata[key];
+  return typeof value === 'string' ? value : '';
 }

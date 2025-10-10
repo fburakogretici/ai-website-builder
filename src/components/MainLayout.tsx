@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createBrowserClient } from "@/utils/supabase/client";
 import { usePathname } from "next/navigation";
 import Navbar from './Navbar';
 import Footer from './Footer';
+import { useSupabaseClient } from '@/hooks/useSupabaseClient';
+import type { Session } from '@supabase/supabase-js';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const pathname = usePathname();
-  const supabase = createBrowserClient();
+  const supabase = useSupabaseClient();
 
   // Routes that should not show navbar and footer
   const noLayoutRoutes = ['/forgot-password', '/reset-password'];
@@ -24,16 +25,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     
     checkSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      }
-    );
+    const { data: authListener } = supabase.auth.onAuthStateChange((_, newSession) => {
+      setSession(newSession);
+    });
 
     return () => {
-      authListener.subscription.unsubscribe();
+      authListener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   if (!shouldShowLayout) {
     // For login, forgot-password, reset-password pages - no layout

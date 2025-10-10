@@ -1,39 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createBrowserClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from 'next-intl';
+import { useSupabaseClient } from '@/hooks/useSupabaseClient';
+import type { Session } from '@supabase/supabase-js';
 
 export default function DashboardPage() {
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const router = useRouter();
   const t = useTranslations();
   const locale = useLocale();
 
-  const supabase = createBrowserClient();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSession(session);
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        setSession(data.session);
       } else {
         router.replace(`/${locale}/login`);
       }
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session) {
-          setSession(session);
-        } else {
-          router.replace(`/${locale}/login`);
-        }
+    const { data: authListener } = supabase.auth.onAuthStateChange((_, newSession) => {
+      if (newSession) {
+        setSession(newSession);
+      } else {
+        router.replace(`/${locale}/login`);
       }
-    );
+    });
 
     return () => {
-      authListener.subscription.unsubscribe();
+      authListener?.subscription.unsubscribe();
     };
   }, [supabase, router, locale]);
 
