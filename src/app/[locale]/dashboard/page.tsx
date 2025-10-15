@@ -40,7 +40,7 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="flex flex-col items-center">
-          <div className="relative">
+            <div className="relative">
             <div className="w-20 h-20 border-4 border-indigo-200 dark:border-indigo-900 rounded-full"></div>
             <div className="w-20 h-20 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin absolute top-0"></div>
           </div>
@@ -87,7 +87,7 @@ export default function DashboardPage() {
                 : "You haven't created a website yet. Start creating a new site right away!"}
             </p>
             <button 
-              onClick={() => router.push(`/${locale}`)}
+              onClick={() => router.push(`/${locale}/create`)}
               className="mt-4 w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-lg hover:shadow-lg hover:scale-[1.02] transition-all duration-200 flex items-center justify-center font-medium group"
             >
               <svg className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">

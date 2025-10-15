@@ -202,19 +202,19 @@ export default function Home() {
       </section>
 
       {/* How It Works - 3 Steps */}
-      <section id="how" className="pt-12 pb-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 min-h-screen flex items-start">
-        <div className="max-w-6xl mx-auto w-full mt-8">
+      <section id="how" className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+        <div className="max-w-6xl mx-auto w-full">
           {/* Section Header */}
-          <div className="text-center mb-20">
+          <div className="text-center mb-10">
             <div className="inline-flex items-center px-4 py-2 bg-indigo-100/80 dark:bg-indigo-900/30 backdrop-blur-sm rounded-full mb-4">
               <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
                 {locale === 'tr' ? '⚡ NASIL ÇALIŞIR' : '⚡ HOW IT WORKS'}
               </span>
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               {locale === 'tr' ? 'Sadece 3 basit adımda' : 'Just 3 simple steps'}
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <p className="text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               {locale === 'tr' 
                 ? 'AI destekli web sitesi oluşturucumuz, işletmeniz için özel olarak tasarlanmış, profesyonel görünümlü bir web sitesi oluşturacaktır.'
                 : 'Our AI-powered website builder will create a professional-looking website specifically designed for your business.'}
@@ -364,19 +364,19 @@ export default function Home() {
       </main>
 
       {/* Features Section */}
-      <section id="features" className="py-32 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900 min-h-screen flex items-center">
+      <section id="features" className="py-12 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
         <div className="max-w-6xl mx-auto w-full">
           {/* Section Header */}
-          <div className="text-center mb-20">
+          <div className="text-center mb-10">
             <div className="inline-flex items-center px-4 py-2 bg-purple-100/80 dark:bg-purple-900/30 backdrop-blur-sm rounded-full mb-4">
               <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
                 {locale === 'tr' ? '✨ ÖZELLİKLER' : '✨ FEATURES'}
               </span>
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               {locale === 'tr' ? 'Güçlü özellikler, basit kullanım' : 'Powerful features, simple usage'}
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <p className="text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               {locale === 'tr'
                 ? 'Modern web teknolojileri ile donatılmış, kullanıcı dostu arayüz'
                 : 'User-friendly interface equipped with modern web technologies'}
@@ -441,13 +441,13 @@ export default function Home() {
       </section>
 
       {/* Templates Section - Static Website Themes Only */}
-      <section id="templates" className="py-32 bg-gray-50 dark:bg-gray-900 min-h-screen flex items-center">
+      <section id="templates" className="py-12 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
               {locale === 'tr' ? 'Profesyonel Temalar' : 'Professional Themes'}
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300">
+            <p className="text-base text-gray-600 dark:text-gray-300">
               {locale === 'tr' ? 'Statik web siteniz için modern ve şık tasarımlar' : 'Modern and elegant designs for your static website'}
             </p>
           </div>
@@ -532,13 +532,13 @@ export default function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-32 bg-white dark:bg-gray-800 min-h-screen flex items-center">
+      <section id="pricing" className="py-12 bg-white dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
               {locale === 'tr' ? 'Basit ve Şeffaf Fiyatlandırma' : 'Simple and Transparent Pricing'}
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300">
+            <p className="text-base text-gray-600 dark:text-gray-300">
               {locale === 'tr' ? 'İhtiyacınıza uygun planı seçin' : 'Choose the plan that fits your needs'}
             </p>
           </div>
@@ -693,12 +693,12 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
+      <section className="py-12 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             {locale === 'tr' ? 'Web sitenizi bugün oluşturun' : 'Create your website today'}
           </h2>
-          <p className="text-xl text-indigo-100 mb-8">
+          <p className="text-base text-indigo-100 mb-6">
             {locale === 'tr' 
               ? 'AI destekli platformumuzla profesyonel web sitenizi dakikalar içinde hazır hale getirin'
               : 'Get your professional website ready in minutes with our AI-powered platform'
