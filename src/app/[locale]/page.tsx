@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from 'next-intl';
+import Image from 'next/image';
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 import type { Session } from '@supabase/supabase-js';
 
@@ -453,76 +454,70 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Portfolio Theme */}
+            {/* Portfolio Creative Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="h-48 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center">
-                <svg className="w-20 h-20 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+              <div className="relative h-48 w-full">
+                <Image src="/templates/portfolio-creative/en/preview.png" alt="Portfolio Creative Theme Preview" layout="fill" objectFit="cover" />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {locale === 'tr' ? 'Portfolyo' : 'Portfolio'}
+                  Creative Portfolio
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  {locale === 'tr' ? 'Kreatif profesyoneller için görsel odaklı tasarım' : 'Visual-focused design for creative professionals'}
+                  A visually-driven theme for creatives to showcase their work.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full text-sm">
-                    {locale === 'tr' ? 'Galeri' : 'Gallery'}
+                    Portfolio
                   </span>
                   <span className="px-3 py-1 bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300 rounded-full text-sm">
-                    {locale === 'tr' ? 'Minimalist' : 'Minimal'}
+                    Creative
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Landing Page Theme */}
+            {/* SaaS Modern Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="h-48 bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500 flex items-center justify-center">
-                <svg className="w-20 h-20 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+              <div className="relative h-48 w-full">
+                <Image src="/templates/business-modern/en/preview.png" alt="SaaS Modern Theme Preview" layout="fill" objectFit="cover" />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {locale === 'tr' ? 'Açılış Sayfası' : 'Landing Page'}
+                  Business Modern
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  {locale === 'tr' ? 'Ürün ve hizmet tanıtımı için yüksek dönüşüm' : 'High conversion for product and service showcase'}
+                  A modern, clean theme for SaaS and technology companies.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm">
-                    {locale === 'tr' ? 'Modern' : 'Modern'}
+                    Business
                   </span>
                   <span className="px-3 py-1 bg-cyan-100 dark:bg-cyan-900 text-cyan-700 dark:text-cyan-300 rounded-full text-sm">
-                    CTA
+                      Modern
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Business Theme */}
+            {/* Startup Tech Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="h-48 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex items-center justify-center">
-                <svg className="w-20 h-20 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
+              <div className="relative h-48 w-full">
+                <Image src="/templates/blog-minimal/en/preview.png" alt="Startup Tech Theme Preview" layout="fill" objectFit="cover" />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {locale === 'tr' ? 'İş & Kurumsal' : 'Business & Corporate'}
+                  Blog-Minimal
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  {locale === 'tr' ? 'Şirketler ve kurumlar için güvenilir tasarım' : 'Reliable design for companies and corporations'}
+                  A vibrant and energetic theme for tech startups.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full text-sm">
-                    {locale === 'tr' ? 'Klasik' : 'Classic'}
+                    Blog
                   </span>
                   <span className="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-full text-sm">
-                    {locale === 'tr' ? 'Profesyonel' : 'Professional'}
+                    Minimal
                   </span>
                 </div>
               </div>
