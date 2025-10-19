@@ -202,7 +202,7 @@ export default function Home() {
       </section>
 
       {/* How It Works - 3 Steps */}
-      <section id="how" className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+      <section id="how" className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
         <div className="max-w-6xl mx-auto w-full">
           {/* Section Header */}
           <div className="text-center mb-10">
@@ -364,7 +364,7 @@ export default function Home() {
       </main>
 
       {/* Features Section */}
-      <section id="features" className="py-12 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+      <section id="features" className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
         <div className="max-w-6xl mx-auto w-full">
           {/* Section Header */}
           <div className="text-center mb-10">
@@ -441,7 +441,7 @@ export default function Home() {
       </section>
 
       {/* Templates Section - Static Website Themes Only */}
-      <section id="templates" className="py-12 bg-gray-50 dark:bg-gray-900">
+      <section id="templates" className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
@@ -532,7 +532,7 @@ export default function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-12 bg-white dark:bg-gray-800">
+      <section id="pricing" className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
@@ -705,7 +705,7 @@ export default function Home() {
             }
           </p>
           <button 
-            onClick={() => router.push(session ? '/dashboard' : '/login')}
+            onClick={() => router.push(session ? '/dashboard' : `${locale}/login`)}
             className="inline-flex items-center px-8 py-4 rounded-lg bg-white text-indigo-600 font-bold text-lg hover:bg-gray-100 hover:scale-105 transition-all duration-200 shadow-2xl"
           >
             {locale === 'tr' ? 'Ücretsiz Başla' : 'Start Free'}
