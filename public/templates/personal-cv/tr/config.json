@@ -1,0 +1,31 @@
+{
+  "id": "personal-cv",
+  "name": "Kişisel CV",
+  "name_en": "Personal CV",
+  "category": "cv",
+  "description": "Modern ve dinamik kişisel özgeçmiş şablonu.",
+  "description_en": "Modern and dynamic personal resume template.",
+  "preview": "/templates/personal-cv/preview.png",
+  "color": "teal",
+  "placeholders": {
+    "FULL_NAME": "Ad Soyad",
+    "TITLE": "Pozisyon / Meslek",
+    "PROFILE_PHOTO": "/templates/personal-cv/profile.png",
+    "SUMMARY": "Kısa özet veya kariyer hedefi",
+    "CONTACT_EMAIL": "email@domain.com",
+    "CONTACT_PHONE": "+90 555 555 55 55",
+    "CONTACT_LOCATION": "İstanbul, Türkiye",
+    "SKILLS": "HTML, CSS, JavaScript, React, Node.js",
+    "EXPERIENCE_1_TITLE": "Şirket / Pozisyon",
+    "EXPERIENCE_1_DATE": "2022 - 2024",
+    "EXPERIENCE_1_DESC": "Burada çalıştığım süre boyunca ...",
+    "EXPERIENCE_2_TITLE": "Şirket / Pozisyon",
+    "EXPERIENCE_2_DATE": "2020 - 2022",
+    "EXPERIENCE_2_DESC": "Burada çalıştığım süre boyunca ...",
+    "EDUCATION_1_TITLE": "Üniversite / Bölüm",
+    "EDUCATION_1_DATE": "2016 - 2020",
+    "EDUCATION_1_DESC": "Lisans eğitimi ...",
+    "LANGUAGES": "Türkçe, İngilizce",
+    "SOCIAL_LINKS": "LinkedIn, GitHub, Twitter"
+  }
+}

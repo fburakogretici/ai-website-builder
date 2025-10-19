@@ -1,0 +1,29 @@
+{
+  "id": "landing-startup",
+  "name": "Startup Landing",
+  "name_en": "Startup Landing",
+  "category": "landing",
+  "description": "Startup ve ürün lansmanı için modern landing page",
+  "description_en": "Modern landing page for startups and product launches",
+  "preview": "/templates/landing-startup/preview.png",
+  "color": "green",
+  "placeholders": {
+    "SITE_TITLE": "Startup Name",
+    "SITE_DESCRIPTION": "Revolutionary product",
+    "HERO_TITLE": "Build Something Amazing",
+    "HERO_SUBTITLE": "The future starts here",
+    "CTA_BUTTON": "Start Free Trial",
+    "FEATURE_1_TITLE": "Fast & Easy",
+    "FEATURE_1_DESC": "Get started in minutes",
+    "FEATURE_2_TITLE": "Powerful",
+    "FEATURE_2_DESC": "All the tools you need",
+    "FEATURE_3_TITLE": "Secure",
+    "FEATURE_3_DESC": "Your data is safe",
+    "TESTIMONIAL_TEXT": "This product changed our business!",
+    "TESTIMONIAL_AUTHOR": "Happy Customer",
+    "PRICING_TITLE": "Simple Pricing",
+    "PRICE_AMOUNT": "$29",
+    "PRICE_PERIOD": "/month",
+    "CONTACT_EMAIL": "hello@startup.com"
+  }
+}

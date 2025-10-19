@@ -1,0 +1,75 @@
+body {
+    background: #f4f6fb;
+    font-family: 'Open Sans', Arial, sans-serif;
+    color: #222;
+}
+.corporate-hero {
+    background: linear-gradient(90deg, #283e51 0%, #485563 100%);
+    color: #fff;
+    text-align: center;
+    padding: 56px 0 36px 0;
+}
+.corporate-hero-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+.corporate-hero-content h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+.corporate-hero-content h2 {
+    font-size: 1.3rem;
+    font-weight: 400;
+    margin-bottom: 0;
+}
+.corporate-about, .corporate-services, .corporate-team, .corporate-contact {
+    max-width: 900px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    padding: 36px 32px;
+}
+.corporate-services-list, .corporate-team-list {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.corporate-service, .corporate-team-member {
+    background: #f4f6fb;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 18px 16px;
+    text-align: center;
+    flex: 1 1 220px;
+    max-width: 260px;
+}
+.corporate-team-member img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+}
+.corporate-footer {
+    background: #283e51;
+    color: #fff;
+    text-align: center;
+    padding: 24px 0;
+    margin-top: 40px;
+    border-radius: 0 0 16px 16px;
+}
+@media (max-width: 900px) {
+    .corporate-services-list, .corporate-team-list {
+        flex-direction: column;
+        gap: 18px;
+    }
+    .corporate-about, .corporate-services, .corporate-team, .corporate-contact {
+        padding: 24px 12px;
+    }
+}

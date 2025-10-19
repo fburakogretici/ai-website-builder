@@ -1,0 +1,33 @@
+{
+  "id": "ecommerce-simple",
+  "name": "Basit E-Ticaret",
+  "name_en": "Simple Ecommerce",
+  "category": "ecommerce",
+  "description": "Küçük işletmeler için sade ve hızlı e-ticaret şablonu.",
+  "description_en": "Simple and fast ecommerce template for small businesses.",
+  "preview": "/templates/ecommerce-simple/preview.png",
+  "color": "green",
+  "placeholders": {
+    "STORE_NAME": "Mağaza Adı",
+    "TAGLINE": "Hızlı ve güvenli alışveriş",
+    "HERO_IMAGE": "/templates/ecommerce-simple/hero.png",
+    "FEATURED_TITLE": "Öne Çıkan Ürünler",
+    "PRODUCT_1_NAME": "Ürün 1",
+    "PRODUCT_1_DESC": "Ürün açıklaması",
+    "PRODUCT_1_PRICE": "299₺",
+    "PRODUCT_1_IMAGE": "/templates/ecommerce-simple/product1.png",
+    "PRODUCT_2_NAME": "Ürün 2",
+    "PRODUCT_2_DESC": "Ürün açıklaması",
+    "PRODUCT_2_PRICE": "399₺",
+    "PRODUCT_2_IMAGE": "/templates/ecommerce-simple/product2.png",
+    "PRODUCT_3_NAME": "Ürün 3",
+    "PRODUCT_3_DESC": "Ürün açıklaması",
+    "PRODUCT_3_PRICE": "199₺",
+    "PRODUCT_3_IMAGE": "/templates/ecommerce-simple/product3.png",
+    "ABOUT_TITLE": "Hakkımızda",
+    "ABOUT_TEXT": "Mağaza hakkında kısa bilgi",
+    "CONTACT_TITLE": "İletişim",
+    "CONTACT_EMAIL": "info@store.com",
+    "CONTACT_PHONE": "+90 555 555 55 55"
+  }
+}

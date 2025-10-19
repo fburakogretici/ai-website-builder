@@ -1,0 +1,83 @@
+body {
+    background: #fff7f7;
+    font-family: 'Playfair Display', serif;
+    color: #222;
+}
+.restaurant-hero {
+    background: linear-gradient(90deg, #e53935 0%, #e35d5b 100%);
+    color: #fff;
+    text-align: center;
+    padding: 56px 0 36px 0;
+}
+.restaurant-hero-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+.restaurant-hero-content h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+.restaurant-hero-content h2 {
+    font-size: 1.3rem;
+    font-weight: 400;
+    margin-bottom: 0;
+}
+.restaurant-about, .restaurant-menu, .restaurant-gallery, .restaurant-reservation {
+    max-width: 900px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    padding: 36px 32px;
+}
+.restaurant-menu-list {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.restaurant-menu-item {
+    background: #fff7f7;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 18px 16px;
+    text-align: center;
+    flex: 1 1 220px;
+    max-width: 260px;
+}
+.restaurant-gallery-list {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    margin-top: 18px;
+}
+.restaurant-gallery-list img {
+    width: 180px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.restaurant-footer {
+    background: #e53935;
+    color: #fff;
+    text-align: center;
+    padding: 24px 0;
+    margin-top: 40px;
+    border-radius: 0 0 16px 16px;
+}
+@media (max-width: 900px) {
+    .restaurant-menu-list, .restaurant-gallery-list {
+        flex-direction: column;
+        gap: 18px;
+        align-items: center;
+    }
+    .restaurant-about, .restaurant-menu, .restaurant-gallery, .restaurant-reservation {
+        padding: 24px 12px;
+    }
+}

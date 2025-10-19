@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{BLOG_TITLE}} - {{BLOG_TAGLINE}}</title>
+    <meta name="description" content="{{BLOG_TAGLINE}}">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="container">
+            <a href="#" class="logo">{{BLOG_TITLE}}</a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1 class="hero-title">{{BLOG_TAGLINE}}</h1>
+            <p class="hero-subtitle">{{HERO_TEXT}}</p>
+        </div>
+    </section>
+
+    <div class="container content-wrapper">
+        <main class="main-content">
+            <article class="post-card">
+                <a href="#" class="post-image-link"><img src="{{POST_1_IMAGE}}" alt="{{POST_1_TITLE}}" class="post-image"></a>
+                <div class="post-content">
+                    <h2 class="post-title"><a href="#">{{POST_1_TITLE}}</a></h2>
+                    <p class="post-excerpt">{{POST_1_EXCERPT}}</p>
+                    <div class="post-meta">{{POST_1_DATE}} | {{POST_1_AUTHOR}}</div>
+                </div>
+            </article>
+
+            <article class="post-card">
+                <a href="#" class="post-image-link"><img src="{{POST_2_IMAGE}}" alt="{{POST_2_TITLE}}" class="post-image"></a>
+                <div class="post-content">
+                    <h2 class="post-title"><a href="#">{{POST_2_TITLE}}</a></h2>
+                    <p class="post-excerpt">{{POST_2_EXCERPT}}</p>
+                    <div class="post-meta">{{POST_2_DATE}} | {{POST_2_AUTHOR}}</div>
+                </div>
+            </article>
+
+            <article class="post-card">
+                <a href="#" class="post-image-link"><img src="{{POST_3_IMAGE}}" alt="{{POST_3_TITLE}}" class="post-image"></a>
+                <div class="post-content">
+                    <h2 class="post-title"><a href="#">{{POST_3_TITLE}}</a></h2>
+                    <p class="post-excerpt">{{POST_3_EXCERPT}}</p>
+                    <div class="post-meta">{{POST_3_DATE}} | {{POST_3_AUTHOR}}</div>
+                </div>
+            </article>
+        </main>
+
+        <aside class="sidebar">
+            <div id="about" class="widget">
+                <h3 class="widget-title">{{ABOUT_TITLE}}</h3>
+                <p>{{ABOUT_TEXT}}</p>
+            </div>
+            <div class="widget">
+                <h3 class="widget-title">Categories</h3>
+                <ul>
+                    <li><a href="#">Technology</a></li>
+                    <li><a href="#">Design</a></li>
+                    <li><a href="#">Software</a></li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+    <footer id="contact" class="main-footer">
+        <div class="container">
+            <p>{{CONTACT_TITLE}}</p>
+            <p><a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a></p>
+            <p>&copy; 2025 {{BLOG_TITLE}}. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

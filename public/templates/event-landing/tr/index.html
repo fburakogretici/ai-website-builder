@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{EVENT_NAME}} - {{TAGLINE}}</title>
+    <meta name="description" content="{{ABOUT_TEXT}}">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="event-hero">
+        <img src="{{HERO_IMAGE}}" alt="Hero" class="event-hero-img">
+        <div class="event-hero-content">
+            <h1>{{EVENT_NAME}}</h1>
+            <h2>{{TAGLINE}}</h2>
+            <p><strong>Tarih:</strong> {{DATE}} | <strong>Yer:</strong> {{LOCATION}}</p>
+        </div>
+    </header>
+    <section class="event-about">
+        <h3>{{ABOUT_TITLE}}</h3>
+        <p>{{ABOUT_TEXT}}</p>
+    </section>
+    <section class="event-speakers">
+        <h3>{{SPEAKERS_TITLE}}</h3>
+        <div class="event-speakers-list">
+            <div class="event-speaker">
+                <img src="{{SPEAKER_1_PHOTO}}" alt="{{SPEAKER_1_NAME}}">
+                <h4>{{SPEAKER_1_NAME}}</h4>
+                <span>{{SPEAKER_1_ROLE}}</span>
+            </div>
+            <div class="event-speaker">
+                <img src="{{SPEAKER_2_PHOTO}}" alt="{{SPEAKER_2_NAME}}">
+                <h4>{{SPEAKER_2_NAME}}</h4>
+                <span>{{SPEAKER_2_ROLE}}</span>
+            </div>
+        </div>
+    </section>
+    <section class="event-agenda">
+        <h3>{{AGENDA_TITLE}}</h3>
+        <ul class="event-agenda-list">
+            <li><strong>{{AGENDA_ITEM_1_TIME}}</strong> - {{AGENDA_ITEM_1_TITLE}}</li>
+            <li><strong>{{AGENDA_ITEM_2_TIME}}</strong> - {{AGENDA_ITEM_2_TITLE}}</li>
+            <li><strong>{{AGENDA_ITEM_3_TIME}}</strong> - {{AGENDA_ITEM_3_TITLE}}</li>
+        </ul>
+    </section>
+    <section class="event-tickets">
+        <h3>{{TICKETS_TITLE}}</h3>
+        <p><strong>Fiyat:</strong> {{TICKET_PRICE}}</p>
+    </section>
+    <section class="event-contact">
+        <h3>{{CONTACT_TITLE}}</h3>
+        <p><strong>Email:</strong> {{CONTACT_EMAIL}}</p>
+    </section>
+    <footer class="event-footer">
+        <p>&copy; 2025 {{EVENT_NAME}}. Tüm hakları saklıdır.</p>
+    </footer>
+</body>
+</html>
