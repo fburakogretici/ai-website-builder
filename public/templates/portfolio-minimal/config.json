@@ -1,0 +1,29 @@
+{
+  "id": "portfolio-minimal",
+  "name": "Minimal Portfolyo",
+  "name_en": "Minimal Portfolio",
+  "category": "portfolio",
+  "description": "Sanatçılar, tasarımcılar ve freelancerlar için sade portfolyo şablonu.",
+  "description_en": "Minimal portfolio template for artists, designers, and freelancers.",
+  "preview": "/templates/portfolio-minimal/preview.png",
+  "color": "gray",
+  "placeholders": {
+    "PORTFOLIO_NAME": "Portfolyo Adı",
+    "TAGLINE": "Kısa açıklama veya slogan",
+    "HERO_IMAGE": "/templates/portfolio-minimal/hero.png",
+    "ABOUT_TITLE": "Hakkımda",
+    "ABOUT_TEXT": "Kısa tanıtım yazısı",
+    "WORKS_TITLE": "Çalışmalarım",
+    "WORK_1_TITLE": "Çalışma 1",
+    "WORK_1_IMAGE": "/templates/portfolio-minimal/work1.png",
+    "WORK_1_DESC": "Çalışma açıklaması",
+    "WORK_2_TITLE": "Çalışma 2",
+    "WORK_2_IMAGE": "/templates/portfolio-minimal/work2.png",
+    "WORK_2_DESC": "Çalışma açıklaması",
+    "WORK_3_TITLE": "Çalışma 3",
+    "WORK_3_IMAGE": "/templates/portfolio-minimal/work3.png",
+    "WORK_3_DESC": "Çalışma açıklaması",
+    "CONTACT_TITLE": "İletişim",
+    "CONTACT_EMAIL": "hello@portfolio.com"
+  }
+}
