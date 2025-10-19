@@ -1,13 +1,24 @@
-
 import puppeteer from 'puppeteer';
 import { glob } from 'glob';
 import path from 'path';
+import fs from 'fs';
 
 async function generatePreviews() {
   console.log('Finding preview.html files...');
-  // Use a relative path from the project root where the script will be run
   const projectRoot = process.cwd();
-  const files = await glob('public/templates/**/preview.html', { cwd: projectRoot, absolute: true });
+  
+  const langArg = process.argv.find(arg => arg.startsWith('--lang='));
+  const lang = langArg ? langArg.split('=')[1] : null;
+
+  let pattern: string;
+  if (lang) {
+    console.log(`Filtering for language: ${lang}`);
+    pattern = `public/templates/**/${lang}/**/preview.html`;
+  } else {
+    pattern = 'public/templates/**/preview.html';
+  }
+
+  const files = await glob(pattern, { cwd: projectRoot, absolute: true });
   console.log(`Found ${files.length} files to process.`);
 
   if (files.length === 0) {
@@ -37,7 +48,9 @@ async function generatePreviews() {
       // A short delay to ensure all rendering is complete
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      await page.screenshot({ path: outputPath });
+      const imageBuffer = await page.screenshot();
+      fs.writeFileSync(outputPath, imageBuffer);
+
       console.log(`✅ Successfully created screenshot: ${outputPath}`);
     } catch (error) {
       console.error(`❌ Failed to create screenshot for ${file}:`, error);
