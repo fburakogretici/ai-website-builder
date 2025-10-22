@@ -15,50 +15,47 @@ type ThemeOption = {
   accentColor: string;
 };
 
-const DEFAULT_THEMES: ThemeOption[] = [
+// Temaların config.json dosyalarını dinamik olarak oku
+const themeConfigs = [
   {
-    id: "modern-gradient",
-    name: "Modern Gradient",
-    description: "Bold colors and dynamic gradients",
-    gradient: "from-indigo-500 via-purple-500 to-pink-500",
-    accentColor: "bg-indigo-600",
+    id: "business-modern",
+    folder: "business-modern",
   },
   {
-    id: "minimal-light",
-    name: "Minimal Light",
-    description: "Clean, spacious and professional",
-    gradient: "from-gray-50 via-white to-gray-100",
-    accentColor: "bg-slate-800",
+    id: "portfolio-creative",
+    folder: "portfolio-creative",
   },
   {
-    id: "dark-elegant",
-    name: "Dark Elegant",
-    description: "Sophisticated dark mode experience",
-    gradient: "from-slate-900 via-slate-800 to-slate-900",
-    accentColor: "bg-violet-500",
+    id: "blog-minimal",
+    folder: "blog-minimal",
   },
-  {
-    id: "warm-sunset",
-    name: "Warm Sunset",
-    description: "Inviting orange and red tones",
-    gradient: "from-orange-400 via-red-400 to-pink-500",
-    accentColor: "bg-orange-600",
-  },
-  {
-    id: "ocean-breeze",
-    name: "Ocean Breeze",
-    description: "Calm blues and teals",
-    gradient: "from-cyan-400 via-blue-500 to-indigo-600",
-    accentColor: "bg-blue-600",
-  },
-  {
-    id: "forest-green",
-    name: "Forest Green",
-    description: "Natural and earthy palette",
-    gradient: "from-emerald-400 via-green-500 to-teal-600",
-    accentColor: "bg-green-600",
-  },
+  // Diğer temalar buraya eklenebilir
 ];
+
+function getThemeData(locale: string) {
+  // Sunucu tarafında import ile, client'ta fetch ile alınabilir
+  // Basitlik için require ile synchronous okuma
+  try {
+    return themeConfigs.map((theme) => {
+      let config;
+      try {
+        config = require(`../../../../public/templates/${theme.folder}/${locale}/config.json`);
+      } catch {
+        config = require(`../../../../public/templates/${theme.folder}/en/config.json`);
+      }
+      return {
+        id: config.id,
+        name: locale === 'tr' ? config.name : config.name_en || config.name,
+        description: locale === 'tr' ? config.description : config.description_en || config.description,
+        gradient: theme.folder === 'business-modern' ? 'from-indigo-500 via-purple-500 to-pink-500' : theme.folder === 'portfolio-creative' ? 'from-slate-900 via-slate-800 to-slate-900' : 'from-gray-50 via-white to-gray-100',
+        accentColor: 'bg-indigo-600',
+        folder: theme.folder,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
 
 function cls(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -72,6 +69,8 @@ export default function CreateProjectPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
+  // Dinamik temaları al
+  const themeData = getThemeData(locale);
   const [formState, setFormState] = useState<SiteBlueprint>({
     projectName: "",
     websiteGoal: "",
@@ -80,7 +79,7 @@ export default function CreateProjectPage() {
       locale === "tr"
         ? "İşletmenizi, hizmetlerinizi ve hedef kitlenizi anlatın. Varsa tercih ettiğiniz ton, CTA ve içerik bölümlerini ekleyin."
         : "Describe your business, key offerings, audience, tone of voice, must-have sections, and preferred CTAs.",
-    themeId: DEFAULT_THEMES[0].id,
+    themeId: themeData.length > 0 ? themeData[0].id : "",
   });
 
   const updateForm = <Key extends keyof SiteBlueprint>(
@@ -150,7 +149,7 @@ export default function CreateProjectPage() {
   ];
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
-  const selectedTheme = DEFAULT_THEMES.find((t) => t.id === formState.themeId);
+  const selectedTheme = themeData.find((t: any) => t.id === formState.themeId);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950 flex flex-col relative overflow-hidden">
@@ -452,7 +451,7 @@ export default function CreateProjectPage() {
                   </svg>
                 </div>
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-600 via-rose-600 to-orange-600 bg-clip-text text-transparent mb-2">
-                  {locale === "tr" ? "Stilinizi Seçin" : "Choose Your Style"}
+                  {locale === "tr" ? "Tema Seçiniz" : "Choose Your Theme"}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">
                   {locale === "tr"
@@ -462,13 +461,28 @@ export default function CreateProjectPage() {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {DEFAULT_THEMES.map((theme) => {
+                {themeData.map((theme: any) => {
                   const isSelected = formState.themeId === theme.id;
+                  // Tema klasör adını id'den üret (örnek: business-modern, portfolio-creative vs.)
+                  // id'yi dosya/folder ismine uygun şekilde eşleştirmeniz gerekebilir!
+                  // Örnek eşleme:
+                  const themeFolderMap: Record<string, string> = {
+                    'modern-gradient': 'business-modern',
+                    'minimal-light': 'portfolio-minimal',
+                    'dark-elegant': 'portfolio-creative',
+                    'warm-sunset': 'agency-modern',
+                    'ocean-breeze': 'saas-modern',
+                    'forest-green': 'restaurant-elegant',
+                  };
+                  const folder = themeFolderMap[theme.id] || theme.id;
+                  const previewImg = `/templates/${folder}/${locale}/preview.png`;
+                  const previewHtml = `/templates/${folder}/${locale}/preview.html`;
                   return (
                     <button
                       type="button"
                       key={theme.id}
                       onClick={() => updateForm("themeId", theme.id)}
+                      onDoubleClick={() => window.open(previewHtml, '_blank')}
                       className={cls(
                         "group relative rounded-2xl border-2 transition-all duration-300 text-left overflow-hidden transform hover:scale-105 hover:-translate-y-1",
                         isSelected
@@ -476,14 +490,13 @@ export default function CreateProjectPage() {
                           : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 shadow-lg hover:shadow-xl"
                       )}
                     >
-                      <div className={`h-24 bg-gradient-to-br ${theme.gradient} relative overflow-hidden`}>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <div className="absolute inset-0 opacity-10">
-                          <div className="absolute inset-0" style={{
-                            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-                            backgroundSize: '20px 20px'
-                          }} />
-                        </div>
+                      <div className="h-32 w-full relative">
+                        <img
+                          src={previewImg}
+                          alt={theme.name + ' preview'}
+                          className="object-cover w-full h-full rounded-t-2xl"
+                          style={{ pointerEvents: 'none' }}
+                        />
                         {isSelected && (
                           <div className="absolute inset-0 flex items-center justify-center animate-scaleIn">
                             <div className="w-12 h-12 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center shadow-2xl">
