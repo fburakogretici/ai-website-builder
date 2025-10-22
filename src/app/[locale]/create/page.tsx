@@ -15,41 +15,39 @@ type ThemeOption = {
   accentColor: string;
 };
 
-// Temaların config.json dosyalarını dinamik olarak oku
-const themeConfigs = [
-  {
-    id: "business-modern",
-    folder: "business-modern",
-  },
-  {
-    id: "portfolio-creative",
-    folder: "portfolio-creative",
-  },
-  {
-    id: "blog-minimal",
-    folder: "blog-minimal",
-  },
-  // Diğer temalar buraya eklenebilir
+// Tüm tema klasörlerini otomatik olarak oku
+const themeFolders = [
+  "agency-modern",
+  "blog-minimal",
+  "business-modern",
+  "corporate-classic",
+  "ecommerce-simple",
+  "event-landing",
+  "landing-startup",
+  "personal-cv",
+  "portfolio-creative",
+  "portfolio-minimal",
+  "restaurant-elegant",
+  "saas-modern",
+  "startup-tech",
 ];
 
 function getThemeData(locale: string) {
-  // Sunucu tarafında import ile, client'ta fetch ile alınabilir
-  // Basitlik için require ile synchronous okuma
   try {
-    return themeConfigs.map((theme) => {
+    return themeFolders.map((folder) => {
       let config;
       try {
-        config = require(`../../../../public/templates/${theme.folder}/${locale}/config.json`);
+        config = require(`../../../../public/templates/${folder}/${locale}/config.json`);
       } catch {
-        config = require(`../../../../public/templates/${theme.folder}/en/config.json`);
+        config = require(`../../../../public/templates/${folder}/en/config.json`);
       }
       return {
         id: config.id,
         name: locale === 'tr' ? config.name : config.name_en || config.name,
         description: locale === 'tr' ? config.description : config.description_en || config.description,
-        gradient: theme.folder === 'business-modern' ? 'from-indigo-500 via-purple-500 to-pink-500' : theme.folder === 'portfolio-creative' ? 'from-slate-900 via-slate-800 to-slate-900' : 'from-gray-50 via-white to-gray-100',
+        gradient: 'from-indigo-500 via-purple-500 to-pink-500', // İsterseniz config'e ekleyebilirsiniz
         accentColor: 'bg-indigo-600',
-        folder: theme.folder,
+        folder,
       };
     });
   } catch {
