@@ -1,5 +1,5 @@
-"use client";
 
+"use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from 'next-intl';
@@ -12,6 +12,7 @@ export default function Home() {
   const [industry, setIndustry] = useState("");
   const [session, setSession] = useState<Session | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const t = useTranslations();
   const locale = useLocale();
@@ -24,13 +25,10 @@ export default function Home() {
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
     };
-    
     checkSession();
-
     const { data: authListener } = supabase.auth.onAuthStateChange((_, newSession) => {
       setSession(newSession);
     });
-
     return () => {
       authListener?.subscription.unsubscribe();
     };
@@ -45,7 +43,6 @@ export default function Home() {
         setShowScrollTop(false);
       }
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -59,20 +56,32 @@ export default function Home() {
 
   const handleWebsiteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!session) {
       router.replace(`/${locale}/login`);
       return;
     }
-
     console.log("Web Sitesi Oluşturma Formu Submitted:", { businessName, industry, userId: session.user.id });
     router.replace(`/${locale}/dashboard`);
   };
 
-  // Removed loading screen - show content immediately
+  // Listen for route changes to hide loading spinner
+  useEffect(() => {
+    // Next.js App Router navigation events
+    const handleRouteChange = () => setLoading(false);
+    window.addEventListener('next-route-change', handleRouteChange);
+    return () => {
+      window.removeEventListener('next-route-change', handleRouteChange);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
+      {/* Loading Spinner Overlay */}
+      {loading && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
+        </div>
+      )}
       {/* Hero Section - Compact & Visual */}
       <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
         {/* Animated Background Elements */}
@@ -151,7 +160,10 @@ export default function Home() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-8">
             <button
-              onClick={() => session ? router.push(`/${locale}/dashboard`) : router.push(`/${locale}/login`)}
+              onClick={() => {
+                setLoading(true);
+                session ? router.push(`/${locale}/dashboard`) : router.push(`/${locale}/login`);
+              }}
               className="group relative px-7 py-3.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold text-base rounded-xl shadow-xl hover:shadow-indigo-500/50 transition-all duration-300 hover:scale-105"
             >
               <span className="flex items-center gap-2">
@@ -706,7 +718,10 @@ export default function Home() {
             }
           </p>
           <button 
-            onClick={() => router.push(session ? '/dashboard' : `${locale}/login`)}
+            onClick={() => {
+              setLoading(true);
+              router.push(session ? '/dashboard' : `${locale}/login`);
+            }}
             className="inline-flex items-center px-8 py-4 rounded-lg bg-white text-indigo-600 font-bold text-lg hover:bg-gray-100 hover:scale-105 transition-all duration-200 shadow-2xl"
           >
             {locale === 'tr' ? 'Ücretsiz Başla' : 'Start Free'}
