@@ -457,21 +457,23 @@ export default function Home() {
             {/* Portfolio Creative Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="relative h-48 w-full">
-                <Image src="/templates/portfolio-creative/en/preview.png" alt="Portfolio Creative Theme Preview" layout="fill" objectFit="cover" />
+                <Image src={`/templates/portfolio-creative/${locale}/preview.png`} alt="Portfolio Creative Theme Preview" layout="fill" objectFit="cover" />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  Creative Portfolio
+                  {locale === 'tr' ? 'Yaratıcı Portfolyo' : 'Creative Portfolio'}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  A visually-driven theme for creatives to showcase their work.
+                  {locale === 'tr'
+                    ? 'Yaratıcılar için görsel odaklı tema.'
+                    : 'A visually-driven theme for creatives to showcase their work.'}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full text-sm">
-                    Portfolio
+                    {locale === 'tr' ? 'Portfolyo' : 'Portfolio'}
                   </span>
                   <span className="px-3 py-1 bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300 rounded-full text-sm">
-                    Creative
+                    {locale === 'tr' ? 'Yaratıcı' : 'Creative'}
                   </span>
                 </div>
               </div>
@@ -480,21 +482,23 @@ export default function Home() {
             {/* SaaS Modern Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="relative h-48 w-full">
-                <Image src="/templates/business-modern/en/preview.png" alt="SaaS Modern Theme Preview" layout="fill" objectFit="cover" />
+                <Image src={`/templates/business-modern/${locale}/preview.png`} alt="SaaS Modern Theme Preview" layout="fill" objectFit="cover" />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  Business Modern
+                  {locale === 'tr' ? 'Modern İş' : 'Business Modern'}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  A modern, clean theme for SaaS and technology companies.
+                  {locale === 'tr'
+                    ? 'SaaS ve teknoloji şirketleri için modern, sade tema.'
+                    : 'A modern, clean theme for SaaS and technology companies.'}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm">
-                    Business
+                    {locale === 'tr' ? 'İş' : 'Business'}
                   </span>
                   <span className="px-3 py-1 bg-cyan-100 dark:bg-cyan-900 text-cyan-700 dark:text-cyan-300 rounded-full text-sm">
-                      Modern
+                    {locale === 'tr' ? 'Modern' : 'Modern'}
                   </span>
                 </div>
               </div>
@@ -503,21 +507,23 @@ export default function Home() {
             {/* Startup Tech Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="relative h-48 w-full">
-                <Image src="/templates/blog-minimal/en/preview.png" alt="Startup Tech Theme Preview" layout="fill" objectFit="cover" />
+                <Image src={`/templates/blog-minimal/${locale}/preview.png`} alt="Startup Tech Theme Preview" layout="fill" objectFit="cover" />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  Blog-Minimal
+                  {locale === 'tr' ? 'Minimal Blog' : 'Blog-Minimal'}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  A vibrant and energetic theme for tech startups.
+                  {locale === 'tr'
+                    ? 'Teknoloji girişimleri için enerjik ve canlı tema.'
+                    : 'A vibrant and energetic theme for tech startups.'}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full text-sm">
-                    Blog
+                    {locale === 'tr' ? 'Blog' : 'Blog'}
                   </span>
                   <span className="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-full text-sm">
-                    Minimal
+                    {locale === 'tr' ? 'Minimal' : 'Minimal'}
                   </span>
                 </div>
               </div>
