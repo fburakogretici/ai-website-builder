@@ -492,7 +492,11 @@ export default function CreateProjectPage() {
                         <img
                           src={previewImg}
                           alt={theme.name + ' preview'}
-                          className="object-cover object-top w-full h-full rounded-t-2xl"
+                          className={cls(
+                            folder === 'business-modern'
+                              ? 'object-cover object-top scale-110'
+                              : 'object-cover object-top w-full h-full rounded-t-2xl'
+                          )}
                           style={{ pointerEvents: 'none' }}
                         />
                         {isSelected && (
