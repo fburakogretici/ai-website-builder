@@ -453,8 +453,8 @@ export default function CreateProjectPage() {
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">
                   {locale === "tr"
-                    ? "Size uygun renk paletini seçin"
-                    : "Pick a color palette that suits you"}
+                    ? "Size uygun temayı seçin"
+                    : "Pick a theme that suits you"}
                 </p>
               </div>
 
