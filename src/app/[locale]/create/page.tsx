@@ -66,7 +66,7 @@ export default function CreateProjectPage() {
   const [currentStep, setCurrentStep] = useState<WizardStep>("basics");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
-
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   // Dinamik temaları al
   const themeData = getThemeData(locale);
   const [formState, setFormState] = useState<SiteBlueprint>({
@@ -79,6 +79,8 @@ export default function CreateProjectPage() {
         : "Describe your business, key offerings, audience, tone of voice, must-have sections, and preferred CTAs.",
     themeId: themeData.length > 0 ? themeData[0].id : "",
   });
+    const selectedTheme = themeData.find((t: any) => t.id === formState.themeId);
+    const previewPath = selectedTheme ? `/templates/${selectedTheme.folder || selectedTheme.id}/${locale}/preview.html` : "";
 
   const updateForm = <Key extends keyof SiteBlueprint>(
     key: Key,
@@ -147,7 +149,6 @@ export default function CreateProjectPage() {
   ];
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
-  const selectedTheme = themeData.find((t: any) => t.id === formState.themeId);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950 flex flex-col relative overflow-hidden">
@@ -586,28 +587,97 @@ export default function CreateProjectPage() {
                 </div>
 
                 {/* Theme Card */}
-                <div className="bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-16 h-16 rounded-lg bg-gradient-to-br ${selectedTheme?.gradient}`} />
-                      <div>
-                        <p className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">
-                          {locale === "tr" ? "Tema" : "Theme"}
-                        </p>
-                        <p className="font-bold text-lg text-gray-900 dark:text-white">
-                          {selectedTheme?.name}
-                        </p>
+                  {selectedTheme ? (
+                    <div
+                      className="relative bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 border border-gray-200 dark:border-gray-700 cursor-pointer"
+                      onDoubleClick={() => setShowPreviewModal(true)}
+                      style={{ userSelect: "none" }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 relative flex items-center justify-center overflow-hidden">
+                            <img
+                              src={`/templates/${selectedTheme.folder || selectedTheme.id}/${locale}/preview.png`}
+                              alt={selectedTheme.name}
+                              className="w-full h-full object-cover rounded-lg absolute inset-0"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.parentElement?.querySelector('.theme-fallback')?.classList.remove('hidden');
+                              }}
+                            />
+                            <span className="theme-fallback text-white font-bold text-base z-10 select-none text-center w-full hidden">
+                              {selectedTheme.name.split(' ')[0]}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">
+                              {locale === "tr" ? "Tema" : "Theme"}
+                            </p>
+                            <p className="font-bold text-lg text-gray-900 dark:text-white">
+                              {selectedTheme.name}
+                            </p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
+                              {selectedTheme.description}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep("theme")}
+                          className="px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-semibold hover:bg-indigo-100"
+                        >
+                          {locale === "tr" ? "Değiştir" : "Change"}
+                        </button>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep("theme")}
-                      className="px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-semibold hover:bg-indigo-100"
-                    >
-                      {locale === "tr" ? "Değiştir" : "Change"}
-                    </button>
-                  </div>
-                </div>
+                  ) : (
+                    <div className="relative bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 border border-red-400 dark:border-red-700 flex items-center gap-3">
+                      <div className="w-16 h-16 flex items-center justify-center rounded-lg bg-gradient-to-br from-red-400 to-pink-400">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-red-600 dark:text-red-400 uppercase mb-1">
+                          {locale === "tr" ? "Tema seçilmedi" : "No theme selected"}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {locale === "tr"
+                            ? "Lütfen bir tema seçin."
+                            : "Please select a theme."}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep("theme")}
+                        className="ml-auto px-3 py-1 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-100"
+                      >
+                        {locale === "tr" ? "Tema Seç" : "Choose Theme"}
+                      </button>
+                    </div>
+                  )}
+                  {/* Modal for preview.html */}
+                  {showPreviewModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[90vw] max-w-3xl h-[80vh] flex flex-col">
+                        <button
+                          className="absolute top-3 right-3 z-10 bg-gray-100 dark:bg-gray-800 rounded-full p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+                          onClick={() => setShowPreviewModal(false)}
+                          aria-label="Kapat"
+                        >
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                        <iframe
+                          src={previewPath}
+                          title="Theme Preview"
+                          className="flex-1 w-full h-full rounded-2xl border-none"
+                          style={{ background: "transparent" }}
+                        />
+                      </div>
+                    </div>
+                  )}
               </div>
             </div>
           )}
