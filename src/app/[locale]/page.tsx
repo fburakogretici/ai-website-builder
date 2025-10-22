@@ -469,7 +469,13 @@ export default function Home() {
             {/* Portfolio Creative Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="relative h-48 w-full">
-                <Image src={`/templates/portfolio-creative/${locale}/preview.png`} alt="Portfolio Creative Theme Preview" layout="fill" objectFit="cover" />
+                <Image 
+                  src={`/templates/portfolio-creative/${locale}/preview.png`} 
+                  alt="Portfolio Creative Theme Preview" 
+                  fill 
+                  sizes="(max-width: 768px) 100vw, 33vw" 
+                  className="object-cover" 
+                />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -494,7 +500,13 @@ export default function Home() {
             {/* SaaS Modern Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="relative h-48 w-full">
-                <Image src={`/templates/business-modern/${locale}/preview.png`} alt="SaaS Modern Theme Preview" layout="fill" objectFit="cover" />
+                <Image 
+                  src={`/templates/business-modern/${locale}/preview.png`} 
+                  alt="SaaS Modern Theme Preview" 
+                  fill 
+                  sizes="(max-width: 768px) 100vw, 33vw" 
+                  className="object-cover" 
+                />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -519,7 +531,13 @@ export default function Home() {
             {/* Startup Tech Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="relative h-48 w-full">
-                <Image src={`/templates/blog-minimal/${locale}/preview.png`} alt="Startup Tech Theme Preview" layout="fill" objectFit="cover" />
+                <Image 
+                  src={`/templates/blog-minimal/${locale}/preview.png`} 
+                  alt="Startup Tech Theme Preview" 
+                  fill 
+                  sizes="(max-width: 768px) 100vw, 33vw" 
+                  className="object-cover" 
+                />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
