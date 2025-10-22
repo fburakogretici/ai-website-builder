@@ -20,16 +20,16 @@ const themeFolders = [
   "agency-modern",
   "blog-minimal",
   "business-modern",
-  "corporate-classic",
-  "ecommerce-simple",
-  "event-landing",
-  "landing-startup",
   "personal-cv",
   "portfolio-creative",
-  "portfolio-minimal",
-  "restaurant-elegant",
-  "saas-modern",
-  "startup-tech",
+  "landing-startup",
+  // "event-landing",
+  // "restaurant-elegant",
+  // "saas-modern",
+  // "portfolio-minimal",
+  // "corporate-classic",
+  // "ecommerce-simple",
+  // "startup-tech",
 ];
 
 function getThemeData(locale: string) {
@@ -488,11 +488,11 @@ export default function CreateProjectPage() {
                           : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 shadow-lg hover:shadow-xl"
                       )}
                     >
-                      <div className="h-32 w-full relative">
+                      <div className="h-40 w-full relative">
                         <img
                           src={previewImg}
                           alt={theme.name + ' preview'}
-                          className="object-cover w-full h-full rounded-t-2xl"
+                          className="object-cover object-top w-full h-full rounded-t-2xl"
                           style={{ pointerEvents: 'none' }}
                         />
                         {isSelected && (
