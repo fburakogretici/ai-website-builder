@@ -87,20 +87,30 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
   const [isCheckingSession, setIsCheckingSession] = useState<boolean>(true);
 
   useEffect(() => {
+    if (!supabase) {
+      setIsCheckingSession(false);
+      return;
+    }
+
     let isMounted = true;
 
     const syncSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!isMounted) {
-        return;
-      }
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!isMounted) {
+          return;
+        }
 
-      const nextSession = data.session ?? null;
-      setSession(nextSession);
-      setIsCheckingSession(false);
+        const nextSession = data.session ?? null;
+        setSession(nextSession);
+        setIsCheckingSession(false);
 
-      if (!nextSession) {
-        router.replace(`/${locale}/login`);
+        if (!nextSession) {
+          router.replace(`/${locale}/login`);
+        }
+      } catch (error) {
+        console.error('Session sync error:', error);
+        setIsCheckingSession(false);
       }
     };
 

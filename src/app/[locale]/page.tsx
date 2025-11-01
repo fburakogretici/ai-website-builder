@@ -20,10 +20,16 @@ export default function Home() {
   const supabase = useSupabaseClient();
 
   useEffect(() => {
+    if (!supabase) return;
+
     // Check session in background, don't block UI
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
+      try {
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+      } catch (error) {
+        console.error('Session check error:', error);
+      }
     };
     checkSession();
     const { data: authListener } = supabase.auth.onAuthStateChange((_, newSession) => {

@@ -20,10 +20,18 @@ export default function LoginPage() {
   const supabase = useSupabaseClient();
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         router.replace(`/${locale}/dashboard`);
       }
+      setLoading(false);
+    }).catch((error) => {
+      console.error('Session check error:', error);
       setLoading(false);
     });
 
@@ -42,19 +50,34 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!supabase) {
+      setAuthError(t('auth.error.connectionFailed'));
+      return;
+    }
+    
     setAuthError(null);
     
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    
-    if (error) {
-      setAuthError(t('auth.login.error'));
-    } else if (data.session) {
-      router.replace(`/${locale}/dashboard`);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        setAuthError(t('auth.login.error'));
+      } else if (data.session) {
+        router.replace(`/${locale}/dashboard`);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setAuthError(t('auth.error.connectionFailed'));
     }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!supabase) {
+      setAuthError('Connection error. Please refresh the page.');
+      return;
+    }
+    
     setAuthError(null);
     
     if (!email || !password) {
@@ -67,33 +90,49 @@ export default function LoginPage() {
       return;
     }
     
-    const { error } = await supabase.auth.signUp({ email, password });
-    
-    if (error) {
-      setAuthError(t('auth.register.error'));
-    } else {
-      setAuthError(null);
-      alert(t('auth.register.success'));
+    try {
+      const { error } = await supabase.auth.signUp({ email, password });
+      
+      if (error) {
+        setAuthError(t('auth.register.error'));
+      } else {
+        setAuthError(null);
+        alert(t('auth.register.success'));
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      setAuthError('An error occurred during registration.');
     }
   };
 
   const handleGoogleLogin = async () => {
+    if (!supabase) {
+      setAuthError('Connection error. Please refresh the page.');
+      return;
+    }
+    
     setAuthError(null);
     setIsGoogleLoading(true);
     
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/${locale}/auth/callback`,
-      },
-    });
-    
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/${locale}/auth/callback`,
+        },
+      });
+      
+      if (error) {
+        setIsGoogleLoading(false);
+        setAuthError(locale === 'tr' 
+          ? 'Google ile giriş yapılamadı. Lütfen tekrar deneyin.' 
+          : 'Failed to sign in with Google. Please try again.'
+        );
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
       setIsGoogleLoading(false);
-      setAuthError(locale === 'tr' 
-        ? 'Google ile giriş yapılamadı. Lütfen tekrar deneyin.' 
-        : 'Failed to sign in with Google. Please try again.'
-      );
+      setAuthError('An error occurred with Google login.');
     }
     // Keep loading state true since we're redirecting to Google
   };

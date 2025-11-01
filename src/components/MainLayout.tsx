@@ -9,6 +9,7 @@ import type { Session } from '@supabase/supabase-js';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
+  const [isClient, setIsClient] = useState(false);
   const pathname = usePathname();
   const supabase = useSupabaseClient();
 
@@ -17,10 +18,20 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const shouldShowLayout = !noLayoutRoutes.some(route => pathname?.includes(route));
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient || !supabase) return;
+
     // Check session
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+      } catch (error) {
+        console.error('Session check error:', error);
+      }
     };
     
     checkSession();
@@ -32,7 +43,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, isClient]);
 
   if (!shouldShowLayout) {
     // For login, forgot-password, reset-password pages - no layout

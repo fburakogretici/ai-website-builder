@@ -5,7 +5,7 @@ import type { Session, SupabaseClient, User } from '@supabase/supabase-js';
 import { EMPTY_PROFILE, extractUserProfile, type UserProfile } from '@/utils/profile';
 
 interface UseUserProfileOptions {
-  supabase: SupabaseClient;
+  supabase: SupabaseClient | null;
   session?: Session | null;
   listenForUpdates?: boolean;
 }
@@ -35,6 +35,11 @@ export function useUserProfile({
   }, []);
 
   const refreshProfile = useCallback(async () => {
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
 
     if (session?.user) {
@@ -43,10 +48,14 @@ export function useUserProfile({
       return;
     }
 
-    const { data, error } = await supabase.auth.getUser();
+    try {
+      const { data, error } = await supabase.auth.getUser();
 
-    if (!error) {
-      applyUserProfile(data?.user ?? null);
+      if (!error) {
+        applyUserProfile(data?.user ?? null);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
     }
 
     setIsLoading(false);

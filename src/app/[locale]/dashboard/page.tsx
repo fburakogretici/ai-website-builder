@@ -15,6 +15,8 @@ export default function DashboardPage() {
   const supabase = useSupabaseClient();
 
   useEffect(() => {
+    if (!supabase) return;
+
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         setSession(data.session);

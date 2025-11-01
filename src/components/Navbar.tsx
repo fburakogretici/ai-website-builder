@@ -42,6 +42,7 @@ export default function Navbar({ session }: NavbarProps) {
   }, []);
 
   const handleLogout = async () => {
+    if (!supabase) return;
     await supabase.auth.signOut();
     router.push(`/${locale}/login`);
   };

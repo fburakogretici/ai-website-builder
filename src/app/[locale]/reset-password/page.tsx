@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createBrowserClient } from "@/utils/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from 'next-intl';
+import type { AuthResponse } from '@supabase/supabase-js';
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -20,6 +21,8 @@ export default function ResetPasswordPage() {
   const supabase = createBrowserClient();
 
   useEffect(() => {
+    if (!supabase) return;
+    
     // Check if we have a valid code/token in URL
     const code = searchParams.get('code');
     if (!code) {
@@ -29,7 +32,10 @@ export default function ResetPasswordPage() {
     }
     
     // Verify the session is valid
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    supabase.auth.getSession().then((result: AuthResponse | any) => {
+      const session = result?.data?.session;
+      const error = result?.error;
+      
       if (error || !session) {
         // Invalid or expired token, redirect to forgot password
         router.replace(`/${locale}/forgot-password`);
@@ -41,6 +47,8 @@ export default function ResetPasswordPage() {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!supabase) return;
+    
     setError(null);
 
     // Validation
