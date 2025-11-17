@@ -38,6 +38,31 @@ export function createBrowserClient() {
         global: {
           headers: {
             'x-application-name': 'nocodepage-ai'
+          },
+          fetch: (url, options = {}) => {
+            // Normal fetch çağrısı yap
+            return fetch(url, options).catch(error => {
+              // URL'i string'e çevir
+              const urlString = typeof url === 'string' ? url : url.toString();
+              
+              // Sadece SSL/Certificate hatalarını sessizce handle et
+              // OAuth ve diğer kritik işlemler için hataları fırlat
+              const isCertError = error.message?.includes('CERT') || 
+                                 error.message?.includes('SSL') ||
+                                 error.message?.includes('certificate');
+              
+              if (isCertError && urlString.includes('/auth/v1/token?grant_type=refresh_token')) {
+                // Sadece token refresh hatalarını bastır
+                console.warn('Token refresh failed (suppressed):', error.message);
+                return new Response(JSON.stringify({ error: 'Token refresh failed' }), {
+                  status: 401,
+                  headers: { 'Content-Type': 'application/json' }
+                });
+              }
+              
+              // Diğer tüm hatalar (OAuth, sign in, vb.) için hatayı fırlat
+              throw error;
+            });
           }
         }
       }

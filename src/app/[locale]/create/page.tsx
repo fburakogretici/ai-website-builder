@@ -3,53 +3,60 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import type { SiteBlueprint } from "@/components/dashboard/NewProjectWizard";
+import type { TemplateData, ServiceItem, TestimonialItem } from "@/types/template";
 
-type WizardStep = "basics" | "prompt" | "theme" | "review";
+type WizardStep = "template" | "business" | "content" | "ai-generate" | "preview";
 
 type ThemeOption = {
   id: string;
   name: string;
   description: string;
-  gradient: string;
-  accentColor: string;
+  category: string;
+  preview: string;
+  features: string[];
 };
 
 // Tüm tema klasörlerini otomatik olarak oku
 const themeFolders = [
-  "agency-modern",
-  "blog-minimal",
   "business-modern",
-  "personal-cv",
   "portfolio-creative",
+  "agency-modern",
   "landing-startup",
-  // "event-landing",
-  // "restaurant-elegant",
+  "blog-minimal",
+  "personal-cv",
   // "saas-modern",
+  // "restaurant-elegant",
   // "portfolio-minimal",
   // "corporate-classic",
   // "ecommerce-simple",
+  // "event-landing",
   // "startup-tech",
 ];
 
-function getThemeData(locale: string) {
+function getThemeData(locale: string): ThemeOption[] {
   try {
     return themeFolders.map((folder) => {
       let config;
+      let configLocale = locale;
       try {
         config = require(`../../../../public/templates/${folder}/${locale}/config.json`);
       } catch {
-        config = require(`../../../../public/templates/${folder}/en/config.json`);
+        try {
+          config = require(`../../../../public/templates/${folder}/en/config.json`);
+          configLocale = 'en';
+        } catch {
+          return null;
+        }
       }
       return {
         id: config.id,
         name: locale === 'tr' ? config.name : config.name_en || config.name,
         description: locale === 'tr' ? config.description : config.description_en || config.description,
-        gradient: 'from-indigo-500 via-purple-500 to-pink-500', // İsterseniz config'e ekleyebilirsiniz
-        accentColor: 'bg-indigo-600',
-        folder,
+        category: config.category || 'business',
+        preview: `/templates/${folder}/${configLocale}/preview.png`,
+        features: config.features || [],
       };
-    });
+    }).filter(Boolean) as ThemeOption[];
   } catch {
     return [];
   }
@@ -63,68 +70,223 @@ export default function CreateProjectPage() {
   const router = useRouter();
   const locale = useLocale();
 
-  const [currentStep, setCurrentStep] = useState<WizardStep>("basics");
+  const [currentStep, setCurrentStep] = useState<WizardStep>("template");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  
+  // AI & Preview States
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedHtml, setGeneratedHtml] = useState("");
+  const [generationHistory, setGenerationHistory] = useState<string[]>([]);
+  const [refinementPrompt, setRefinementPrompt] = useState("");
+  
   // Dinamik temaları al
   const themeData = getThemeData(locale);
-  const [formState, setFormState] = useState<SiteBlueprint>({
-    projectName: "",
-    websiteGoal: "",
+  
+  // Debug: Log theme data
+  React.useEffect(() => {
+    console.log('📊 Loaded themes:', themeData.length);
+    themeData.forEach(theme => {
+      console.log(`  - ${theme.name}: ${theme.preview}`);
+    });
+  }, [themeData]);
+  
+  // Template Data State
+  const [templateData, setTemplateData] = useState<Partial<TemplateData>>({
+    businessName: "",
+    industry: "",
     targetAudience: "",
-    aiPrompt:
-      locale === "tr"
-        ? "İşletmenizi, hizmetlerinizi ve hedef kitlenizi anlatın. Varsa tercih ettiğiniz ton, CTA ve içerik bölümlerini ekleyin."
-        : "Describe your business, key offerings, audience, tone of voice, must-have sections, and preferred CTAs.",
-    themeId: themeData.length > 0 ? themeData[0].id : "",
+    heroTitle: "",
+    heroSubtitle: "",
+    heroCtaText: locale === "tr" ? "İletişime Geçin" : "Get Started",
+    aboutTitle: locale === "tr" ? "Hakkımızda" : "About Us",
+    aboutContent: "",
+    services: [],
+    testimonials: [],
+    ctaTitle: locale === "tr" ? "Başlamaya Hazır mısınız?" : "Ready to Get Started?",
+    ctaSubtitle: locale === "tr" ? "Projeniz hakkında konuşalım" : "Let's discuss your project",
+    ctaButtonText: locale === "tr" ? "Teklif Alın" : "Get a Quote",
+    contactEmail: "",
+    contactPhone: "",
+    contactAddress: "",
+    colorPrimary: "#0d47a1",
+    colorSecondary: "#1976d2",
+    colorAccent: "#ffc107",
+    colorText: "#333333",
+    colorBackground: "#f4f7f9",
+    footerTagline: "",
+    footerCopyright: `© ${new Date().getFullYear()} ${locale === "tr" ? "Tüm hakları saklıdır" : "All rights reserved"}`,
+    locale: locale,
+    createdAt: new Date().toISOString(),
   });
-    const selectedTheme = themeData.find((t: any) => t.id === formState.themeId);
-    const previewPath = selectedTheme ? `/templates/${selectedTheme.folder || selectedTheme.id}/${locale}/preview.html` : "";
 
-  const updateForm = <Key extends keyof SiteBlueprint>(
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+
+  const updateTemplateData = <Key extends keyof TemplateData>(
     key: Key,
-    value: SiteBlueprint[Key]
+    value: TemplateData[Key]
   ) => {
     setHasInteracted(true);
-    setFormState((prev) => ({
+    setTemplateData((prev) => ({
       ...prev,
       [key]: value,
     }));
   };
 
-  const fieldError = (value: string) => !value && hasInteracted;
+  const addService = () => {
+    setTemplateData(prev => ({
+      ...prev,
+      services: [...(prev.services || []), { title: "", description: "", icon: "" }]
+    }));
+  };
+
+  const removeService = (index: number) => {
+    setTemplateData(prev => ({
+      ...prev,
+      services: (prev.services || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateService = (index: number, field: keyof ServiceItem, value: string) => {
+    setTemplateData(prev => ({
+      ...prev,
+      services: (prev.services || []).map((service, i) => 
+        i === index ? { ...service, [field]: value } : service
+      )
+    }));
+  };
+
+  const addTestimonial = () => {
+    setTemplateData(prev => ({
+      ...prev,
+      testimonials: [...(prev.testimonials || []), { name: "", role: "", company: "", content: "" }]
+    }));
+  };
+
+  const removeTestimonial = (index: number) => {
+    setTemplateData(prev => ({
+      ...prev,
+      testimonials: (prev.testimonials || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateTestimonial = (index: number, field: keyof TestimonialItem, value: string) => {
+    setTemplateData(prev => ({
+      ...prev,
+      testimonials: (prev.testimonials || []).map((testimonial, i) => 
+        i === index ? { ...testimonial, [field]: value } : testimonial
+      )
+    }));
+  };
+
+  const selectedTheme = themeData.find((t) => t.id === selectedTemplate);
 
   const handleNext = () => {
-    if (currentStep === "basics") {
-      if (!formState.projectName || !formState.websiteGoal) {
+    if (currentStep === "template") {
+      if (!selectedTemplate) {
         setHasInteracted(true);
         return;
       }
-      setCurrentStep("prompt");
-    } else if (currentStep === "prompt") {
-      if (!formState.aiPrompt) {
+      setCurrentStep("business");
+    } else if (currentStep === "business") {
+      if (!templateData.businessName || !templateData.industry) {
         setHasInteracted(true);
         return;
       }
-      setCurrentStep("theme");
-    } else if (currentStep === "theme") {
-      setCurrentStep("review");
+      setCurrentStep("content");
+    } else if (currentStep === "content") {
+      if (!templateData.heroTitle || !templateData.aboutContent) {
+        setHasInteracted(true);
+        return;
+      }
+      setCurrentStep("ai-generate");
+    } else if (currentStep === "ai-generate") {
+      // Generate will be handled by the generate button
+      setCurrentStep("preview");
     }
   };
 
   const handleBack = () => {
-    if (currentStep === "prompt") {
-      setCurrentStep("basics");
-    } else if (currentStep === "theme") {
-      setCurrentStep("prompt");
-    } else if (currentStep === "review") {
-      setCurrentStep("theme");
+    if (currentStep === "business") {
+      setCurrentStep("template");
+    } else if (currentStep === "content") {
+      setCurrentStep("business");
+    } else if (currentStep === "ai-generate") {
+      setCurrentStep("content");
+    } else if (currentStep === "preview") {
+      setCurrentStep("ai-generate");
+    }
+  };
+
+  // AI Generation Handler with Claude
+  const handleAIGenerate = async (isRefinement = false) => {
+    setIsGenerating(true);
+    
+    try {
+      const prompt = isRefinement ? refinementPrompt : aiPrompt;
+      
+      // Step 1: Generate content with Claude
+      const contentResponse = await fetch("/api/generate-content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName: templateData.businessName,
+          businessType: templateData.industry || "",
+          description: prompt || templateData.aboutContent || "",
+          services: templateData.services || [],
+          testimonials: templateData.testimonials || [],
+          template: selectedTemplate,
+          locale: locale,
+        }),
+      });
+
+      if (!contentResponse.ok) {
+        const error = await contentResponse.json();
+        throw new Error(error.details || "Content generation failed");
+      }
+
+      const contentResult = await contentResponse.json();
+      console.log("✅ Claude generated content:", contentResult);
+      
+      // Step 2: Merge content into template
+      const mergeResponse = await fetch("/api/merge-template", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          templateId: selectedTemplate,
+          content: contentResult.content,
+          locale: locale,
+        }),
+      });
+
+      if (!mergeResponse.ok) {
+        throw new Error("Template merge failed");
+      }
+
+      const mergeResult = await mergeResponse.json();
+      setGeneratedHtml(mergeResult.html);
+      setGenerationHistory(prev => [...prev, mergeResult.html]);
+      
+      if (!isRefinement) {
+        setCurrentStep("preview");
+      } else {
+        setRefinementPrompt("");
+      }
+      
+    } catch (error: any) {
+      console.error("AI generation error:", error);
+      alert(locale === "tr" 
+        ? `AI ile içerik oluşturulurken hata oluştu:\n${error.message}` 
+        : `Error generating content with AI:\n${error.message}`);
+
+    } finally {
+      setIsGenerating(false);
     }
   };
 
   const handleSubmit = async () => {
-    if (!formState.projectName || !formState.websiteGoal || !formState.aiPrompt) {
+    if (!selectedTemplate || !templateData.businessName || !generatedHtml) {
       setHasInteracted(true);
       return;
     }
@@ -132,628 +294,815 @@ export default function CreateProjectPage() {
     setIsSubmitting(true);
 
     try {
-      // TODO: API call to generate website
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
-      router.push(`/${locale}/dashboard`);
+      // Deploy the generated website
+      const response = await fetch("/api/deploy-website", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          generatedHtml: generatedHtml,
+          templateData: templateData,
+          templateId: selectedTemplate,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Show success message
+        alert(locale === "tr" 
+          ? `🎉 Web siteniz yayınlandı!\n\nURL: ${result.deploymentUrl}\n\nDashboard'a yönlendiriliyorsunuz...` 
+          : `🎉 Your website is live!\n\nURL: ${result.deploymentUrl}\n\nRedirecting to dashboard...`);
+        
+        // Redirect to dashboard with deployment info
+        router.push(`/${locale}/dashboard?deployed=${result.deploymentId}`);
+      } else {
+        throw new Error("Failed to deploy website");
+      }
+    } catch (error) {
+      console.error("Deployment error:", error);
+      alert(locale === "tr" 
+        ? "Website yayınlanırken hata oluştu. Lütfen tekrar deneyin." 
+        : "Error deploying website. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const steps: Array<{ id: WizardStep; label: string }> = [
-    { id: "basics", label: locale === "tr" ? "Temel Bilgiler" : "Basics" },
-    { id: "prompt", label: locale === "tr" ? "AI İstemi" : "AI Prompt" },
-    { id: "theme", label: locale === "tr" ? "Tema" : "Theme" },
-    { id: "review", label: locale === "tr" ? "İnceleme" : "Review" },
+  const steps: Array<{ id: WizardStep; label: string; icon: string }> = [
+    { id: "template", label: locale === "tr" ? "Şablon" : "Template", icon: "🎨" },
+    { id: "business", label: locale === "tr" ? "İşletme" : "Business", icon: "🏢" },
+    { id: "content", label: locale === "tr" ? "İçerik" : "Content", icon: "📝" },
+    { id: "ai-generate", label: locale === "tr" ? "AI Üret" : "AI Generate", icon: "🤖" },
+    { id: "preview", label: locale === "tr" ? "Önizleme" : "Preview", icon: "👀" },
   ];
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950 flex flex-col relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 dark:bg-purple-900/20 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 animate-blob" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-300 dark:bg-indigo-900/20 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-300 dark:bg-pink-900/20 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 animate-blob animation-delay-4000" />
-      </div>
-
-      {/* Header - Professional */}
-      <div className="relative bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50 shadow-sm flex-shrink-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-3">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950">
+      {/* Header with Progress */}
+      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            {/* Progress Steps - Premium Design */}
-            <div className="flex items-center gap-3">
+            {/* Progress Steps */}
+            <div className="flex items-center gap-2">
               {steps.map((step, idx) => (
-                <div key={step.id} className="flex items-center gap-3">
+                <React.Fragment key={step.id}>
                   <button
                     type="button"
-                    onClick={() => {
-                      // Sadece tamamlanan veya mevcut adımlara gidilebilir
-                      if (idx <= currentStepIndex) {
-                        setCurrentStep(step.id);
-                      }
-                    }}
+                    onClick={() => idx <= currentStepIndex && setCurrentStep(step.id)}
                     disabled={idx > currentStepIndex}
                     className={cls(
-                      "flex items-center gap-2 group transition-all duration-300",
-                      idx <= currentStepIndex 
-                        ? "cursor-pointer hover:scale-105" 
-                        : "cursor-not-allowed opacity-60"
+                      "flex items-center gap-2 transition-all duration-300",
+                      idx <= currentStepIndex ? "cursor-pointer" : "cursor-not-allowed opacity-50"
                     )}
                   >
-                    <div className="relative">
-                      <div
-                        className={cls(
-                          "w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500 relative z-10",
-                          idx <= currentStepIndex
-                            ? "bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white shadow-lg shadow-indigo-500/30"
-                            : "bg-gray-100 dark:bg-gray-800 text-gray-400 border-2 border-gray-300 dark:border-gray-700"
-                        )}
-                      >
-                        {idx < currentStepIndex ? (
-                          <svg className="w-4 h-4 animate-scaleIn" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        ) : (
-                          <span className="animate-scaleIn">{idx + 1}</span>
-                        )}
-                      </div>
-                      {idx <= currentStepIndex && (
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 animate-ping opacity-20" />
-                      )}
+                    <div className={cls(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all",
+                      idx === currentStepIndex
+                        ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg"
+                        : idx < currentStepIndex
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-200 dark:bg-gray-700 text-gray-500"
+                    )}>
+                      {idx < currentStepIndex ? "✓" : idx + 1}
                     </div>
-                    <div className="flex flex-col">
-                      <span
-                        className={cls(
-                          "text-xs font-bold whitespace-nowrap transition-all duration-300",
-                          idx === currentStepIndex
-                            ? "text-indigo-600 dark:text-indigo-400"
-                            : idx < currentStepIndex
-                            ? "text-gray-700 dark:text-gray-300"
-                            : "text-gray-400 dark:text-gray-500"
-                        )}
-                      >
-                        {step.label}
-                      </span>
-                      {idx === currentStepIndex && (
-                        <span className="text-[10px] text-gray-500 dark:text-gray-400 animate-fadeIn">
-                          {locale === "tr" ? "Şu anda" : "Current"}
-                        </span>
-                      )}
-                    </div>
+                    <span className={cls(
+                      "hidden sm:inline text-sm font-medium",
+                      idx === currentStepIndex ? "text-indigo-600 dark:text-indigo-400" : "text-gray-500"
+                    )}>
+                      {step.label}
+                    </span>
                   </button>
                   {idx < steps.length - 1 && (
-                    <div className="relative">
-                      <div className={cls(
-                        "h-0.5 w-8 transition-all duration-500",
-                        idx < currentStepIndex
-                          ? "bg-gradient-to-r from-indigo-600 to-purple-600"
-                          : "bg-gray-200 dark:bg-gray-700"
-                      )}>
-                        {idx < currentStepIndex && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 animate-shimmer" />
-                        )}
-                      </div>
-                    </div>
+                    <div className={cls(
+                      "h-0.5 w-8 transition-all",
+                      idx < currentStepIndex ? "bg-green-500" : "bg-gray-200 dark:bg-gray-700"
+                    )} />
                   )}
-                </div>
+                </React.Fragment>
               ))}
             </div>
 
-            {/* Cancel Button - Premium */}
+            {/* Cancel Button */}
             <button
               type="button"
               onClick={() => router.push(`/${locale}/dashboard`)}
-              className="group relative px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-300 flex items-center gap-2 overflow-hidden"
+              className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
             >
-              <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <svg className="w-4 h-4 relative z-10 transition-transform group-hover:rotate-90 duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              <span className="hidden sm:inline relative z-10">{locale === "tr" ? "İptal" : "Cancel"}</span>
+              {locale === "tr" ? "İptal" : "Cancel"}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Content Area - Premium Design */}
-      <div className="relative z-10 px-6 py-8">
-        <div className="max-w-6xl w-full mx-auto">
-          <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-gray-800/50 p-8">
-          {/* Step 1: Basics */}
-          {currentStep === "basics" && (
-            <div className="space-y-5 animate-fadeIn">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white mb-4 shadow-lg shadow-indigo-500/30">
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                  {locale === "tr"
-                    ? "Temel bilgilerle başlayalım"
-                    : "Let's start with the basics"}
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  {locale === "tr"
-                    ? "Projeniz ve hedef kitleniz hakkında bilgi verin"
-                    : "Tell us about your project and who it's for"}
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="md:col-span-2 group">
-                  <label className="block text-sm font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                    </svg>
-                    {locale === "tr" ? "Proje Adı" : "Project Name"} <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      value={formState.projectName}
-                      onChange={(e) => updateForm("projectName", e.target.value)}
-                      placeholder={
-                        locale === "tr"
-                          ? "örn. Nova Pazarlama Ajansı"
-                          : "e.g. Nova Marketing Agency"
-                      }
-                      className={cls(
-                        "w-full px-4 py-3 text-base rounded-xl border-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 transition-all duration-300 focus:outline-none focus:ring-4 shadow-sm hover:shadow-md group-hover:border-gray-300 dark:group-hover:border-gray-600",
-                        fieldError(formState.projectName)
-                          ? "border-red-300 focus:border-red-500 focus:ring-red-500/20"
-                          : "border-gray-200 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-500/20"
-                      )}
-                    />
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                    {fieldError(formState.projectName) && (
-                      <p className="mt-1.5 text-xs text-red-600 dark:text-red-400 flex items-center gap-1 animate-fadeIn">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                        {locale === "tr"
-                          ? "Lütfen bir proje adı girin"
-                          : "Please enter a project name"}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="group">
-                  <label className="block text-sm font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                      <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                    </svg>
-                    {locale === "tr" ? "Web Sitesi Hedefi" : "Website Goal"} <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <textarea
-                      value={formState.websiteGoal}
-                      onChange={(e) => updateForm("websiteGoal", e.target.value)}
-                      placeholder={
-                        locale === "tr"
-                          ? "Ne başarmak istiyorsunuz?"
-                          : "What do you want to achieve?"
-                      }
-                      rows={4}
-                      className={cls(
-                        "w-full px-4 py-3 text-sm rounded-xl border-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 transition-all duration-300 focus:outline-none focus:ring-4 resize-none shadow-sm hover:shadow-md group-hover:border-gray-300 dark:group-hover:border-gray-600",
-                        fieldError(formState.websiteGoal)
-                          ? "border-red-300 focus:border-red-500 focus:ring-red-500/20"
-                          : "border-gray-200 dark:border-gray-700 focus:border-purple-500 focus:ring-purple-500/20"
-                      )}
-                    />
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                    {fieldError(formState.websiteGoal) && (
-                      <p className="mt-1.5 text-xs text-red-600 dark:text-red-400 flex items-center gap-1 animate-fadeIn">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                        {locale === "tr"
-                          ? "Lütfen hedefinizi açıklayın"
-                          : "Please describe your goal"}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="group">
-                  <label className="block text-sm font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                    </svg>
-                    {locale === "tr" ? "Hedef Kitle" : "Target Audience"} <span className="text-gray-400 text-xs font-normal">({locale === "tr" ? "Opsiyonel" : "Optional"})</span>
-                  </label>
-                  <div className="relative">
-                    <textarea
-                      value={formState.targetAudience}
-                      onChange={(e) =>
-                        updateForm("targetAudience", e.target.value)
-                      }
-                      placeholder={
-                        locale === "tr"
-                          ? "Kimler için yapıyorsunuz?"
-                          : "Who are you building this for?"
-                      }
-                      rows={4}
-                      className="w-full px-4 py-3 text-sm rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 transition-all duration-300 focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/20 resize-none shadow-sm hover:shadow-md group-hover:border-gray-300 dark:group-hover:border-gray-600"
-                    />
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500/5 to-rose-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: AI Prompt */}
-          {currentStep === "prompt" && (
-            <div className="space-y-4 animate-fadeIn">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {locale === "tr"
-                    ? "Vizyonunuzu anlatın"
-                    : "Describe your vision"}
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  {locale === "tr"
-                    ? "AI'ın marka sesinizi ve ihtiyaçlarınızı anlamasına yardımcı olun"
-                    : "Help AI understand your brand voice and needs"}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                  {locale === "tr" ? "AI İstemi" : "AI Prompt"}
-                  <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={formState.aiPrompt}
-                  onChange={(e) => updateForm("aiPrompt", e.target.value)}
-                  placeholder={
-                    locale === "tr"
-                      ? "Marka hikayenizi, tercih ettiğiniz tonu, olmazsa olmaz bölümleri ve tasarım tercihlerinizi anlatın..."
-                      : "Describe your brand story, preferred tone, must-have sections, and any design preferences..."
-                  }
-                  rows={8}
-                  className={cls(
-                    "w-full px-4 py-3 text-sm rounded-xl border-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30 resize-none",
-                    fieldError(formState.aiPrompt)
-                      ? "border-red-300 focus:border-red-500"
-                      : "border-gray-200 dark:border-gray-700 focus:border-indigo-500"
-                  )}
-                />
-                {fieldError(formState.aiPrompt) && (
-                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                    {locale === "tr"
-                      ? "Lütfen AI için bir istem girin"
-                      : "Please provide a prompt for the AI"}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Theme */}
-          {currentStep === "theme" && (
+      {/* Main Content */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-8">
+          
+          {/* Step 1: Template Selection */}
+          {currentStep === "template" && (
             <div className="space-y-6 animate-fadeIn">
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-600 to-rose-600 text-white mb-4 shadow-lg shadow-pink-500/30">
-                  <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-600 via-rose-600 to-orange-600 bg-clip-text text-transparent mb-2">
-                  {locale === "tr" ? "Tema Seçiniz" : "Choose Your Theme"}
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  {locale === "tr" ? "Şablon Seçin" : "Choose a Template"}
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  {locale === "tr"
-                    ? "Size uygun temayı seçin"
-                    : "Pick a theme that suits you"}
+                <p className="text-gray-600 dark:text-gray-400">
+                  {locale === "tr" 
+                    ? "İşletmeniz için en uygun şablonu seçin" 
+                    : "Select the perfect template for your business"}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {themeData.map((theme: any) => {
-                  const isSelected = formState.themeId === theme.id;
-                  // Tema klasör adını id'den üret (örnek: business-modern, portfolio-creative vs.)
-                  // id'yi dosya/folder ismine uygun şekilde eşleştirmeniz gerekebilir!
-                  // Örnek eşleme:
-                  const themeFolderMap: Record<string, string> = {
-                    'modern-gradient': 'business-modern',
-                    'minimal-light': 'portfolio-minimal',
-                    'dark-elegant': 'portfolio-creative',
-                    'warm-sunset': 'agency-modern',
-                    'ocean-breeze': 'saas-modern',
-                    'forest-green': 'restaurant-elegant',
-                  };
-                  const folder = themeFolderMap[theme.id] || theme.id;
-                  const previewImg = `/templates/${folder}/${locale}/preview.png`;
-                  const previewHtml = `/templates/${folder}/${locale}/preview.html`;
-                  return (
-                    <button
-                      type="button"
-                      key={theme.id}
-                      onClick={() => updateForm("themeId", theme.id)}
-                      onDoubleClick={() => window.open(previewHtml, '_blank')}
-                      className={cls(
-                        "group relative rounded-2xl border-2 transition-all duration-300 text-left overflow-hidden transform hover:scale-105 hover:-translate-y-1",
-                        isSelected
-                          ? "border-indigo-500 shadow-2xl shadow-indigo-500/30 scale-105"
-                          : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 shadow-lg hover:shadow-xl"
-                      )}
-                    >
-                      <div className="h-40 w-full relative">
-                        <img
-                          src={previewImg}
-                          alt={theme.name + ' preview'}
-                          className={cls(
-                            folder === 'business-modern'
-                              ? 'object-cover object-top scale-110'
-                              : 'object-cover object-top w-full h-full rounded-t-2xl'
-                          )}
-                          style={{ pointerEvents: 'none' }}
-                        />
-                        {isSelected && (
-                          <div className="absolute inset-0 flex items-center justify-center animate-scaleIn">
-                            <div className="w-12 h-12 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center shadow-2xl">
-                              <svg className="w-7 h-7 text-indigo-600 dark:text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="relative bg-white dark:bg-gray-900 p-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-sm text-gray-900 dark:text-white mb-1 truncate">
-                              {theme.name}
-                            </h4>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-                              {theme.description}
-                            </p>
-                          </div>
-                          {isSelected && (
-                            <div className="flex-shrink-0 w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
-                          )}
-                        </div>
-                        <div className={cls(
-                          "absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 to-purple-600 transition-all duration-300",
-                          isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-50"
-                        )} />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Review */}
-          {currentStep === "review" && (
-            <div className="space-y-4 animate-fadeIn">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {locale === "tr"
-                    ? "Oluşturmaya hazır mısınız?"
-                    : "Ready to generate?"}
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  {locale === "tr"
-                    ? "Girdilerinizi gözden geçirin"
-                    : "Review your inputs"}
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                {/* Project Card */}
-                <div className="bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">
-                        {locale === "tr" ? "Proje" : "Project"}
-                      </p>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                        {formState.projectName}
-                      </h3>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep("basics")}
-                      className="px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-semibold hover:bg-indigo-100"
-                    >
-                      {locale === "tr" ? "Düzenle" : "Edit"}
-                    </button>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="font-semibold text-gray-700 dark:text-gray-300">{locale === "tr" ? "Hedef:" : "Goal:"}</span>
-                      <p className="text-gray-600 dark:text-gray-400 mt-0.5">{formState.websiteGoal}</p>
-                    </div>
-                    {formState.targetAudience && (
-                      <div>
-                        <span className="font-semibold text-gray-700 dark:text-gray-300">{locale === "tr" ? "Kitle:" : "Audience:"}</span>
-                        <p className="text-gray-600 dark:text-gray-400 mt-0.5">{formState.targetAudience}</p>
-                      </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {themeData.map((theme) => (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => setSelectedTemplate(theme.id)}
+                    className={cls(
+                      "relative group border-2 rounded-xl p-4 text-left transition-all duration-300 hover:shadow-lg",
+                      selectedTemplate === theme.id
+                        ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20"
+                        : "border-gray-200 dark:border-gray-700 hover:border-indigo-300"
                     )}
-                  </div>
-                </div>
-
-                {/* Theme Card */}
-                  {selectedTheme ? (
-                    <div
-                      className="relative bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 border border-gray-200 dark:border-gray-700 cursor-pointer"
-                      onDoubleClick={() => setShowPreviewModal(true)}
-                      style={{ userSelect: "none" }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 relative flex items-center justify-center overflow-hidden">
-                            <img
-                              src={`/templates/${selectedTheme.folder || selectedTheme.id}/${locale}/preview.png`}
-                              alt={selectedTheme.name}
-                              className="w-full h-full object-cover rounded-lg absolute inset-0"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.parentElement?.querySelector('.theme-fallback')?.classList.remove('hidden');
-                              }}
-                            />
-                            <span className="theme-fallback text-white font-bold text-base z-10 select-none text-center w-full hidden">
-                              {selectedTheme.name.split(' ')[0]}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase mb-1">
-                              {locale === "tr" ? "Tema" : "Theme"}
-                            </p>
-                            <p className="font-bold text-lg text-gray-900 dark:text-white">
-                              {selectedTheme.name}
-                            </p>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
-                              {selectedTheme.description}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setCurrentStep("theme")}
-                          className="px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-semibold hover:bg-indigo-100"
-                        >
-                          {locale === "tr" ? "Değiştir" : "Change"}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="relative bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 border border-red-400 dark:border-red-700 flex items-center gap-3">
-                      <div className="w-16 h-16 flex items-center justify-center rounded-lg bg-gradient-to-br from-red-400 to-pink-400">
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  >
+                    {/* Preview Image */}
+                    <div className="aspect-video bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg mb-3 overflow-hidden flex items-center justify-center relative">
+                      <img 
+                        src={theme.preview} 
+                        alt={theme.name}
+                        className="w-full h-full object-cover absolute inset-0"
+                        loading="lazy"
+                      />
+                      {/* Fallback placeholder - shown if image fails */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 peer-[img:error]:opacity-100 transition-opacity">
+                        <svg className="w-16 h-16 text-gray-300 dark:text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
                         </svg>
                       </div>
-                      <div>
-                        <p className="text-xs font-bold text-red-600 dark:text-red-400 uppercase mb-1">
-                          {locale === "tr" ? "Tema seçilmedi" : "No theme selected"}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {locale === "tr"
-                            ? "Lütfen bir tema seçin."
-                            : "Please select a theme."}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep("theme")}
-                        className="ml-auto px-3 py-1 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-100"
-                      >
-                        {locale === "tr" ? "Tema Seç" : "Choose Theme"}
-                      </button>
                     </div>
-                  )}
-                  {/* Modal for preview.html */}
-                  {showPreviewModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[90vw] max-w-3xl h-[80vh] flex flex-col">
-                        <button
-                          className="absolute top-3 right-3 z-10 bg-gray-100 dark:bg-gray-800 rounded-full p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
-                          onClick={() => setShowPreviewModal(false)}
-                          aria-label="Kapat"
-                        >
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                        <iframe
-                          src={previewPath}
-                          title="Theme Preview"
-                          className="flex-1 w-full h-full rounded-2xl border-none"
-                          style={{ background: "transparent" }}
-                        />
+
+                    {/* Theme Info */}
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-1">{theme.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{theme.description}</p>
+
+                    {/* Features */}
+                    {theme.features.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {theme.features.slice(0, 3).map((feature, idx) => (
+                          <span 
+                            key={idx}
+                            className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded"
+                          >
+                            {feature}
+                          </span>
+                        ))}
                       </div>
-                    </div>
+                    )}
+
+                    {/* Selected Indicator */}
+                    {selectedTemplate === theme.id && (
+                      <div className="absolute top-2 right-2 w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {!selectedTemplate && hasInteracted && (
+                <p className="text-center text-sm text-red-600 dark:text-red-400">
+                  {locale === "tr" ? "Lütfen bir şablon seçin" : "Please select a template"}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Business Info */}
+          {currentStep === "business" && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  {locale === "tr" ? "İşletme Bilgileri" : "Business Information"}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {locale === "tr" 
+                    ? "İşletmeniz hakkında temel bilgileri girin" 
+                    : "Tell us about your business"}
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Business Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                    {locale === "tr" ? "İşletme Adı" : "Business Name"} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={templateData.businessName || ""}
+                    onChange={(e) => updateTemplateData("businessName", e.target.value)}
+                    placeholder={locale === "tr" ? "örn. TechCorp Solutions" : "e.g. TechCorp Solutions"}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all"
+                  />
+                  {!templateData.businessName && hasInteracted && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {locale === "tr" ? "Lütfen işletme adını girin" : "Please enter business name"}
+                    </p>
                   )}
+                </div>
+
+                {/* Industry */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                    {locale === "tr" ? "Sektör" : "Industry"} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={templateData.industry || ""}
+                    onChange={(e) => updateTemplateData("industry", e.target.value)}
+                    placeholder={locale === "tr" ? "örn. Teknoloji Danışmanlığı" : "e.g. Technology Consulting"}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all"
+                  />
+                  {!templateData.industry && hasInteracted && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {locale === "tr" ? "Lütfen sektörü girin" : "Please enter industry"}
+                    </p>
+                  )}
+                </div>
+
+                {/* Target Audience */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                    {locale === "tr" ? "Hedef Kitle" : "Target Audience"}
+                  </label>
+                  <textarea
+                    value={templateData.targetAudience || ""}
+                    onChange={(e) => updateTemplateData("targetAudience", e.target.value)}
+                    placeholder={locale === "tr" ? "örn. Kurumsal işletmeler" : "e.g. Enterprise businesses"}
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all resize-none"
+                  />
+                </div>
+
+                {/* Contact Info */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                      {locale === "tr" ? "E-posta" : "Email"}
+                    </label>
+                    <input
+                      type="email"
+                      value={templateData.contactEmail || ""}
+                      onChange={(e) => updateTemplateData("contactEmail", e.target.value)}
+                      placeholder="contact@example.com"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                      {locale === "tr" ? "Telefon" : "Phone"}
+                    </label>
+                    <input
+                      type="tel"
+                      value={templateData.contactPhone || ""}
+                      onChange={(e) => updateTemplateData("contactPhone", e.target.value)}
+                      placeholder="+1 (555) 123-4567"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                    {locale === "tr" ? "Adres" : "Address"}
+                  </label>
+                  <input
+                    type="text"
+                    value={templateData.contactAddress || ""}
+                    onChange={(e) => updateTemplateData("contactAddress", e.target.value)}
+                    placeholder={locale === "tr" ? "İstanbul, Türkiye" : "San Francisco, CA"}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all"
+                  />
+                </div>
               </div>
             </div>
           )}
 
-          {/* Navigation - Premium */}
-          <div className="flex items-center justify-between mt-6 pt-5 border-t-2 border-gray-200/50 dark:border-gray-700/50">
-            {currentStepIndex > 0 ? (
-              <button
-                type="button"
-                onClick={handleBack}
-                className="group relative px-5 py-2.5 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold text-sm hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-lg transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
-                disabled={isSubmitting}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-transparent dark:from-gray-700 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <svg className="w-4 h-4 relative z-10 transition-transform group-hover:-translate-x-0.5 duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
-                </svg>
-                <span className="relative z-10">{locale === "tr" ? "Geri" : "Back"}</span>
-              </button>
-            ) : (
-              <div />
-            )}
+          {/* Step 3: Content */}
+          {currentStep === "content" && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  {locale === "tr" ? "İçerik Bilgileri" : "Content Information"}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {locale === "tr" 
+                    ? "Web sitenizin içeriğini oluşturun" 
+                    : "Create your website content"}
+                </p>
+              </div>
 
-            {currentStep === "review" ? (
+              <div className="space-y-6">
+                {/* Hero Section */}
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-4">
+                  <h3 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">
+                    {locale === "tr" ? "Ana Başlık (Hero)" : "Hero Section"}
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                        {locale === "tr" ? "Başlık" : "Title"} <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={templateData.heroTitle || ""}
+                        onChange={(e) => updateTemplateData("heroTitle", e.target.value)}
+                        placeholder={locale === "tr" ? "örn. İşinizi AI ile Dönüştürün" : "e.g. Transform Your Business with AI"}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                        {locale === "tr" ? "Alt Başlık" : "Subtitle"}
+                      </label>
+                      <input
+                        type="text"
+                        value={templateData.heroSubtitle || ""}
+                        onChange={(e) => updateTemplateData("heroSubtitle", e.target.value)}
+                        placeholder={locale === "tr" ? "Kısa açıklama" : "Brief description"}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                        {locale === "tr" ? "Buton Metni" : "Button Text"}
+                      </label>
+                      <input
+                        type="text"
+                        value={templateData.heroCtaText || ""}
+                        onChange={(e) => updateTemplateData("heroCtaText", e.target.value)}
+                        placeholder={locale === "tr" ? "örn. Başlayın" : "e.g. Get Started"}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* About Section */}
+                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4">
+                  <h3 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">
+                    {locale === "tr" ? "Hakkımızda" : "About Section"}
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                        {locale === "tr" ? "Başlık" : "Title"}
+                      </label>
+                      <input
+                        type="text"
+                        value={templateData.aboutTitle || ""}
+                        onChange={(e) => updateTemplateData("aboutTitle", e.target.value)}
+                        placeholder={locale === "tr" ? "Hakkımızda" : "About Us"}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                        {locale === "tr" ? "İçerik" : "Content"} <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        value={templateData.aboutContent || ""}
+                        onChange={(e) => updateTemplateData("aboutContent", e.target.value)}
+                        placeholder={locale === "tr" ? "İşletmeniz hakkında detaylı bilgi..." : "Tell your story..."}
+                        rows={4}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all resize-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Services */}
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                      {locale === "tr" ? "Hizmetler" : "Services"}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={addService}
+                      className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                    >
+                      + {locale === "tr" ? "Ekle" : "Add"}
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {(templateData.services || []).map((service, index) => (
+                      <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-gray-200 dark:border-gray-700">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 space-y-2">
+                            <input
+                              type="text"
+                              value={service.title}
+                              onChange={(e) => updateService(index, "title", e.target.value)}
+                              placeholder={locale === "tr" ? "Hizmet adı" : "Service name"}
+                              className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 text-sm"
+                            />
+                            <textarea
+                              value={service.description}
+                              onChange={(e) => updateService(index, "description", e.target.value)}
+                              placeholder={locale === "tr" ? "Açıklama" : "Description"}
+                              rows={2}
+                              className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 text-sm resize-none"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeService(index)}
+                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Testimonials */}
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                      {locale === "tr" ? "Referanslar" : "Testimonials"}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={addTestimonial}
+                      className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                    >
+                      + {locale === "tr" ? "Ekle" : "Add"}
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {(templateData.testimonials || []).map((testimonial, index) => (
+                      <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-gray-200 dark:border-gray-700">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 space-y-2">
+                            <div className="grid grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                value={testimonial.name}
+                                onChange={(e) => updateTestimonial(index, "name", e.target.value)}
+                                placeholder={locale === "tr" ? "İsim" : "Name"}
+                                className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 text-sm"
+                              />
+                              <input
+                                type="text"
+                                value={testimonial.role}
+                                onChange={(e) => updateTestimonial(index, "role", e.target.value)}
+                                placeholder={locale === "tr" ? "Ünvan" : "Role"}
+                                className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 text-sm"
+                              />
+                            </div>
+                            <input
+                              type="text"
+                              value={testimonial.company}
+                              onChange={(e) => updateTestimonial(index, "company", e.target.value)}
+                              placeholder={locale === "tr" ? "Şirket" : "Company"}
+                              className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 text-sm"
+                            />
+                            <textarea
+                              value={testimonial.content}
+                              onChange={(e) => updateTestimonial(index, "content", e.target.value)}
+                              placeholder={locale === "tr" ? "Yorum" : "Comment"}
+                              rows={2}
+                              className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 text-sm resize-none"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeTestimonial(index)}
+                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: AI Generate */}
+          {currentStep === "ai-generate" && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  🤖 {locale === "tr" ? "AI ile İçerik Oluştur" : "Generate Content with AI"}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {locale === "tr" 
+                    ? "Yapay zeka sitenizin içeriğini oluşturacak. İstediğiniz değişiklikleri açıklayın." 
+                    : "AI will generate your website content. Describe any specific requirements."}
+                </p>
+              </div>
+
+              {/* Özet ve Tema Önizlemesi - Tek Satırda */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Özet */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                  <h3 className="font-bold text-sm mb-3 text-gray-900 dark:text-white">
+                    {locale === "tr" ? "📋 Özet" : "📋 Summary"}
+                  </h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🏢</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-gray-700 dark:text-gray-300 truncate">
+                          {templateData.businessName}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{templateData.industry}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                      <span>📝</span>
+                      <span>{(templateData.services || []).length} {locale === "tr" ? "hizmet" : "services"}</span>
+                      <span>•</span>
+                      <span>{(templateData.testimonials || []).length} {locale === "tr" ? "referans" : "testimonials"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Seçili Tema */}
+                {selectedTheme && (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                    <h3 className="font-bold text-sm mb-3 text-gray-900 dark:text-white">
+                      {locale === "tr" ? "🎨 Seçili Şablon" : "🎨 Selected Template"}
+                    </h3>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="relative w-24 h-20 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                          <img
+                            src={selectedTheme.preview}
+                            alt={selectedTheme.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `
+                                  <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30">
+                                    <div class="text-2xl">🎨</div>
+                                  </div>
+                                `;
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                          {selectedTheme.name}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* AI Prompt */}
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-6 border-2 border-indigo-200 dark:border-indigo-800">
+                <label className="block text-sm font-bold text-gray-900 dark:text-white mb-3">
+                  {locale === "tr" ? "AI'a Talimatlar (Opsiyonel)" : "Instructions for AI (Optional)"}
+                </label>
+                <textarea
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder={locale === "tr" 
+                    ? "Örnek: 'Profesyonel ve modern bir ton kullan. Teknoloji odaklı şirketimiz için etkileyici bir hero başlığı oluştur. Hizmetlerimizi açık ve net bir şekilde anlat...'"
+                    : "Example: 'Use a professional and modern tone. Create an impressive hero title for our tech-focused company. Describe our services clearly and concisely...'"}
+                  rows={8}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all resize-none"
+                />
+                <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                  💡 {locale === "tr" 
+                    ? "Boş bırakırsanız, AI girdiğiniz bilgileri kullanarak otomatik olarak içerik oluşturacaktır." 
+                    : "If left empty, AI will automatically generate content based on the information you provided."}
+                </p>
+              </div>
+
               <button
                 type="button"
-                onClick={handleSubmit}
-                className="group relative px-8 py-3 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold text-sm shadow-2xl hover:shadow-indigo-500/50 hover:scale-105 transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
-                disabled={isSubmitting}
+                onClick={() => handleAIGenerate(false)}
+                disabled={isGenerating}
+                className="w-full py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-xl font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-3"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                <span className="relative z-10 flex items-center gap-2">
-                  {isSubmitting ? (
+                {isGenerating ? (
+                  <>
+                    <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    {locale === "tr" ? "AI İçerik Oluşturuyor..." : "AI Generating Content..."}
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M13 7H7v6h6V7z" />
+                      <path fillRule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5h10v10H5V5z" clipRule="evenodd" />
+                    </svg>
+                    {locale === "tr" ? "🚀 AI ile Web Sitesi Oluştur" : "🚀 Generate Website with AI"}
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Step 6: Preview */}
+          {currentStep === "preview" && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  👀 {locale === "tr" ? "Canlı Önizleme" : "Live Preview"}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {locale === "tr" 
+                    ? "Web sitenizi önizleyin, değişiklik isteyin veya onaylayın" 
+                    : "Preview your website, request changes, or approve"}
+                </p>
+              </div>
+
+              {/* Preview Frame */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border-2 border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                      {templateData.businessName}.nocodepage.ai
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const win = window.open('', '_blank');
+                        if (win) {
+                          win.document.open();
+                          win.document.write(generatedHtml);
+                          win.document.close();
+                        }
+                      }}
+                      className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                    >
+                      {locale === "tr" ? "Yeni Sekmede Aç" : "Open in New Tab"}
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Preview iframe */}
+                <div className="w-full bg-gray-50 dark:bg-gray-900 rounded-xl overflow-hidden" style={{ height: '600px' }}>
+                  {generatedHtml ? (
+                    <iframe
+                      srcDoc={generatedHtml}
+                      className="w-full h-full border-0"
+                      title="Website Preview"
+                      sandbox="allow-scripts allow-same-origin"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-400">
+                      <div className="text-center">
+                        <svg className="w-16 h-16 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                        </svg>
+                        <p>{locale === "tr" ? "Önizleme yükleniyor..." : "Loading preview..."}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Refinement Section */}
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-6 border-2 border-purple-200 dark:border-purple-800">
+                <h3 className="font-bold text-lg mb-3 text-gray-900 dark:text-white flex items-center gap-2">
+                  <span>✨</span>
+                  {locale === "tr" ? "Değişiklik İste" : "Request Changes"}
+                </h3>
+                <textarea
+                  value={refinementPrompt}
+                  onChange={(e) => setRefinementPrompt(e.target.value)}
+                  placeholder={locale === "tr" 
+                    ? "Örnek: 'Hero başlığını daha etkileyici yap, renkleri daha canlı hale getir, hizmetler bölümüne daha fazla detay ekle...'"
+                    : "Example: 'Make the hero title more catchy, use brighter colors, add more details to the services section...'"}
+                  rows={4}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all resize-none mb-3"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAIGenerate(true)}
+                  disabled={isGenerating || !refinementPrompt.trim()}
+                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isGenerating ? (
                     <>
                       <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      {locale === "tr" ? "Oluşturuluyor..." : "Creating..."}
+                      {locale === "tr" ? "Yeniden Oluşturuluyor..." : "Regenerating..."}
                     </>
                   ) : (
                     <>
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
                       </svg>
-                      {locale === "tr" ? "Web Sitesi Oluştur" : "Create Website"}
-                      <svg className="w-5 h-5 transition-transform group-hover:translate-x-1 duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
+                      {locale === "tr" ? "Değişiklikleri Uygula" : "Apply Changes"}
                     </>
                   )}
-                </span>
+                </button>
+              </div>
+
+              {/* Generation History */}
+              {generationHistory.length > 1 && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border-2 border-gray-200 dark:border-gray-700">
+                  <h3 className="font-bold text-sm mb-2 text-gray-900 dark:text-white">
+                    {locale === "tr" ? "Versiyon Geçmişi" : "Version History"}
+                  </h3>
+                  <div className="flex gap-2 overflow-x-auto pb-2">
+                    {generationHistory.map((_, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => setGeneratedHtml(generationHistory[index])}
+                        className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
+                      >
+                        {locale === "tr" ? "Versiyon" : "Version"} {index + 1}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <button
+              type="button"
+              onClick={handleBack}
+              disabled={currentStep === "template"}
+              className={cls(
+                "px-6 py-3 rounded-lg font-medium transition-all",
+                currentStep === "template"
+                  ? "invisible"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              )}
+            >
+              ← {locale === "tr" ? "Geri" : "Back"}
+            </button>
+
+            {currentStep === "preview" ? (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting || !generatedHtml}
+                className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                {isSubmitting 
+                  ? (locale === "tr" ? "Yayınlanıyor..." : "Deploying...") 
+                  : (locale === "tr" ? "Onayla ve Yayınla" : "Approve & Deploy")}
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleNext}
-                className="group relative px-8 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm shadow-xl hover:shadow-2xl hover:shadow-indigo-500/40 hover:scale-105 transition-all duration-300 flex items-center gap-2 overflow-hidden"
+                className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-bold hover:shadow-lg transition-all"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                <span className="relative z-10 flex items-center gap-2">
-                  {locale === "tr" ? "Devam Et" : "Continue"}
-                  <svg className="w-5 h-5 transition-transform group-hover:translate-x-1 duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </span>
+                {locale === "tr" ? "İleri" : "Next"} →
               </button>
             )}
           </div>
         </div>
       </div>
-      </div>
 
-      {/* Premium Styles & Animations */}
+      {/* CSS Animations */}
       <style jsx>{`
-        /* Fade In Animation */
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -764,58 +1113,9 @@ export default function CreateProjectPage() {
             transform: translateY(0);
           }
         }
+        
         .animate-fadeIn {
           animation: fadeIn 0.4s ease-out;
-        }
-        
-        /* Scale In Animation */
-        @keyframes scaleIn {
-          from {
-            transform: scale(0.8);
-            opacity: 0;
-          }
-          to {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-        .animate-scaleIn {
-          animation: scaleIn 0.3s ease-out;
-        }
-        
-        /* Blob Animation */
-        @keyframes blob {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-          }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-        
-        /* Shimmer Animation */
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-        .animate-shimmer {
-          animation: shimmer 2s infinite;
         }
       `}</style>
     </div>

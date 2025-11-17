@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from './Navbar';
 import Footer from './Footer';
+import SupabaseErrorHandler from './SupabaseErrorHandler';
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 import type { Session } from '@supabase/supabase-js';
 
@@ -30,7 +31,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
       } catch (error) {
-        console.error('Session check error:', error);
+        // Supabase hatalarını sessizce logla
+        console.warn('Session check failed (non-critical):', error);
       }
     };
     
@@ -47,11 +49,17 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   if (!shouldShowLayout) {
     // For login, forgot-password, reset-password pages - no layout
-    return <>{children}</>;
+    return (
+      <>
+        <SupabaseErrorHandler />
+        {children}
+      </>
+    );
   }
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SupabaseErrorHandler />
       <Navbar session={session} />
       <main className="flex-1">
         {children}
