@@ -1,9 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import type { TemplateData, ServiceItem, TestimonialItem } from "@/types/template";
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
 
 type WizardStep = "template" | "business" | "content" | "ai-generate" | "preview";
 
@@ -34,32 +40,59 @@ const themeFolders = [
 ];
 
 function getThemeData(locale: string): ThemeOption[] {
-  try {
-    return themeFolders.map((folder) => {
-      let config;
-      let configLocale = locale;
-      try {
-        config = require(`../../../../public/templates/${folder}/${locale}/config.json`);
-      } catch {
-        try {
-          config = require(`../../../../public/templates/${folder}/en/config.json`);
-          configLocale = 'en';
-        } catch {
-          return null;
-        }
-      }
-      return {
-        id: config.id,
-        name: locale === 'tr' ? config.name : config.name_en || config.name,
-        description: locale === 'tr' ? config.description : config.description_en || config.description,
-        category: config.category || 'business',
-        preview: `/templates/${folder}/${configLocale}/preview.png`,
-        features: config.features || [],
-      };
-    }).filter(Boolean) as ThemeOption[];
-  } catch {
-    return [];
-  }
+  // Return hardcoded theme data since require() doesn't work in Next.js App Router
+  const themes: ThemeOption[] = [
+    {
+      id: "business-modern",
+      name: locale === 'tr' ? "Modern İşletme" : "Business Modern",
+      description: locale === 'tr' ? "Profesyonel ve modern işletme sitesi" : "Professional and modern business website",
+      category: "business",
+      preview: `/templates/business-modern/preview.html`,
+      features: ["Responsive", "Modern", "Professional"],
+    },
+    {
+      id: "portfolio-creative",
+      name: locale === 'tr' ? "Yaratıcı Portfolyo" : "Creative Portfolio",
+      description: locale === 'tr' ? "Yaratıcı profesyoneller için portfolyo" : "Portfolio for creative professionals",
+      category: "portfolio",
+      preview: `/templates/portfolio-creative/preview.html`,
+      features: ["Creative", "Showcase", "Modern"],
+    },
+    {
+      id: "agency-modern",
+      name: locale === 'tr' ? "Modern Ajans" : "Modern Agency",
+      description: locale === 'tr' ? "Dijital ajanslar için modern tasarım" : "Modern design for digital agencies",
+      category: "agency",
+      preview: `/templates/agency-modern/preview.html`,
+      features: ["Professional", "Clean", "Modern"],
+    },
+    {
+      id: "landing-startup",
+      name: locale === 'tr' ? "Startup Landing" : "Startup Landing",
+      description: locale === 'tr' ? "Startup'lar için landing page" : "Landing page for startups",
+      category: "landing",
+      preview: `/templates/landing-startup/preview.html`,
+      features: ["Conversion", "Modern", "Fast"],
+    },
+    {
+      id: "blog-minimal",
+      name: locale === 'tr' ? "Minimal Blog" : "Minimal Blog",
+      description: locale === 'tr' ? "Sade ve şık blog tasarımı" : "Clean and elegant blog design",
+      category: "blog",
+      preview: `/templates/blog-minimal/preview.html`,
+      features: ["Minimal", "Readable", "Clean"],
+    },
+    {
+      id: "personal-cv",
+      name: locale === 'tr' ? "Kişisel CV" : "Personal CV",
+      description: locale === 'tr' ? "Profesyonel CV ve özgeçmiş sitesi" : "Professional CV and resume website",
+      category: "personal",
+      preview: `/templates/personal-cv/preview.html`,
+      features: ["Professional", "Clean", "Simple"],
+    },
+  ];
+  
+  return themes.filter(theme => themeFolders.includes(theme.id));
 }
 
 function cls(...classes: Array<string | false | null | undefined>) {
@@ -128,53 +161,53 @@ export default function CreateProjectPage() {
     value: TemplateData[Key]
   ) => {
     setHasInteracted(true);
-    setTemplateData((prev) => ({
+    setTemplateData((prev: Partial<TemplateData>) => ({
       ...prev,
       [key]: value,
     }));
   };
 
   const addService = () => {
-    setTemplateData(prev => ({
+    setTemplateData((prev: Partial<TemplateData>) => ({
       ...prev,
       services: [...(prev.services || []), { title: "", description: "", icon: "" }]
     }));
   };
 
   const removeService = (index: number) => {
-    setTemplateData(prev => ({
+    setTemplateData((prev: Partial<TemplateData>) => ({
       ...prev,
-      services: (prev.services || []).filter((_, i) => i !== index)
+      services: (prev.services || []).filter((_: ServiceItem, i: number) => i !== index)
     }));
   };
 
   const updateService = (index: number, field: keyof ServiceItem, value: string) => {
-    setTemplateData(prev => ({
+    setTemplateData((prev: Partial<TemplateData>) => ({
       ...prev,
-      services: (prev.services || []).map((service, i) => 
+      services: (prev.services || []).map((service: ServiceItem, i: number) => 
         i === index ? { ...service, [field]: value } : service
       )
     }));
   };
 
   const addTestimonial = () => {
-    setTemplateData(prev => ({
+    setTemplateData((prev: Partial<TemplateData>) => ({
       ...prev,
       testimonials: [...(prev.testimonials || []), { name: "", role: "", company: "", content: "" }]
     }));
   };
 
   const removeTestimonial = (index: number) => {
-    setTemplateData(prev => ({
+    setTemplateData((prev: Partial<TemplateData>) => ({
       ...prev,
-      testimonials: (prev.testimonials || []).filter((_, i) => i !== index)
+      testimonials: (prev.testimonials || []).filter((_: TestimonialItem, i: number) => i !== index)
     }));
   };
 
   const updateTestimonial = (index: number, field: keyof TestimonialItem, value: string) => {
-    setTemplateData(prev => ({
+    setTemplateData((prev: Partial<TemplateData>) => ({
       ...prev,
-      testimonials: (prev.testimonials || []).map((testimonial, i) => 
+      testimonials: (prev.testimonials || []).map((testimonial: TestimonialItem, i: number) => 
         i === index ? { ...testimonial, [field]: value } : testimonial
       )
     }));
@@ -700,7 +733,7 @@ export default function CreateProjectPage() {
                     </button>
                   </div>
                   <div className="space-y-3">
-                    {(templateData.services || []).map((service, index) => (
+                    {(templateData.services || []).map((service: ServiceItem, index: number) => (
                       <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-gray-200 dark:border-gray-700">
                         <div className="flex items-start gap-3">
                           <div className="flex-1 space-y-2">
@@ -749,7 +782,7 @@ export default function CreateProjectPage() {
                     </button>
                   </div>
                   <div className="space-y-3">
-                    {(templateData.testimonials || []).map((testimonial, index) => (
+                    {(templateData.testimonials || []).map((testimonial: TestimonialItem, index: number) => (
                       <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-gray-200 dark:border-gray-700">
                         <div className="flex items-start gap-3">
                           <div className="flex-1 space-y-2">

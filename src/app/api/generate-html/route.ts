@@ -8,15 +8,29 @@ const anthropic = new Anthropic({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { prompt, locale = "tr" } = body;
+    const { prompt, currentHtml = null, conversationHistory = [], locale = "tr" } = body;
 
     if (!prompt || !prompt.trim()) {
       return NextResponse.json({ error: "Missing prompt" }, { status: 400 });
     }
 
-    console.log("🎨 Generating HTML from scratch with direct prompt...");
+    console.log(`🎨 ${currentHtml ? 'Modifying existing website' : 'Generating HTML from scratch'}...`);
 
-    const systemPrompt = `Expert Full-Stack Web Developer. Generate COMPLETELY FROM SCRATCH professional HTML+CSS website.
+    const systemPrompt = currentHtml 
+      ? `Expert Full-Stack Web Developer. Modify existing HTML+CSS website based on user requests.
+
+RULES:
+- Keep existing structure unless explicitly requested to change
+- Modern CSS3 (flexbox, grid, variables)
+- Responsive (mobile-first, breakpoints: 640px, 1024px)  
+- Inline CSS (in <style> tag)
+- Self-contained (NO external files, system fonts only)
+- Realistic content (NO Lorem Ipsum)
+- Smooth animations
+- Accessibility (semantic HTML, ARIA)
+
+OUTPUT: Return ONLY the complete modified HTML code. No explanations!`
+      : `Expert Full-Stack Web Developer. Generate COMPLETELY FROM SCRATCH professional HTML+CSS website.
 
 RULES:
 - Modern CSS3 (flexbox, grid, variables)
@@ -30,8 +44,31 @@ RULES:
 
 OUTPUT: Return ONLY working HTML code. No explanations!`;
 
-    const userPrompt = locale === "tr" 
-      ? `Kullanıcı İsteği: "${prompt}"
+    let userPrompt = "";
+    
+    if (currentHtml) {
+      // Modification mode
+      userPrompt = locale === "tr"
+        ? `Mevcut Web Sitesi:
+\`\`\`html
+${currentHtml}
+\`\`\`
+
+Kullanıcı İsteği: "${prompt}"
+
+GÖREV: Yukarıdaki HTML'i kullanıcı isteğine göre değiştir. SADECE TAM HTML KODUNU DÖNDÜR!`
+        : `Current Website:
+\`\`\`html
+${currentHtml}
+\`\`\`
+
+User Request: "${prompt}"
+
+TASK: Modify the above HTML according to user request. RETURN ONLY COMPLETE HTML CODE!`;
+    } else {
+      // Generation from scratch mode
+      userPrompt = locale === "tr" 
+        ? `Kullanıcı İsteği: "${prompt}"
 
 GÖREV:
 1. İsteği analiz et (işletme/proje adı, sektör, hizmetler, stil)
@@ -48,7 +85,7 @@ SAYFA YAPISI (Tek sayfa):
 - Footer: Logo, linkler, sosyal medya, telif
 
 İçeriği ${prompt} için ÖZELLEŞTİR. Mobile-first tasarım. Sistem fontları kullan. ŞİMDİ OLUŞTUR!`
-      : `User Request: "${prompt}"
+        : `User Request: "${prompt}"
 
 TASK:
 1. Analyze request (business/project name, sector, services, style)
@@ -65,6 +102,7 @@ PAGE STRUCTURE (Single-page):
 - Footer: Logo, links, social media, copyright
 
 CUSTOMIZE content for ${prompt}. Mobile-first design. System fonts. CREATE NOW!`;
+    }
 
     console.log("🤖 Calling Claude 3.5 Haiku (fast & cost-effective)...");
 
@@ -99,9 +137,10 @@ CUSTOMIZE content for ${prompt}. Mobile-first design. System fonts. CREATE NOW!`
       success: true,
       html: html.trim(),
       businessName: businessName,
+      explanation: currentHtml ? (locale === 'tr' ? '✅ Değişiklikler uygulandı!' : '✅ Changes applied!') : (locale === 'tr' ? '✅ Web siteniz oluşturuldu!' : '✅ Website created!'),
       model: "claude-3-5-haiku-20241022",
       tokensUsed: message.usage.output_tokens,
-      method: "direct-generation",
+      method: currentHtml ? "modification" : "direct-generation",
     });
 
   } catch (error: any) {
