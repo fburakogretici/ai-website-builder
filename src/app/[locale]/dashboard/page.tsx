@@ -65,6 +65,35 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDeleteWebsite = async (websiteId: string, websiteName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    const confirmed = window.confirm(
+      locale === 'tr' 
+        ? `"${websiteName}" adlı siteyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`
+        : `Are you sure you want to delete "${websiteName}"? This action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase!
+        .from('websites')
+        .delete()
+        .eq('id', websiteId);
+
+      if (error) throw error;
+
+      // Refresh the websites list
+      if (session) {
+        loadWebsites(session.user.id);
+      }
+    } catch (error) {
+      console.error('Error deleting website:', error);
+      alert(locale === 'tr' ? 'Site silinirken bir hata oluştu.' : 'Error deleting website.');
+    }
+  };
+
   if (!session) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
@@ -196,13 +225,24 @@ export default function DashboardPage() {
                         <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1 text-base">
                           {website.name}
                         </h3>
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${
-                          website.status === 'published' 
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-400'
-                        }`}>
-                          {website.status === 'published' ? (locale === 'tr' ? 'Yayında' : 'Live') : (locale === 'tr' ? 'Taslak' : 'Draft')}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${
+                            website.status === 'published' 
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-400'
+                          }`}>
+                            {website.status === 'published' ? (locale === 'tr' ? 'Yayında' : 'Live') : (locale === 'tr' ? 'Taslak' : 'Draft')}
+                          </span>
+                          <button
+                            onClick={(e) => handleDeleteWebsite(website.id, website.name, e)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                            title={locale === 'tr' ? 'Sil' : 'Delete'}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                       
                       <p className="text-xs text-gray-500 dark:text-gray-400">
