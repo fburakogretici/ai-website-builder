@@ -171,7 +171,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <aside className="lg:col-span-1">
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden sticky top-24">
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden sticky">
               <div className="p-4 border-b border-gray-200/50 dark:border-gray-700/50">
                 <h2 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
                   {t("settings.title")}

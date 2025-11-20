@@ -3,6 +3,7 @@
 import { useRouter, usePathname } from "next/navigation";
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Avatar from '@/components/Avatar';
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
@@ -19,7 +20,9 @@ export default function Navbar({ session }: NavbarProps) {
   const locale = useLocale();
   const t = useTranslations();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const supabase = useSupabaseClient();
   const { profile } = useUserProfile({ supabase, session });
 
@@ -31,8 +34,13 @@ export default function Navbar({ session }: NavbarProps) {
   const avatarUrl = profile.avatarUrl;
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
+          buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
         setShowAccountMenu(false);
       }
     };
@@ -48,9 +56,9 @@ export default function Navbar({ session }: NavbarProps) {
   };
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <nav className="relative w-full border-b border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm overflow-visible">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-visible">
+        <div className="flex justify-between items-center h-16 overflow-visible">
           {/* Logo */}
           <button
             onClick={() => router.push(`/${locale}`)}
@@ -100,8 +108,9 @@ export default function Navbar({ session }: NavbarProps) {
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
             {session ? (
-              <div className="relative" ref={dropdownRef}>
+              <>
                 <button
+                  ref={buttonRef}
                   onClick={() => setShowAccountMenu(!showAccountMenu)}
                   className="group flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border border-indigo-200/50 dark:border-indigo-800/50 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-200 hover:scale-[1.02]"
                 >
@@ -131,8 +140,15 @@ export default function Navbar({ session }: NavbarProps) {
                   </svg>
                 </button>
 
-                {showAccountMenu && (
-                  <div className="absolute right-0 mt-3 w-64 bg-white/98 dark:bg-gray-800/98 backdrop-blur-2xl rounded-2xl shadow-2xl border border-indigo-200/40 dark:border-indigo-800/40 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                {mounted && showAccountMenu && createPortal(
+                  <div 
+                    ref={dropdownRef}
+                    className="fixed w-64 bg-white/98 dark:bg-gray-800/98 backdrop-blur-2xl rounded-2xl shadow-2xl border border-indigo-200/40 dark:border-indigo-800/40 overflow-hidden z-[10000] animate-in fade-in slide-in-from-top-2 duration-200"
+                    style={{
+                      top: `${(buttonRef.current?.getBoundingClientRect().bottom || 0) + 12}px`,
+                      right: `${window.innerWidth - (buttonRef.current?.getBoundingClientRect().right || 0)}px`,
+                    }}
+                  >
                     {/* User Info Header */}
                     <div className="px-4 py-3 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40 border-b border-indigo-200/40 dark:border-indigo-800/40">
                       <div className="flex items-center gap-3">
@@ -248,9 +264,10 @@ export default function Navbar({ session }: NavbarProps) {
                         <span>{t('dashboard.accountMenu.logout')}</span>
                       </button>
                     </div>
-                  </div>
+                  </div>,
+                  document.body
                 )}
-              </div>
+              </>
             ) : !isAuthPage && (
               <button
                 onClick={() => router.push(`/${locale}/login`)}
