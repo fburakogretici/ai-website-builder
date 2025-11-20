@@ -474,13 +474,14 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Portfolio Creative Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="relative h-48 w-full">
+              <div className="relative h-48 w-full bg-gradient-to-br from-purple-500 to-pink-500">
                 <Image 
-                  src={`/templates/portfolio-creative/${locale}/preview.png`} 
+                  src="https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&h=400&fit=crop" 
                   alt="Portfolio Creative Theme Preview" 
                   fill 
                   sizes="(max-width: 768px) 100vw, 33vw" 
                   className="object-cover" 
+                  unoptimized
                 />
               </div>
               <div className="p-6">
@@ -505,13 +506,14 @@ export default function Home() {
 
             {/* SaaS Modern Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="relative h-48 w-full">
+              <div className="relative h-48 w-full bg-gradient-to-br from-blue-500 to-cyan-500">
                 <Image 
-                  src={`/templates/business-modern/${locale}/preview.png`} 
+                  src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=400&fit=crop" 
                   alt="SaaS Modern Theme Preview" 
                   fill 
                   sizes="(max-width: 768px) 100vw, 33vw" 
                   className="object-cover" 
+                  unoptimized
                 />
               </div>
               <div className="p-6">
@@ -536,13 +538,14 @@ export default function Home() {
 
             {/* Startup Tech Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="relative h-48 w-full">
+              <div className="relative h-48 w-full bg-gradient-to-br from-indigo-500 to-purple-500">
                 <Image 
-                  src={`/templates/blog-minimal/${locale}/preview.png`} 
+                  src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=400&fit=crop" 
                   alt="Startup Tech Theme Preview" 
                   fill 
                   sizes="(max-width: 768px) 100vw, 33vw" 
                   className="object-cover" 
+                  unoptimized
                 />
               </div>
               <div className="p-6">
