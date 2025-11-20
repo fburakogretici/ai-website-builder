@@ -273,9 +273,9 @@ export default function AIBuilderPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 overflow-hidden">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 bg-gradient-to-r from-indigo-900/40 via-purple-900/40 to-slate-900/40 backdrop-blur-xl border-b border-white/10 shadow-2xl z-50">
+      <div className="flex-shrink-0 bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/50 shadow-2xl z-50">
         <div className="max-w-[95%] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -289,7 +289,7 @@ export default function AIBuilderPage() {
                 </svg>
               </button>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/50">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/50">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
@@ -321,25 +321,27 @@ export default function AIBuilderPage() {
                 )}
                 
                 {/* Undo/Redo Buttons */}
-                <div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/10">
+                <div className="flex items-center gap-2 border-r border-slate-700 pr-3">
                   <button
                     onClick={handleUndo}
                     disabled={historyIndex <= 0}
-                    className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-slate-700/50 hover:bg-slate-700 text-slate-200 rounded-lg text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-slate-700/50"
                     title={locale === "tr" ? "Geri Al (Ctrl+Z)" : "Undo (Ctrl+Z)"}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                     </svg>
+                    <span className="hidden sm:inline">{locale === "tr" ? "Geri" : "Undo"}</span>
                   </button>
                   <button
                     onClick={handleRedo}
                     disabled={historyIndex >= htmlHistory.length - 1}
-                    className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-slate-700/50 hover:bg-slate-700 text-slate-200 rounded-lg text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-slate-700/50"
                     title={locale === "tr" ? "İleri Al (Ctrl+Y)" : "Redo (Ctrl+Y)"}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+                    <span className="hidden sm:inline">{locale === "tr" ? "İleri" : "Redo"}</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
                     </svg>
                   </button>
                 </div>
@@ -349,12 +351,12 @@ export default function AIBuilderPage() {
                   value={websiteName}
                   onChange={(e) => setWebsiteName(e.target.value)}
                   placeholder={locale === "tr" ? "Site adı..." : "Website name..."}
-                  className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:border-indigo-400 focus:bg-white/10 transition-all duration-200 min-w-[200px]"
+                  className="px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-400 focus:bg-slate-700 transition-all duration-200 min-w-[200px]"
                 />
                 <button
                   onClick={handleSave}
                   disabled={isSaving || !websiteName.trim()}
-                  className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-indigo-500/50"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold text-sm shadow-lg transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? (
                     <>
@@ -377,10 +379,10 @@ export default function AIBuilderPage() {
                   <button
                     onClick={websiteStatus === 'published' ? handleUnpublish : handlePublish}
                     disabled={isPublishing}
-                    className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${
                       websiteStatus === 'published'
-                        ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 hover:shadow-orange-500/50 text-white'
-                        : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/50 text-white'
+                        ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white'
+                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/30'
                     }`}
                   >
                     {isPublishing ? (
@@ -417,71 +419,57 @@ export default function AIBuilderPage() {
       {/* Main Content - Split View */}
       <div className="flex-1 flex overflow-hidden max-w-[95%] mx-auto w-full gap-4 py-4">
         {/* Left Panel - Chat */}
-        <div className="w-1/2 flex flex-col bg-gradient-to-br from-slate-900/80 to-slate-950/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+        <div className="w-1/2 flex flex-col bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 overflow-hidden">
           {/* Messages */}
           <div
             ref={messagesContainerRef}
             className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent"
           >
             {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-fadeIn`}
+              <div 
+                key={index} 
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className="flex items-start gap-3 max-w-[85%]">
-                  {message.role === 'assistant' && (
-                    <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
+                <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                  message.role === 'user' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-slate-700/50 text-slate-100'
+                }`}>
+                  <div className="flex items-start gap-3">
+                    {message.role === 'assistant' && (
+                      <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                      <p className="text-xs opacity-60 mt-2">
+                        {message.timestamp.toLocaleTimeString(locale === 'tr' ? 'tr-TR' : 'en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </p>
                     </div>
-                  )}
-                  <div
-                    className={`rounded-2xl px-5 py-3 shadow-lg ${
-                      message.role === 'user'
-                        ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white'
-                        : 'bg-gradient-to-br from-slate-800/90 to-slate-900/90 text-slate-100 border border-white/5'
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
-                    <p className="text-xs opacity-60 mt-2.5 flex items-center gap-1.5">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      {message.timestamp.toLocaleTimeString(locale === 'tr' ? 'tr-TR' : 'en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
                   </div>
-                  {message.role === 'user' && (
-                    <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg flex items-center justify-center border border-white/10">
-                      <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
             {isGenerating && (
-              <div className="flex justify-start animate-fadeIn">
-                <div className="flex items-start gap-3 max-w-[85%]">
-                  <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
-                    <svg className="w-5 h-5 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 text-slate-100 border border-white/5 rounded-2xl px-5 py-3 shadow-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                        <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                      </div>
-                      <span className="text-sm text-slate-400">
-                        {locale === "tr" ? "AI düşünüyor..." : "AI is thinking..."}
-                      </span>
+              <div className="flex justify-start">
+                <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-slate-700/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white animate-spin" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    </div>
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span>
+                      <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
+                      <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
                     </div>
                   </div>
                 </div>
@@ -490,77 +478,42 @@ export default function AIBuilderPage() {
           </div>
 
           {/* Input Area */}
-          <div className="flex-shrink-0 p-5 bg-gradient-to-r from-slate-900/95 via-slate-900/85 to-slate-900/95 border-t border-white/5">
-            <div className="flex flex-col gap-3">
-              <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-300 transition-colors pointer-events-none">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16h6a2 2 0 002-2V6a2 2 0 00-2-2H9a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          <div className="p-4 border-t border-slate-700/50">
+            <div className="flex gap-3">
+              <textarea
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={locale === 'tr' ? 'Mesajınızı yazın...' : 'Type your message...'}
+                className="flex-1 bg-slate-700/50 text-white placeholder-slate-400 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 scrollbar-thin scrollbar-thumb-slate-600"
+                rows={3}
+                disabled={isGenerating}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={!inputMessage.trim() || isGenerating}
+                className="px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {isGenerating ? (
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                </div>
-                <textarea
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder={locale === "tr" 
-                    ? "Mesajınızı yazın... (Enter: gönder, Shift+Enter: yeni satır)" 
-                    : "Type your message... (Enter: send, Shift+Enter: new line)"}
-                  rows={3}
-                  className="w-full pl-14 pr-24 py-4 bg-white/5 border border-white/15 rounded-3xl text-white placeholder:text-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-500/30 focus:bg-white/10 resize-none transition-all duration-200 shadow-inner shadow-black/10"
-                  disabled={isGenerating}
-                />
-                <div className="absolute bottom-3 left-4 text-[11px] text-slate-500">
-                  {inputMessage.length > 0 && `${inputMessage.length} ${locale === "tr" ? 'karakter' : 'characters'}`}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSendMessage}
-                  disabled={isGenerating || !inputMessage.trim()}
-                  aria-label={locale === 'tr' ? 'Mesajı gönder' : 'Send message'}
-                  className="absolute bottom-3 right-3 w-11 h-11 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:via-purple-500 hover:to-pink-500 disabled:from-slate-700 disabled:via-slate-800 disabled:to-slate-800 disabled:cursor-not-allowed text-white transition-all duration-200 flex items-center justify-center shadow-lg"
-                >
-                  {isGenerating ? (
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-                <span className="uppercase tracking-wide text-slate-400/90">{locale === 'tr' ? 'Önerilen istemler' : 'Suggested prompts'}</span>
-                {[
-                  locale === 'tr' ? 'Restoran menüsü' : 'Restaurant menu',
-                  locale === 'tr' ? 'SaaS landing' : 'SaaS landing',
-                  locale === 'tr' ? 'Kişisel portföy' : 'Personal portfolio'
-                ].map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => setInputMessage(chip)}
-                    className="px-3 py-1 rounded-full border border-white/10 bg-white/5 text-slate-200 hover:border-indigo-400/60 hover:text-white transition"
-                  >
-                    {chip}
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center justify-between text-[10px] text-slate-500">
-                <span>{locale === 'tr' ? 'Enter ile gönder • Shift + Enter yeni satır' : 'Enter to send • Shift + Enter for newline'}</span>
-                <span>{locale === 'tr' ? 'AI yanıtları hatalar içerebilir' : 'AI responses may be inaccurate'}</span>
-              </div>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                )}
+              </button>
             </div>
           </div>
         </div>
 
         {/* Right Panel - Preview */}
-        <div className="w-1/2 flex flex-col bg-gradient-to-br from-slate-900/80 to-slate-950/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+        <div className="w-1/2 flex flex-col bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 overflow-hidden">
           {generatedHtml ? (
             <>
-              <div className="flex-shrink-0 px-6 py-4 bg-gradient-to-r from-slate-900/90 via-slate-800/90 to-slate-900/90 border-b border-white/5 flex items-center justify-between">
+              <div className="flex-shrink-0 px-6 py-4 bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/50 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-lg border border-white/10">
                     <div className="flex gap-1.5">
@@ -606,12 +559,12 @@ export default function AIBuilderPage() {
             <div className="flex-1 flex items-center justify-center p-8">
               <div className="text-center text-slate-400 space-y-6 max-w-md">
                 <div className="relative">
-                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/10">
-                    <svg className="w-12 h-12 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/10">
+                    <svg className="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-purple-500 rounded-full animate-ping opacity-75"></div>
+                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full animate-ping opacity-75"></div>
                 </div>
                 <div>
                   <p className="text-lg font-semibold text-white mb-2">
@@ -625,13 +578,13 @@ export default function AIBuilderPage() {
                 </div>
                 <div className="flex flex-col gap-2 pt-4">
                   <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                     {locale === "tr" ? "AI destekli tasarım" : "AI-powered design"}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                     {locale === "tr" ? "Sınırsız düzenleme" : "Unlimited edits"}
