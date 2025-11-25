@@ -40,6 +40,12 @@ export default function ProfilePage() {
       setUploading(true);
       setMessage(null);
 
+      if (!supabase) {
+        setMessage({ type: "error", text: locale === 'tr' ? 'Bağlantı hatası!' : 'Connection error!' });
+        setUploading(false);
+        return;
+      }
+
       if (!e.target.files || e.target.files.length === 0) {
         setUploading(false);
         return;
@@ -94,6 +100,12 @@ export default function ProfilePage() {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
+
+    if (!supabase) {
+      setMessage({ type: "error", text: locale === 'tr' ? 'Bağlantı hatası!' : 'Connection error!' });
+      setLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.updateUser({
       data: {
