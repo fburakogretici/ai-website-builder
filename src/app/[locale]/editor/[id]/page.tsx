@@ -350,7 +350,7 @@ export default function EditorPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-[9999] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden flex flex-col">
       {/* Compact Header */}
       <div className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/50 px-8 py-4">
         <div className="max-w-[1800px] mx-auto flex items-center justify-between">
