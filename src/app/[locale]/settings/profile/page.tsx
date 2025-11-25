@@ -70,6 +70,11 @@ export default function ProfilePage() {
       reader.onloadend = async () => {
         const base64String = reader.result as string;
         
+        if (!supabase) {
+          setUploading(false);
+          return;
+        }
+        
         const { error } = await supabase.auth.updateUser({
           data: {
             avatar_url: base64String,
