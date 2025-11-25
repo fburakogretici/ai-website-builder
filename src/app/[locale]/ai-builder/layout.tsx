@@ -6,10 +6,9 @@ export default async function AIBuilderLayout({
   params
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
-  const awaitedParams = await params;
-  const { locale } = awaitedParams;
+  const { locale } = await params;
   const messages = await getMessages({ locale });
 
   return (

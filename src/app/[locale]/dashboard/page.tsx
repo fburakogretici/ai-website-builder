@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from 'next-intl';
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 import type { Session } from '@supabase/supabase-js';
+import WebsiteCard from '@/components/dashboard/WebsiteCard';
 
 export default function DashboardPage() {
   const [session, setSession] = useState<Session | null>(null);
@@ -202,85 +203,12 @@ export default function DashboardPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {websites.map((website) => (
-                  <div 
-                    key={website.id} 
-                    className="group bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 hover:shadow-lg transition-all duration-200 cursor-pointer"
-                    onClick={() => router.push(`/${locale}/editor/${website.id}`)}
-                  >
-                    {/* Preview */}
-                    <div className="w-full h-48 bg-white dark:bg-gray-800 rounded-lg mb-3 overflow-hidden border border-gray-200 dark:border-gray-700 relative">
-                      <div className="absolute inset-0" style={{ transform: 'scale(0.25)', transformOrigin: 'top left', width: '400%', height: '400%' }}>
-                        <iframe
-                          srcDoc={website.html_content}
-                          className="w-full h-full border-0 pointer-events-none"
-                          title={`Preview of ${website.name}`}
-                          sandbox=""
-                        />
-                      </div>
-                    </div>
-
-                    {/* Info */}
-                    <div className="space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1 text-base">
-                          {website.name}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${
-                            website.status === 'published' 
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                              : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-400'
-                          }`}>
-                            {website.status === 'published' ? (locale === 'tr' ? 'Yayında' : 'Live') : (locale === 'tr' ? 'Taslak' : 'Draft')}
-                          </span>
-                          <button
-                            onClick={(e) => handleDeleteWebsite(website.id, website.name, e)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                            title={locale === 'tr' ? 'Sil' : 'Delete'}
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {new Date(website.created_at).toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </p>
-
-                      <div className="flex gap-2 pt-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/${locale}/editor/${website.id}`);
-                          }}
-                          className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm font-medium"
-                        >
-                          {locale === 'tr' ? 'Düzenle' : 'Edit'}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const win = window.open('', '_blank');
-                            if (win) {
-                              win.document.open();
-                              win.document.write(website.html_content);
-                              win.document.close();
-                            }
-                          }}
-                          className="py-2 px-4 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
-                          title={locale === 'tr' ? 'Önizle' : 'Preview'}
-                        >
-                          👁️
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <WebsiteCard
+                    key={website.id}
+                    website={website}
+                    onDelete={handleDeleteWebsite}
+                    onUpdate={() => session && loadWebsites(session.user.id)}
+                  />
                 ))}
               </div>
             )}

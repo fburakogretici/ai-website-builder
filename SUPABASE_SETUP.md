@@ -179,3 +179,127 @@ SELECT
 FROM profiles 
 LIMIT 5;
 ```
+
+---
+
+# Website Publishing Tabloları
+
+Kullanıcı sitelerini yayınlamak için aşağıdaki SQL'i çalıştırın:
+
+```sql
+-- websites tablosuna publishing sütunları ekle
+ALTER TABLE websites ADD COLUMN IF NOT EXISTS subdomain TEXT UNIQUE;
+ALTER TABLE websites ADD COLUMN IF NOT EXISTS custom_domain TEXT;
+ALTER TABLE websites ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT false;
+ALTER TABLE websites ADD COLUMN IF NOT EXISTS published_url TEXT;
+ALTER TABLE websites ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ;
+ALTER TABLE websites ADD COLUMN IF NOT EXISTS html_content TEXT;
+ALTER TABLE websites ADD COLUMN IF NOT EXISTS css_content TEXT;
+
+-- published_sites tablosu
+CREATE TABLE IF NOT EXISTS published_sites (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  website_id UUID REFERENCES websites(id) ON DELETE CASCADE UNIQUE NOT NULL,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  subdomain TEXT UNIQUE NOT NULL,
+  storage_path TEXT,
+  public_url TEXT,
+  is_published BOOLEAN DEFAULT true,
+  published_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- custom_domains tablosu
+CREATE TABLE IF NOT EXISTS custom_domains (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  website_id UUID REFERENCES websites(id) ON DELETE CASCADE UNIQUE NOT NULL,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  domain TEXT UNIQUE NOT NULL,
+  verification_token TEXT,
+  verification_status TEXT DEFAULT 'pending', -- pending, verified, failed
+  dns_configured BOOLEAN DEFAULT false,
+  ssl_status TEXT DEFAULT 'pending', -- pending, active, failed
+  last_verified_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexler
+CREATE INDEX IF NOT EXISTS idx_published_sites_subdomain ON published_sites(subdomain);
+CREATE INDEX IF NOT EXISTS idx_published_sites_user_id ON published_sites(user_id);
+CREATE INDEX IF NOT EXISTS idx_custom_domains_domain ON custom_domains(domain);
+CREATE INDEX IF NOT EXISTS idx_websites_subdomain ON websites(subdomain);
+
+-- RLS
+ALTER TABLE published_sites ENABLE ROW LEVEL SECURITY;
+ALTER TABLE custom_domains ENABLE ROW LEVEL SECURITY;
+
+-- Published sites policies
+DROP POLICY IF EXISTS "Users can view own published sites" ON published_sites;
+CREATE POLICY "Users can view own published sites" ON published_sites
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own published sites" ON published_sites;
+CREATE POLICY "Users can insert own published sites" ON published_sites
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own published sites" ON published_sites;
+CREATE POLICY "Users can update own published sites" ON published_sites
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- Custom domains policies
+DROP POLICY IF EXISTS "Users can view own domains" ON custom_domains;
+CREATE POLICY "Users can view own domains" ON custom_domains
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can manage own domains" ON custom_domains;
+CREATE POLICY "Users can manage own domains" ON custom_domains
+  FOR ALL USING (auth.uid() = user_id);
+
+-- Public access for published sites (for serving)
+DROP POLICY IF EXISTS "Public can view published sites" ON published_sites;
+CREATE POLICY "Public can view published sites" ON published_sites
+  FOR SELECT USING (is_published = true);
+```
+
+## Supabase Storage Bucket Oluştur
+
+1. Supabase Dashboard → Storage
+2. "New Bucket" tıkla
+3. Bucket adı: `websites`
+4. Public bucket: ✅ Evet
+5. "Create bucket" tıkla
+
+### Storage Policy Ekle
+
+```sql
+-- Storage policies for websites bucket
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('websites', 'websites', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Allow authenticated users to upload to their folder
+CREATE POLICY "Users can upload websites" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'websites' AND 
+    auth.uid()::text = (storage.foldername(name))[2]
+  );
+
+-- Allow public read access
+CREATE POLICY "Public can view websites" ON storage.objects
+  FOR SELECT USING (bucket_id = 'websites');
+
+-- Allow users to update their own files
+CREATE POLICY "Users can update own websites" ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'websites' AND 
+    auth.uid()::text = (storage.foldername(name))[2]
+  );
+
+-- Allow users to delete their own files
+CREATE POLICY "Users can delete own websites" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'websites' AND 
+    auth.uid()::text = (storage.foldername(name))[2]
+  );
+```

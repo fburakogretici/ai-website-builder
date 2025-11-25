@@ -16,7 +16,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<Response> {
   try {
     const formData = await request.formData();
     const token = formData.get('token') as string;
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       token,
     };
 
-    return new Promise((resolve) => {
+    return new Promise<Response>((resolve) => {
       iyzipay.checkoutForm.retrieve(retrieveRequest, async (err: Error | null, result: {
         status: string;
         paymentStatus?: string;
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Also handle GET for redirect-based callbacks
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<Response> {
   const token = request.nextUrl.searchParams.get('token');
   
   if (!token) {
@@ -151,8 +151,10 @@ export async function GET(request: NextRequest) {
   const formData = new FormData();
   formData.append('token', token);
   
-  return POST(new NextRequest(request.url, {
+  const result = await POST(new NextRequest(request.url, {
     method: 'POST',
     body: formData,
   }));
+  
+  return result as Response;
 }

@@ -12,7 +12,7 @@ const iyzipay = new Iyzipay({
     : 'https://sandbox-api.iyzipay.com'
 });
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<Response> {
   try {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create checkout form
-    return new Promise((resolve) => {
+    return new Promise<Response>((resolve) => {
       iyzipay.checkoutFormInitialize.create(checkoutRequest, (err: Error | null, result: { status: string; checkoutFormContent?: string; paymentPageUrl?: string; errorMessage?: string }) => {
         if (err) {
           console.error('iyzico error:', err);
