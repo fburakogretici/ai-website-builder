@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from 'next-intl';
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
@@ -17,6 +17,12 @@ export default function DashboardPage() {
 
   const supabase = useSupabaseClient();
 
+  const sessionRef = useRef<Session | null>(null);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
   useEffect(() => {
     if (!supabase) return;
 
@@ -29,10 +35,13 @@ export default function DashboardPage() {
       }
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_: any, newSession: Session | null) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, newSession: Session | null) => {
       if (newSession) {
+        // If user ID hasn't changed, do a silent update
+        const isSameUser = sessionRef.current?.user?.id === newSession.user.id;
         setSession(newSession);
-        loadWebsites(newSession.user.id);
+        // Only load websites if user changed or if it's the first load (no previous session)
+        loadWebsites(newSession.user.id, !isSameUser);
       } else {
         router.replace(`/${locale}/login`);
       }
@@ -41,10 +50,12 @@ export default function DashboardPage() {
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [supabase, router, locale]);
+  }, [supabase, router, locale]); // Removed session dependency
 
-  const loadWebsites = async (userId: string) => {
-    setIsLoadingWebsites(true);
+  const loadWebsites = async (userId: string, showLoading = true) => {
+    if (showLoading) {
+      setIsLoadingWebsites(true);
+    }
     try {
       const { data, error } = await supabase!
         .from('websites')
@@ -62,7 +73,9 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Error loading websites:', error);
     } finally {
-      setIsLoadingWebsites(false);
+      if (showLoading) {
+        setIsLoadingWebsites(false);
+      }
     }
   };
 

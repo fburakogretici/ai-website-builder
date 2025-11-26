@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import type { Session } from "@supabase/supabase-js";
 import { useSupabaseClient } from "@/hooks/useSupabaseClient";
+import ThemeToggle from "@/components/ThemeToggle";
 
 type SettingsLayoutProps = {
   children: ReactNode;
@@ -187,8 +188,8 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
                       key={item.href}
                       href={item.href}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-all duration-200 text-sm ${isActive
-                          ? "bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50 font-medium"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                        ? "bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50 font-medium"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                         }`}
                     >
                       <div className={isActive ? "text-indigo-600 dark:text-indigo-400" : ""}>{item.icon}</div>
@@ -196,6 +197,8 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
                     </Link>
                   );
                 })}
+
+
               </nav>
             </div>
           </aside>

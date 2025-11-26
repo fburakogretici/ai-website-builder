@@ -733,12 +733,12 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
+      <section className="py-12 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-indigo-600 dark:via-purple-600 dark:to-pink-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
             {locale === 'tr' ? 'Web sitenizi bugün oluşturun' : 'Create your website today'}
           </h2>
-          <p className="text-base text-indigo-100 mb-6">
+          <p className="text-base text-gray-600 dark:text-indigo-100 mb-6">
             {locale === 'tr'
               ? 'AI destekli platformumuzla profesyonel web sitenizi dakikalar içinde hazır hale getirin'
               : 'Get your professional website ready in minutes with our AI-powered platform'
@@ -749,7 +749,7 @@ export default function Home() {
               setLoading(true);
               router.push(session ? '/dashboard' : `${locale}/login`);
             }}
-            className="inline-flex items-center px-8 py-4 rounded-lg bg-white text-indigo-600 font-bold text-lg hover:bg-gray-100 hover:scale-105 transition-all duration-200 shadow-2xl"
+            className="inline-flex items-center px-8 py-4 rounded-lg bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white dark:bg-white dark:text-indigo-600 dark:bg-none font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-200 shadow-xl"
           >
             {locale === 'tr' ? 'Ücretsiz Başla' : 'Start Free'}
             <svg className="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

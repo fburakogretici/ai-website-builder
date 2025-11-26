@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: "Create professional websites instantly with AI. No coding required.",
 };
 
+import { ThemeProvider } from "@/contexts/ThemeContext";
+
 // This is the root layout - provides html shell for locale layouts
 export default function RootLayout({
   children,
@@ -27,7 +29,9 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

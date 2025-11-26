@@ -21,11 +21,11 @@ export default function EditorPage() {
   const [htmlContent, setHtmlContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
-  
+
   // History management for undo/redo
   const [htmlHistory, setHtmlHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  
+
   // Chat states
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -71,20 +71,20 @@ export default function EditorPage() {
 
       setWebsite(data);
       setHtmlContent(data.html_content);
-      
+
       // Initialize history with the loaded HTML
       setHtmlHistory([data.html_content]);
       setHistoryIndex(0);
-      
+
       // Initialize with welcome message
       setMessages([{
         role: 'assistant',
-        content: locale === 'tr' 
-          ? `Merhaba! "${data.name}" sitenizi düzenlemeye hazırım. Ne yapmak istersiniz?\n\nÖrnek:\n- "Renkleri daha modern yap"\n- "Hero bölümünü daha çekici hale getir"\n- "İletişim formunu ekle"` 
+        content: locale === 'tr'
+          ? `Merhaba! "${data.name}" sitenizi düzenlemeye hazırım. Ne yapmak istersiniz?\n\nÖrnek:\n- "Renkleri daha modern yap"\n- "Hero bölümünü daha çekici hale getir"\n- "İletişim formunu ekle"`
           : `Hello! I'm ready to edit your "${data.name}" website. What would you like to do?\n\nExamples:\n- "Make colors more modern"\n- "Make hero section more attractive"\n- "Add contact form"`,
         timestamp: new Date()
       }]);
-      
+
       setIsLoading(false);
     } catch (error) {
       console.error("Load error:", error);
@@ -97,14 +97,14 @@ export default function EditorPage() {
     // Remove any future history if we're not at the end
     const newHistory = htmlHistory.slice(0, historyIndex + 1);
     newHistory.push(newHtml);
-    
+
     // Keep only last 20 versions to avoid memory issues
     if (newHistory.length > 20) {
       newHistory.shift();
     } else {
       setHistoryIndex(prev => prev + 1);
     }
-    
+
     setHtmlHistory(newHistory);
   };
 
@@ -146,7 +146,7 @@ export default function EditorPage() {
         userPrompt: userMessage.content,
         currentHtmlLength: htmlContent.length
       });
-      
+
       const response = await fetch('/api/ai-edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -164,7 +164,7 @@ export default function EditorPage() {
       if (!response.ok) throw new Error('AI request failed');
 
       const data = await response.json();
-      
+
       console.log('✅ Data received:', {
         hasHtml: !!data.html,
         htmlLength: data.html?.length,
@@ -180,8 +180,8 @@ export default function EditorPage() {
       // Add AI response
       const aiMessage: Message = {
         role: 'assistant',
-        content: data.explanation || (locale === 'tr' 
-          ? '✅ Değişiklikler uygulandı!' 
+        content: data.explanation || (locale === 'tr'
+          ? '✅ Değişiklikler uygulandı!'
           : '✅ Changes applied!'),
         timestamp: new Date()
       };
@@ -202,8 +202,8 @@ export default function EditorPage() {
       console.error('❌ AI edit error:', error);
       const errorMessage: Message = {
         role: 'assistant',
-        content: locale === 'tr' 
-          ? '❌ Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.' 
+        content: locale === 'tr'
+          ? '❌ Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.'
           : '❌ Sorry, an error occurred. Please try again.',
         timestamp: new Date()
       };
@@ -228,7 +228,7 @@ export default function EditorPage() {
 
       const { error } = await supabase
         .from("websites")
-        .update({ 
+        .update({
           html_content: htmlContent,
           updated_at: new Date().toISOString()
         })
@@ -242,10 +242,10 @@ export default function EditorPage() {
       if (!silent) {
         alert(locale === "tr" ? "✅ Kaydedildi!" : "✅ Saved!");
       }
-      
+
       // Don't reload website data - it would override our current htmlContent!
       console.log('✅ Saved successfully without reloading');
-      
+
     } catch (error) {
       console.error("Save error:", error);
       if (!silent) {
@@ -257,8 +257,8 @@ export default function EditorPage() {
   };
 
   const handlePublish = async () => {
-    if (!confirm(locale === "tr" 
-      ? "Siteyi canlıya almak istediğinize emin misiniz?" 
+    if (!confirm(locale === "tr"
+      ? "Siteyi canlıya almak istediğinize emin misiniz?"
       : "Are you sure you want to publish this site?")) {
       return;
     }
@@ -270,7 +270,7 @@ export default function EditorPage() {
 
       const { error } = await supabase
         .from("websites")
-        .update({ 
+        .update({
           status: "active"
         })
         .eq("id", websiteId);
@@ -291,8 +291,8 @@ export default function EditorPage() {
   };
 
   const handleUnpublish = async () => {
-    if (!confirm(locale === "tr" 
-      ? "Siteyi yayından kaldırmak istediğinize emin misiniz?" 
+    if (!confirm(locale === "tr"
+      ? "Siteyi yayından kaldırmak istediğinize emin misiniz?"
       : "Are you sure you want to unpublish this site?")) {
       return;
     }
@@ -304,7 +304,7 @@ export default function EditorPage() {
 
       const { error } = await supabase
         .from("websites")
-        .update({ 
+        .update({
           status: "draft"
         })
         .eq("id", websiteId);
@@ -335,13 +335,13 @@ export default function EditorPage() {
 
   if (isLoading) {
     return (
-      <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-12 h-12">
             <div className="absolute inset-0 border-4 border-blue-500/20 rounded-full"></div>
             <div className="absolute inset-0 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
-          <p className="text-slate-400 font-medium">
+          <p className="text-gray-500 dark:text-slate-400 font-medium">
             {locale === "tr" ? "Yükleniyor..." : "Loading..."}
           </p>
         </div>
@@ -350,24 +350,24 @@ export default function EditorPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-[9999] bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-hidden flex flex-col">
       {/* Compact Header */}
-      <div className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/50 px-8 py-4">
+      <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border-b border-gray-200/50 dark:border-slate-700/50 px-8 py-4">
         <div className="max-w-[1800px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push(`/${locale}/dashboard`)}
-              className="p-2 hover:bg-slate-700/50 rounded-xl transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700/50 rounded-xl transition-colors"
             >
-              <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <div>
-              <h1 className="text-lg font-bold text-white">
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white">
                 {website?.name}
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-gray-500 dark:text-slate-400">
                 {locale === "tr" ? "AI ile Düzenle" : "Edit with AI"}
               </p>
             </div>
@@ -378,19 +378,19 @@ export default function EditorPage() {
                 {locale === "tr" ? "Yayında" : "Live"}
               </span>
             ) : (
-              <span className="px-3 py-1.5 bg-slate-700/90 text-slate-200 rounded-lg text-xs font-bold flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
+              <span className="px-3 py-1.5 bg-gray-200/90 dark:bg-slate-700/90 text-gray-700 dark:text-slate-200 rounded-lg text-xs font-bold flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 bg-gray-400 dark:bg-slate-400 rounded-full"></span>
                 {locale === "tr" ? "Taslak" : "Draft"}
               </span>
             )}
           </div>
           <div className="flex items-center gap-3">
             {/* Undo/Redo Buttons */}
-            <div className="flex items-center gap-2 border-r border-slate-700 pr-3">
+            <div className="flex items-center gap-2 border-r border-gray-200 dark:border-slate-700 pr-3">
               <button
                 onClick={handleUndo}
                 disabled={historyIndex <= 0}
-                className="flex items-center gap-1.5 px-3 py-2 bg-slate-700/50 hover:bg-slate-700 text-slate-200 rounded-lg text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-slate-700/50"
+                className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-slate-700/50 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-lg text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-slate-700/50"
                 title={locale === "tr" ? "Geri Al (Ctrl+Z)" : "Undo (Ctrl+Z)"}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,7 +401,7 @@ export default function EditorPage() {
               <button
                 onClick={handleRedo}
                 disabled={historyIndex >= htmlHistory.length - 1}
-                className="flex items-center gap-1.5 px-3 py-2 bg-slate-700/50 hover:bg-slate-700 text-slate-200 rounded-lg text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-slate-700/50"
+                className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-slate-700/50 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-lg text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-slate-700/50"
                 title={locale === "tr" ? "İleri Al (Ctrl+Y)" : "Redo (Ctrl+Y)"}
               >
                 <span className="hidden sm:inline">{locale === "tr" ? "İleri" : "Redo"}</span>
@@ -410,7 +410,7 @@ export default function EditorPage() {
                 </svg>
               </button>
             </div>
-            
+
             <button
               onClick={() => handleSave()}
               disabled={isSaving}
@@ -460,7 +460,7 @@ export default function EditorPage() {
               <button
                 onClick={handleUnpublish}
                 disabled={isPublishing}
-                className="flex items-center gap-2 px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
               >
                 {isPublishing ? (
                   <>
@@ -487,24 +487,23 @@ export default function EditorPage() {
       {/* Main Content - ChatGPT Style */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full max-w-[1800px] mx-auto px-8 py-6 grid grid-cols-2 gap-6">
-          
+
           {/* Left: Chat Interface */}
-          <div className="flex flex-col bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 overflow-hidden">
+          <div className="flex flex-col bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-slate-700/50 overflow-hidden shadow-xl dark:shadow-none">
             {/* Chat Messages */}
             <div
               ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent"
+              className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent"
             >
               {messages.map((message, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                    message.role === 'user' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-slate-700/50 text-slate-100'
-                  }`}>
+                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${message.role === 'user'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-slate-700/50 text-gray-800 dark:text-slate-100'
+                    }`}>
                     <div className="flex items-start gap-3">
                       {message.role === 'assistant' && (
                         <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -516,9 +515,9 @@ export default function EditorPage() {
                       <div className="flex-1">
                         <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                         <p className="text-xs opacity-60 mt-2">
-                          {message.timestamp.toLocaleTimeString(locale === 'tr' ? 'tr-TR' : 'en-US', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
+                          {message.timestamp.toLocaleTimeString(locale === 'tr' ? 'tr-TR' : 'en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
                           })}
                         </p>
                       </div>
@@ -526,10 +525,10 @@ export default function EditorPage() {
                   </div>
                 </div>
               ))}
-              
+
               {isAIProcessing && (
                 <div className="flex justify-start">
-                  <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-slate-700/50">
+                  <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-gray-100 dark:bg-slate-700/50">
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
                         <svg className="w-4 h-4 text-white animate-spin" viewBox="0 0 24 24">
@@ -538,9 +537,9 @@ export default function EditorPage() {
                         </svg>
                       </div>
                       <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span>
-                        <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
-                        <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                        <span className="w-2 h-2 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce"></span>
+                        <span className="w-2 h-2 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
+                        <span className="w-2 h-2 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
                       </div>
                     </div>
                   </div>
@@ -550,7 +549,7 @@ export default function EditorPage() {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 border-t border-slate-700/50">
+            <div className="p-4 border-t border-gray-100 dark:border-slate-700/50 bg-gray-50/50 dark:bg-transparent">
               <div className="flex gap-3">
                 <textarea
                   ref={inputRef}
@@ -558,7 +557,7 @@ export default function EditorPage() {
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={handleKeyPress}
                   placeholder={locale === 'tr' ? 'Sitenizde ne değiştirmek istersiniz?' : 'What would you like to change?'}
-                  className="flex-1 bg-slate-700/50 text-white placeholder-slate-400 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 scrollbar-thin scrollbar-thumb-slate-600"
+                  className="flex-1 bg-white dark:bg-slate-700/50 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-600 border border-gray-200 dark:border-transparent shadow-sm dark:shadow-none"
                   rows={3}
                   disabled={isAIProcessing}
                 />
@@ -579,20 +578,20 @@ export default function EditorPage() {
                   )}
                 </button>
               </div>
-              <p className="text-xs text-slate-500 mt-2">
+              <p className="text-xs text-gray-500 dark:text-slate-500 mt-2">
                 {locale === 'tr' ? 'Enter ile gönder, Shift+Enter ile yeni satır' : 'Press Enter to send, Shift+Enter for new line'}
               </p>
             </div>
           </div>
 
           {/* Right: Live Preview */}
-          <div className="flex flex-col bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-700/50 flex items-center justify-between">
+          <div className="flex flex-col bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-slate-700/50 overflow-hidden shadow-xl dark:shadow-none">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700/50 flex items-center justify-between bg-gray-50 dark:bg-transparent">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
                 <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                 <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <span className="text-sm text-slate-400 ml-2">{locale === 'tr' ? 'Canlı Önizleme' : 'Live Preview'}</span>
+                <span className="text-sm text-gray-500 dark:text-slate-400 ml-2">{locale === 'tr' ? 'Canlı Önizleme' : 'Live Preview'}</span>
               </div>
               <button
                 onClick={() => {
@@ -603,7 +602,7 @@ export default function EditorPage() {
                     win.document.close();
                   }
                 }}
-                className="text-xs px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors flex items-center gap-2"
+                className="text-xs px-3 py-1.5 bg-gray-100 dark:bg-slate-700/50 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-300 rounded-lg transition-colors flex items-center gap-2"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
