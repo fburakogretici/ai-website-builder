@@ -35,10 +35,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         console.warn('Session check failed (non-critical):', error);
       }
     };
-    
+
     checkSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_, newSession) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_: any, newSession: Session | null) => {
       setSession(newSession);
     });
 

@@ -4,19 +4,20 @@ import { useEffect, useState } from "react";
 import { createBrowserClient } from "@/utils/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import type { Session } from "@supabase/supabase-js";
 
 export default function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createBrowserClient();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       if (session) {
         setSession(session);
       } else {
@@ -25,7 +26,7 @@ export default function SettingsLayout({
     });
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (_event: any, session: Session | null) => {
         if (session) {
           setSession(session);
         } else {
@@ -114,7 +115,7 @@ export default function SettingsLayout({
                 <p className="text-xs text-gray-500 dark:text-gray-400">Ayarlar</p>
               </div>
             </button>
-            
+
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => router.push("/dashboard")}
@@ -141,11 +142,10 @@ export default function SettingsLayout({
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200 ${
-                        isActive
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200 ${isActive
                           ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
                           : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      }`}
+                        }`}
                     >
                       {item.icon}
                       <span className="font-medium">{item.name}</span>

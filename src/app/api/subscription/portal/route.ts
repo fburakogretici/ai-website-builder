@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Lazy load Stripe to avoid build-time issues
+let Stripe: any;
+let stripe: any;
+
+async function getStripe() {
+  if (!Stripe) {
+    Stripe = (await import('stripe')).default;
+  }
+  if (!stripe && process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  }
+  return stripe;
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,9 +25,9 @@ export async function POST(request: NextRequest) {
     // Auth kontrolü
     const authHeader = request.headers.get('authorization');
     const cookieHeader = request.headers.get('cookie');
-    
+
     let userId: string | null = null;
-    
+
     if (cookieHeader) {
       const supabaseAuthToken = cookieHeader
         .split(';')
@@ -60,8 +71,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get Stripe instance
+    const stripeInstance = await getStripe();
+
+    if (!stripeInstance) {
+      return NextResponse.json(
+        { error: 'Payment provider not configured' },
+        { status: 503 }
+      );
+    }
+
     // Create customer portal session
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await stripeInstance.billingPortal.sessions.create({
       customer: profile.stripe_customer_id,
       return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
     });

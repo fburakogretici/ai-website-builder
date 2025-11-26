@@ -76,7 +76,8 @@ function injectMetaTags(html: string, data: TemplateData): string {
 /**
  * Attribute için escape
  */
-function escapeAttribute(text: string): string {
+function escapeAttribute(text: string | undefined): string {
+  if (!text) return '';
   return text
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;')
@@ -151,7 +152,7 @@ export async function createWebsiteZip(
   const readme = `
 # ${website.templateId} Website
 
-Generated: ${new Date(website.generatedAt).toLocaleString()}
+Generated: ${new Date(website.generatedAt || new Date()).toLocaleString()}
 Locale: ${website.locale}
 
 ## How to use

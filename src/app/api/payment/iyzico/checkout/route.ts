@@ -1,16 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Iyzipay from 'iyzipay';
 import { createClient } from '@/utils/supabase/server';
 import { SUBSCRIPTION_PLANS, SubscriptionTier } from '@/types/subscription';
 import { generateConversationId, generateBasketId } from '@/lib/iyzico';
 
-const iyzipay = new Iyzipay({
-  apiKey: process.env.IYZICO_API_KEY!,
-  secretKey: process.env.IYZICO_SECRET_KEY!,
-  uri: process.env.NODE_ENV === 'production' 
-    ? 'https://api.iyzipay.com' 
-    : 'https://sandbox-api.iyzipay.com'
-});
+// Lazy load iyzipay to avoid build-time issues
+let Iyzipay: any;
+let iyzipay: any;
+
+async function getIyzipay() {
+  if (!Iyzipay) {
+    Iyzipay = (await import('iyzipay')).default;
+  }
+  if (!iyzipay) {
+    iyzipay = new Iyzipay({
+      apiKey: process.env.IYZICO_API_KEY!,
+      secretKey: process.env.IYZICO_SECRET_KEY!,
+      uri: process.env.NODE_ENV === 'production'
+        ? 'https://api.iyzipay.com'
+        : 'https://sandbox-api.iyzipay.com'
+    });
+  }
+  return iyzipay;
+}
 
 export async function POST(request: NextRequest): Promise<Response> {
   try {
@@ -118,8 +129,10 @@ export async function POST(request: NextRequest): Promise<Response> {
     });
 
     // Create checkout form
+    const iyzipayInstance = await getIyzipay();
+
     return new Promise<Response>((resolve) => {
-      iyzipay.checkoutFormInitialize.create(checkoutRequest, (err: Error | null, result: { status: string; checkoutFormContent?: string; paymentPageUrl?: string; errorMessage?: string }) => {
+      iyzipayInstance.checkoutFormInitialize.create(checkoutRequest, (err: Error | null, result: { status: string; checkoutFormContent?: string; paymentPageUrl?: string; errorMessage?: string }) => {
         if (err) {
           console.error('iyzico error:', err);
           resolve(NextResponse.json({ error: 'Payment initialization failed' }, { status: 500 }));

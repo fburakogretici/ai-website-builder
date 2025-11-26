@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { SubscriptionTier } from '@/types/subscription';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Lazy load Stripe to avoid build-time issues
+let Stripe: any;
+let stripe: any;
+
+async function getStripe() {
+  if (!Stripe) {
+    Stripe = (await import('stripe')).default;
+  }
+  if (!stripe && process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  }
+  return stripe;
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,10 +38,10 @@ export async function POST(request: NextRequest) {
     // Auth kontrolü - cookie'den user ID al
     const authHeader = request.headers.get('authorization');
     const cookieHeader = request.headers.get('cookie');
-    
+
     // Supabase auth token'ı cookie'den al
     let userId: string | null = null;
-    
+
     if (cookieHeader) {
       const supabaseAuthToken = cookieHeader
         .split(';')
@@ -97,7 +108,16 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const customer = await stripe.customers.create({
+      const stripeInstance = await getStripe();
+
+      if (!stripeInstance) {
+        return NextResponse.json(
+          { error: 'Payment provider not configured' },
+          { status: 503 }
+        );
+      }
+
+      const customer = await stripeInstance.customers.create({
         email,
         metadata: {
           userId,
@@ -122,8 +142,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const stripeInstance = await getStripe();
+
+    if (!stripeInstance) {
+      return NextResponse.json(
+        { error: 'Payment provider not configured' },
+        { status: 503 }
+      );
+    }
+
     // Create checkout session
-    const session = await stripe.checkout.sessions.create({
+    const session = await stripeInstance.checkout.sessions.create({
       customer: stripeCustomerId,
       mode: 'subscription',
       payment_method_types: ['card'],

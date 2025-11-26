@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { createBrowserClient } from "@/utils/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from 'next-intl';
 import type { AuthResponse } from '@supabase/supabase-js';
 
-export default function ResetPasswordPage() {
+export const dynamic = 'force-dynamic';
+
+// Component that uses useSearchParams - must be wrapped in Suspense
+function ResetPasswordForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -22,7 +25,7 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     if (!supabase) return;
-    
+
     // Check if we have a valid code/token in URL
     const code = searchParams.get('code');
     if (!code) {
@@ -30,12 +33,12 @@ export default function ResetPasswordPage() {
       router.replace(`/${locale}/login`);
       return;
     }
-    
+
     // Verify the session is valid
     supabase.auth.getSession().then((result: AuthResponse | any) => {
       const session = result?.data?.session;
       const error = result?.error;
-      
+
       if (error || !session) {
         // Invalid or expired token, redirect to forgot password
         router.replace(`/${locale}/forgot-password`);
@@ -48,21 +51,21 @@ export default function ResetPasswordPage() {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) return;
-    
+
     setError(null);
 
     // Validation
     if (password.length < 6) {
-      setError(locale === 'tr' 
-        ? 'Şifre en az 6 karakter olmalıdır.' 
+      setError(locale === 'tr'
+        ? 'Şifre en az 6 karakter olmalıdır.'
         : 'Password must be at least 6 characters.'
       );
       return;
     }
 
     if (password !== confirmPassword) {
-      setError(locale === 'tr' 
-        ? 'Şifreler eşleşmiyor.' 
+      setError(locale === 'tr'
+        ? 'Şifreler eşleşmiyor.'
         : 'Passwords do not match.'
       );
       return;
@@ -76,8 +79,8 @@ export default function ResetPasswordPage() {
       });
 
       if (error) {
-        setError(locale === 'tr' 
-          ? 'Şifre güncellenemedi. Lütfen tekrar deneyin.' 
+        setError(locale === 'tr'
+          ? 'Şifre güncellenemedi. Lütfen tekrar deneyin.'
           : 'Failed to update password. Please try again.'
         );
       } else {
@@ -88,8 +91,8 @@ export default function ResetPasswordPage() {
         }, 2000);
       }
     } catch (err) {
-      setError(locale === 'tr' 
-        ? 'Bir hata oluştu. Lütfen tekrar deneyin.' 
+      setError(locale === 'tr'
+        ? 'Bir hata oluştu. Lütfen tekrar deneyin.'
         : 'An error occurred. Please try again.'
       );
     } finally {
@@ -121,9 +124,9 @@ export default function ResetPasswordPage() {
               onClick={() => router.push(`/${locale}`)}
               className="flex items-center cursor-pointer"
             >
-              <img 
-                src="/nocodepage_logo.png" 
-                alt="NoCodePage" 
+              <img
+                src="/nocodepage_logo.png"
+                alt="NoCodePage"
                 className="h-14 w-auto"
               />
             </button>
@@ -148,7 +151,7 @@ export default function ResetPasswordPage() {
                   {locale === 'tr' ? 'Şifre Güncellendi!' : 'Password Updated!'}
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  {locale === 'tr' 
+                  {locale === 'tr'
                     ? 'Şifreniz başarıyla güncellendi. Giriş sayfasına yönlendiriliyorsunuz...'
                     : 'Your password has been successfully updated. Redirecting to login...'
                   }
@@ -174,7 +177,7 @@ export default function ResetPasswordPage() {
                     {locale === 'tr' ? 'Yeni Şifre Belirle' : 'Set New Password'}
                   </h1>
                   <p className="text-gray-600 dark:text-gray-400">
-                    {locale === 'tr' 
+                    {locale === 'tr'
                       ? 'Lütfen yeni şifrenizi girin'
                       : 'Please enter your new password'
                     }
@@ -282,7 +285,7 @@ export default function ResetPasswordPage() {
                         <div className={`h-1 flex-1 rounded ${password.length >= 10 && /[A-Z]/.test(password) && /[0-9]/.test(password) ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                       </div>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {locale === 'tr' 
+                        {locale === 'tr'
                           ? 'Güçlü bir şifre için en az 8 karakter, büyük harf ve rakam kullanın'
                           : 'Use at least 8 characters, uppercase letters and numbers for a strong password'
                         }
@@ -332,5 +335,21 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrapper component with Suspense boundary
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-700 dark:text-gray-300">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

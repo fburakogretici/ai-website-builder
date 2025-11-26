@@ -1,15 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Iyzipay from 'iyzipay';
 import { createClient } from '@supabase/supabase-js';
 import { SUBSCRIPTION_PLANS, SubscriptionTier } from '@/types/subscription';
 
-const iyzipay = new Iyzipay({
-  apiKey: process.env.IYZICO_API_KEY!,
-  secretKey: process.env.IYZICO_SECRET_KEY!,
-  uri: process.env.NODE_ENV === 'production' 
-    ? 'https://api.iyzipay.com' 
-    : 'https://sandbox-api.iyzipay.com'
-});
+// Lazy load iyzipay to avoid build-time issues
+let Iyzipay: any;
+let iyzipay: any;
+
+async function getIyzipay() {
+  if (!Iyzipay) {
+    Iyzipay = (await import('iyzipay')).default;
+  }
+  if (!iyzipay) {
+    iyzipay = new Iyzipay({
+      apiKey: process.env.IYZICO_API_KEY!,
+      secretKey: process.env.IYZICO_SECRET_KEY!,
+      uri: process.env.NODE_ENV === 'production'
+        ? 'https://api.iyzipay.com'
+        : 'https://sandbox-api.iyzipay.com'
+    });
+  }
+  return iyzipay;
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,8 +43,10 @@ export async function POST(request: NextRequest): Promise<Response> {
       token,
     };
 
+    const iyzipayInstance = await getIyzipay();
+
     return new Promise<Response>((resolve) => {
-      iyzipay.checkoutForm.retrieve(retrieveRequest, async (err: Error | null, result: {
+      iyzipayInstance.checkoutForm.retrieve(retrieveRequest, async (err: Error | null, result: {
         status: string;
         paymentStatus?: string;
         conversationId?: string;
@@ -142,7 +155,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 // Also handle GET for redirect-based callbacks
 export async function GET(request: NextRequest): Promise<Response> {
   const token = request.nextUrl.searchParams.get('token');
-  
+
   if (!token) {
     return NextResponse.redirect(new URL('/pricing?error=missing_token', process.env.NEXT_PUBLIC_APP_URL!));
   }
@@ -150,11 +163,11 @@ export async function GET(request: NextRequest): Promise<Response> {
   // Create a form data with token and call POST
   const formData = new FormData();
   formData.append('token', token);
-  
+
   const result = await POST(new NextRequest(request.url, {
     method: 'POST',
     body: formData,
   }));
-  
+
   return result as Response;
 }

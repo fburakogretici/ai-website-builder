@@ -29,7 +29,7 @@ export default function DashboardPage() {
       }
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_, newSession) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_: any, newSession: Session | null) => {
       if (newSession) {
         setSession(newSession);
         loadWebsites(newSession.user.id);
@@ -56,7 +56,7 @@ export default function DashboardPage() {
         console.error('Supabase error:', error);
         throw error;
       }
-      
+
       setWebsites(data || []);
       console.log('✅ Loaded websites from Supabase:', data?.length || 0);
     } catch (error) {
@@ -68,9 +68,9 @@ export default function DashboardPage() {
 
   const handleDeleteWebsite = async (websiteId: string, websiteName: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     const confirmed = window.confirm(
-      locale === 'tr' 
+      locale === 'tr'
         ? `"${websiteName}" adlı siteyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`
         : `Are you sure you want to delete "${websiteName}"? This action cannot be undone.`
     );
@@ -99,7 +99,7 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="flex flex-col items-center">
-            <div className="relative">
+          <div className="relative">
             <div className="w-20 h-20 border-4 border-indigo-200 dark:border-indigo-900 rounded-full"></div>
             <div className="w-20 h-20 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin absolute top-0"></div>
           </div>
@@ -119,7 +119,7 @@ export default function DashboardPage() {
             {t('dashboard.welcome')}! 👋
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg">
-            {locale === 'tr' 
+            {locale === 'tr'
               ? 'AI ile web sitenizi oluşturun veya mevcut sitelerinizi yönetin.'
               : 'Create your website with AI or manage your existing sites.'}
           </p>
@@ -140,12 +140,12 @@ export default function DashboardPage() {
                   </h2>
                 </div>
                 <p className="text-indigo-100 text-base leading-relaxed">
-                  {locale === 'tr' 
+                  {locale === 'tr'
                     ? 'Sadece istediklerinizi anlatın, AI sizin için profesyonel web sitesini oluştursun.'
                     : 'Just describe what you want, AI will create a professional website for you.'}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => router.push(`/${locale}/ai-builder`)}
                 className="bg-white text-indigo-600 py-3 px-8 rounded-xl hover:shadow-2xl hover:scale-105 transition-all duration-200 flex items-center justify-center font-bold text-lg whitespace-nowrap"
               >
@@ -168,7 +168,7 @@ export default function DashboardPage() {
                   {websites.length} {locale === 'tr' ? 'site' : websites.length === 1 ? 'site' : 'sites'}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => router.push(`/${locale}/ai-builder`)}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 px-5 rounded-lg transition-all duration-200 flex items-center gap-2 font-medium"
               >
@@ -195,8 +195,8 @@ export default function DashboardPage() {
                   {locale === 'tr' ? 'Henüz site oluşturmadınız' : "No websites yet"}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  {locale === 'tr' 
-                    ? 'Yukarıdaki butona tıklayarak ilk web sitenizi oluşturun.' 
+                  {locale === 'tr'
+                    ? 'Yukarıdaki butona tıklayarak ilk web sitenizi oluşturun.'
                     : 'Click the button above to create your first website.'}
                 </p>
               </div>

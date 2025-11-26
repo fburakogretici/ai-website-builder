@@ -144,3 +144,25 @@ export type TemplateCategory =
   | 'restaurant'
   | 'personal'
   | 'event';
+
+/**
+ * Loaded template with HTML, CSS and config
+ */
+export interface LoadedTemplate {
+  html: string;
+  css: string;
+  config: TemplateConfig;
+  preview?: string;
+}
+
+/**
+ * Rendered website output
+ */
+export interface RenderedWebsite {
+  html: string;
+  css: string;
+  fullHtml?: string;
+  templateId: string;
+  locale: string;
+  generatedAt?: string;
+}

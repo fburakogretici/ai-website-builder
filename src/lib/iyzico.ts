@@ -1,15 +1,26 @@
-import Iyzipay from 'iyzipay';
+// Lazy load iyzipay to avoid build-time issues
+let Iyzipay: any;
+let iyzipayInstance: any;
 
-// iyzico configuration
-const iyzipay = new Iyzipay({
-  apiKey: process.env.IYZICO_API_KEY!,
-  secretKey: process.env.IYZICO_SECRET_KEY!,
-  uri: process.env.NODE_ENV === 'production' 
-    ? 'https://api.iyzipay.com' 
-    : 'https://sandbox-api.iyzipay.com'
-});
+export async function getIyzipay() {
+  if (!Iyzipay) {
+    Iyzipay = (await import('iyzipay')).default;
+  }
+  if (!iyzipayInstance) {
+    iyzipayInstance = new Iyzipay({
+      apiKey: process.env.IYZICO_API_KEY!,
+      secretKey: process.env.IYZICO_SECRET_KEY!,
+      uri: process.env.NODE_ENV === 'production'
+        ? 'https://api.iyzipay.com'
+        : 'https://sandbox-api.iyzipay.com'
+    });
+  }
+  return iyzipayInstance;
+}
 
-export default iyzipay;
+// For backward compatibility, export default as a function
+export default getIyzipay;
+
 
 // Helper types for iyzico
 export interface IyzicoPaymentRequest {

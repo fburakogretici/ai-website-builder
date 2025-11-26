@@ -32,7 +32,7 @@ export default function Home() {
       }
     };
     checkSession();
-    const { data: authListener } = supabase.auth.onAuthStateChange((_, newSession) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_: any, newSession: Session | null) => {
       setSession(newSession);
     });
     return () => {
@@ -95,18 +95,18 @@ export default function Home() {
           {/* Gradient Orbs */}
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-indigo-400/30 to-purple-400/30 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-pink-400/30 to-orange-400/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          
+
           {/* Floating Code Symbols */}
           <div className="absolute top-20 left-10 text-indigo-400/20 dark:text-indigo-400/10 text-6xl font-mono animate-float">{'<>'}</div>
           <div className="absolute top-40 right-20 text-purple-400/20 dark:text-purple-400/10 text-5xl font-mono animate-float" style={{ animationDelay: '0.5s' }}>{'{ }'}</div>
           <div className="absolute bottom-32 left-1/4 text-pink-400/20 dark:text-pink-400/10 text-7xl font-mono animate-float" style={{ animationDelay: '1s' }}>{'</>'}</div>
           <div className="absolute top-1/3 right-10 text-cyan-400/20 dark:text-cyan-400/10 text-4xl font-mono animate-float" style={{ animationDelay: '1.5s' }}>{'[ ]'}</div>
-          
+
           {/* AI Sparkles */}
           <div className="absolute top-1/4 right-1/3 w-2 h-2 bg-indigo-400 rounded-full animate-ping" style={{ animationDelay: '0.3s' }}></div>
           <div className="absolute bottom-1/3 left-1/4 w-2 h-2 bg-purple-400 rounded-full animate-ping" style={{ animationDelay: '0.7s' }}></div>
           <div className="absolute top-1/2 right-1/4 w-2 h-2 bg-pink-400 rounded-full animate-ping" style={{ animationDelay: '1.2s' }}></div>
-          
+
           {/* Browser Window Mockups */}
           <div className="absolute top-10 right-10 w-32 h-24 bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-indigo-300/20 dark:border-indigo-500/10 rounded-lg animate-float-slow">
             <div className="flex gap-1 p-2">
@@ -120,7 +120,7 @@ export default function Home() {
               <div className="h-1 bg-pink-400/20 rounded w-2/3"></div>
             </div>
           </div>
-          
+
           <div className="absolute bottom-20 left-10 w-36 h-28 bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-purple-300/20 dark:border-purple-500/10 rounded-lg animate-float-slow" style={{ animationDelay: '0.8s' }}>
             <div className="flex gap-1 p-2">
               <div className="w-2 h-2 rounded-full bg-red-400/40"></div>
@@ -133,7 +133,7 @@ export default function Home() {
               <div className="h-1 bg-cyan-400/20 rounded w-5/6"></div>
             </div>
           </div>
-          
+
           {/* Grid Pattern */}
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzg4OCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-5"></div>
         </div>
@@ -234,7 +234,7 @@ export default function Home() {
               {locale === 'tr' ? 'Sadece 3 basit adımda' : 'Just 3 simple steps'}
             </h2>
             <p className="text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              {locale === 'tr' 
+              {locale === 'tr'
                 ? 'AI destekli web sitesi oluşturucumuz, işletmeniz için özel olarak tasarlanmış, profesyonel görünümlü bir web sitesi oluşturacaktır.'
                 : 'Our AI-powered website builder will create a professional-looking website specifically designed for your business.'}
             </p>
@@ -316,7 +316,7 @@ export default function Home() {
       </section>
 
       {/* Old content below - keeping for reference */}
-      <main className="pt-24 pb-16 px-4 sm:px-6 lg:px-8" style={{display: 'none'}}>
+      <main className="pt-24 pb-16 px-4 sm:px-6 lg:px-8" style={{ display: 'none' }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-sm font-medium mb-6 animate-pulse">
@@ -475,12 +475,12 @@ export default function Home() {
             {/* Portfolio Creative Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="relative h-48 w-full bg-gradient-to-br from-purple-500 to-pink-500">
-                <Image 
-                  src="https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&h=400&fit=crop" 
-                  alt="Portfolio Creative Theme Preview" 
-                  fill 
-                  sizes="(max-width: 768px) 100vw, 33vw" 
-                  className="object-cover" 
+                <Image
+                  src="https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&h=400&fit=crop"
+                  alt="Portfolio Creative Theme Preview"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover"
                   unoptimized
                 />
               </div>
@@ -507,12 +507,12 @@ export default function Home() {
             {/* SaaS Modern Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="relative h-48 w-full bg-gradient-to-br from-blue-500 to-cyan-500">
-                <Image 
-                  src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=400&fit=crop" 
-                  alt="SaaS Modern Theme Preview" 
-                  fill 
-                  sizes="(max-width: 768px) 100vw, 33vw" 
-                  className="object-cover" 
+                <Image
+                  src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=400&fit=crop"
+                  alt="SaaS Modern Theme Preview"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover"
                   unoptimized
                 />
               </div>
@@ -539,12 +539,12 @@ export default function Home() {
             {/* Startup Tech Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="relative h-48 w-full bg-gradient-to-br from-indigo-500 to-purple-500">
-                <Image 
-                  src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=400&fit=crop" 
-                  alt="Startup Tech Theme Preview" 
-                  fill 
-                  sizes="(max-width: 768px) 100vw, 33vw" 
-                  className="object-cover" 
+                <Image
+                  src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=400&fit=crop"
+                  alt="Startup Tech Theme Preview"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover"
                   unoptimized
                 />
               </div>
@@ -739,12 +739,12 @@ export default function Home() {
             {locale === 'tr' ? 'Web sitenizi bugün oluşturun' : 'Create your website today'}
           </h2>
           <p className="text-base text-indigo-100 mb-6">
-            {locale === 'tr' 
+            {locale === 'tr'
               ? 'AI destekli platformumuzla profesyonel web sitenizi dakikalar içinde hazır hale getirin'
               : 'Get your professional website ready in minutes with our AI-powered platform'
             }
           </p>
-          <button 
+          <button
             onClick={() => {
               setLoading(true);
               router.push(session ? '/dashboard' : `${locale}/login`);
@@ -766,10 +766,10 @@ export default function Home() {
           className="fixed bottom-8 right-8 w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group z-50 animate-bounce hover:animate-none"
           aria-label={locale === 'tr' ? 'Yukarı çık' : 'Scroll to top'}
         >
-          <svg 
-            className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" 
-            fill="none" 
-            stroke="currentColor" 
+          <svg
+            className="w-6 h-6 group-hover:scale-110 transition-transform duration-200"
+            fill="none"
+            stroke="currentColor"
             viewBox="0 0 24 24"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
