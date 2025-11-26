@@ -46,7 +46,7 @@ export default function DashboardPage() {
         router.replace(`/${locale}/login`);
       }
     });
-
+    //
     return () => {
       authListener?.subscription.unsubscribe();
     };
