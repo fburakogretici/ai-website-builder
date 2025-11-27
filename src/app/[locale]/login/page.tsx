@@ -186,16 +186,15 @@ export default function LoginPage() {
         </div>
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-indigo-900/50 to-purple-950/50"></div>
 
-        {/* Brand with Pulse Animation */}
-        <div className="relative z-10 flex items-center gap-3 group">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm shadow-inner group-hover:bg-white/10 group-hover:border-white/20 transition-all duration-300">
-            <svg className="w-6 h-6 text-indigo-300 group-hover:text-indigo-200 transition-colors duration-300 group-hover:scale-110 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-            </svg>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-bold text-white tracking-tight leading-none group-hover:text-indigo-100 transition-colors duration-300">NoCodePage</span>
-            <span className="text-[10px] font-medium text-indigo-300 tracking-widest uppercase leading-none mt-1 group-hover:text-indigo-200 transition-colors duration-300">AI Builder</span>
+        {/* Brand Logo */}
+        <div className="relative z-10 inline-block group cursor-pointer">
+          <div className="relative">
+            <img
+              src="/nocodepage_logo.png"
+              alt="NoCodePage"
+              className="h-16 w-auto transition-all duration-300 group-hover:scale-105 brightness-0 invert"
+            />
+            <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/0 via-purple-500/20 to-pink-500/0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-2xl"></div>
           </div>
         </div>
 
@@ -228,8 +227,8 @@ export default function LoginPage() {
             <span className="hover:text-white cursor-pointer transition-colors">Privacy</span>
             <span className="hover:text-white cursor-pointer transition-colors">Terms</span>
           </div>
-        </div >
-      </div >
+        </div>
+      </div>
 
       {/* Right Panel - Clean Form */}
       < div className="flex items-center justify-center p-4 sm:p-8 lg:p-12 bg-white dark:bg-slate-950 min-h-[100dvh] lg:min-h-screen" >
