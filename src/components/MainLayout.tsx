@@ -7,6 +7,8 @@ import Footer from './Footer';
 import SupabaseErrorHandler from './SupabaseErrorHandler';
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 import type { Session } from '@supabase/supabase-js';
+import { Toaster } from 'sonner';
+import { ConfirmProvider } from './ConfirmProvider';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -50,16 +52,28 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   if (!shouldShowLayout) {
     // For login, forgot-password, reset-password pages - no layout
     return (
-      <>
+      <ConfirmProvider>
         <SupabaseErrorHandler />
+        <Toaster
+          position="bottom-right"
+          closeButton
+          expand={true}
+          duration={4000}
+        />
         {children}
-      </>
+      </ConfirmProvider>
     );
   }
 
   return (
-    <>
+    <ConfirmProvider>
       <SupabaseErrorHandler />
+      <Toaster
+        position="bottom-right"
+        closeButton
+        expand={true}
+        duration={4000}
+      />
       <div>
         <Navbar session={session} />
       </div>
@@ -69,6 +83,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </main>
         <Footer />
       </div>
-    </>
+    </ConfirmProvider>
   );
 }

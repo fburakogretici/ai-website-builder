@@ -6,6 +6,7 @@ import { useLocale } from "next-intl";
 import { retryFetch, getErrorMessage } from "@/utils/retry";
 import { saveConversation, loadConversation } from "@/utils/conversation-storage";
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
+import { toast } from 'sonner';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -226,12 +227,12 @@ export default function AIBuilderPage() {
 
   const handleSave = async () => {
     if (!generatedHtml) {
-      alert(locale === "tr" ? "Önce bir site oluşturun" : "Create a website first");
+      toast.error(locale === "tr" ? "Önce bir site oluşturun" : "Create a website first");
       return;
     }
 
     if (!websiteName.trim()) {
-      alert(locale === "tr" ? "Lütfen site adı girin" : "Please enter website name");
+      toast.error(locale === "tr" ? "Lütfen site adı girin" : "Please enter website name");
       return;
     }
 
@@ -267,15 +268,15 @@ export default function AIBuilderPage() {
         setWebsiteId(result.websiteId);
       }
 
-      alert(locale === "tr"
-        ? "✅ Site kaydedildi!"
-        : "✅ Website saved!");
+      toast.success(locale === "tr"
+        ? "Site kaydedildi!"
+        : "Website saved!");
 
     } catch (error: any) {
       console.error("Save error:", error);
-      alert(locale === "tr"
-        ? `❌ Kaydetme hatası: ${error.message}`
-        : `❌ Save error: ${error.message}`);
+      toast.error(locale === "tr"
+        ? `Kaydetme hatası: ${error.message}`
+        : `Save error: ${error.message}`);
     } finally {
       setIsSaving(false);
       setHasUnsavedChanges(false);
@@ -284,7 +285,7 @@ export default function AIBuilderPage() {
 
   const handlePublish = async () => {
     if (!websiteId) {
-      alert(locale === "tr" ? "Önce siteyi kaydedin" : "Save the website first");
+      toast.error(locale === "tr" ? "Önce siteyi kaydedin" : "Save the website first");
       return;
     }
 
@@ -302,15 +303,15 @@ export default function AIBuilderPage() {
       if (error) throw error;
 
       setWebsiteStatus('published');
-      alert(locale === "tr"
-        ? "✅ Site yayınlandı!"
+      toast.success(locale === "tr"
+        ? "Site yayınlandı!"
         : "✅ Website published!");
 
     } catch (error: any) {
       console.error("Publish error:", error);
-      alert(locale === "tr"
-        ? `❌ Yayınlama hatası: ${error.message}`
-        : `❌ Publish error: ${error.message}`);
+      toast.error(locale === "tr"
+        ? `Yayınlama hatası: ${error.message}`
+        : `Publish error: ${error.message}`);
     } finally {
       setIsPublishing(false);
     }
@@ -333,15 +334,15 @@ export default function AIBuilderPage() {
       if (error) throw error;
 
       setWebsiteStatus('draft');
-      alert(locale === "tr"
-        ? "✅ Site yayından kaldırıldı"
+      toast.success(locale === "tr"
+        ? "Site yayından kaldırıldı"
         : "✅ Website unpublished");
 
     } catch (error: any) {
       console.error("Unpublish error:", error);
-      alert(locale === "tr"
-        ? `❌ Hata: ${error.message}`
-        : `❌ Error: ${error.message}`);
+      toast.error(locale === "tr"
+        ? `Hata: ${error.message}`
+        : `Error: ${error.message}`);
     } finally {
       setIsPublishing(false);
     }

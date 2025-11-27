@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { SUBSCRIPTION_PLANS, CREDIT_PACKAGES, SubscriptionTier } from "@/types/subscription";
+import { toast } from "sonner";
 
 export default function PricingPage() {
   const locale = useLocale();
@@ -46,7 +47,7 @@ export default function PricingPage() {
         const paymentDiv = document.createElement('div');
         paymentDiv.innerHTML = data.checkoutFormContent;
         document.body.appendChild(paymentDiv);
-        
+
         // Execute iyzico scripts
         const scripts = paymentDiv.getElementsByTagName('script');
         for (let i = 0; i < scripts.length; i++) {
@@ -61,7 +62,7 @@ export default function PricingPage() {
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      alert(locale === 'tr' ? 'Bir hata oluştu. Lütfen tekrar deneyin.' : 'An error occurred. Please try again.');
+      toast.error(locale === 'tr' ? 'Bir hata oluştu. Lütfen tekrar deneyin.' : 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
       setSelectedPlan(null);
@@ -91,7 +92,7 @@ export default function PricingPage() {
           {locale === 'tr' ? 'Basit, Şeffaf Fiyatlandırma' : 'Simple, Transparent Pricing'}
         </h1>
         <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-          {locale === 'tr' 
+          {locale === 'tr'
             ? 'Ücretsiz başlayın. İhtiyacınız oldukça büyüyün.'
             : 'Start for free. Scale as you grow.'}
         </p>
@@ -100,21 +101,19 @@ export default function PricingPage() {
         <div className="mt-10 inline-flex items-center gap-4 bg-slate-800/50 p-1.5 rounded-xl">
           <button
             onClick={() => setBillingPeriod('monthly')}
-            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-              billingPeriod === 'monthly'
-                ? 'bg-white text-slate-900'
-                : 'text-slate-400 hover:text-white'
-            }`}
+            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${billingPeriod === 'monthly'
+              ? 'bg-white text-slate-900'
+              : 'text-slate-400 hover:text-white'
+              }`}
           >
             {locale === 'tr' ? 'Aylık' : 'Monthly'}
           </button>
           <button
             onClick={() => setBillingPeriod('yearly')}
-            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
-              billingPeriod === 'yearly'
-                ? 'bg-white text-slate-900'
-                : 'text-slate-400 hover:text-white'
-            }`}
+            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${billingPeriod === 'yearly'
+              ? 'bg-white text-slate-900'
+              : 'text-slate-400 hover:text-white'
+              }`}
           >
             {locale === 'tr' ? 'Yıllık' : 'Yearly'}
             <span className="bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full">
@@ -136,11 +135,10 @@ export default function PricingPage() {
             return (
               <div
                 key={plan.id}
-                className={`relative rounded-2xl p-6 transition-all duration-300 ${
-                  isPopular
-                    ? 'bg-gradient-to-br from-violet-600 to-purple-700 ring-2 ring-violet-400 scale-105 shadow-2xl shadow-violet-500/20'
-                    : 'bg-slate-800/50 border border-slate-700/50 hover:border-slate-600'
-                }`}
+                className={`relative rounded-2xl p-6 transition-all duration-300 ${isPopular
+                  ? 'bg-gradient-to-br from-violet-600 to-purple-700 ring-2 ring-violet-400 scale-105 shadow-2xl shadow-violet-500/20'
+                  : 'bg-slate-800/50 border border-slate-700/50 hover:border-slate-600'
+                  }`}
               >
                 {isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -184,7 +182,7 @@ export default function PricingPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                     <span className={`text-sm font-medium ${isPopular ? 'text-white' : 'text-slate-300'}`}>
-                      {plan.monthlyCredits === -1 
+                      {plan.monthlyCredits === -1
                         ? (locale === 'tr' ? 'Sınırsız kredi' : 'Unlimited credits')
                         : `${plan.monthlyCredits} ${locale === 'tr' ? 'kredi/ay' : 'credits/mo'}`
                       }
@@ -215,13 +213,12 @@ export default function PricingPage() {
                 <button
                   onClick={() => handleSelectPlan(plan.id)}
                   disabled={isLoading && selectedPlan === plan.id}
-                  className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
-                    isPopular
-                      ? 'bg-white text-violet-700 hover:bg-violet-50'
-                      : plan.id === 'free'
+                  className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${isPopular
+                    ? 'bg-white text-violet-700 hover:bg-violet-50'
+                    : plan.id === 'free'
                       ? 'bg-slate-700 text-white hover:bg-slate-600'
                       : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:from-violet-400 hover:to-purple-500'
-                  } disabled:opacity-50`}
+                    } disabled:opacity-50`}
                 >
                   {isLoading && selectedPlan === plan.id ? (
                     <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
@@ -258,11 +255,10 @@ export default function PricingPage() {
             {CREDIT_PACKAGES.map((pack) => (
               <div
                 key={pack.id}
-                className={`relative rounded-xl p-6 transition-all duration-300 ${
-                  pack.popular
-                    ? 'bg-gradient-to-br from-emerald-600 to-green-700 ring-2 ring-emerald-400'
-                    : 'bg-slate-800/50 border border-slate-700/50 hover:border-slate-600'
-                }`}
+                className={`relative rounded-xl p-6 transition-all duration-300 ${pack.popular
+                  ? 'bg-gradient-to-br from-emerald-600 to-green-700 ring-2 ring-emerald-400'
+                  : 'bg-slate-800/50 border border-slate-700/50 hover:border-slate-600'
+                  }`}
               >
                 {pack.popular && (
                   <div className="absolute -top-2.5 right-4">
@@ -273,9 +269,8 @@ export default function PricingPage() {
                 )}
 
                 <div className="text-center">
-                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 ${
-                    pack.popular ? 'bg-white/20' : 'bg-purple-500/20'
-                  }`}>
+                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 ${pack.popular ? 'bg-white/20' : 'bg-purple-500/20'
+                    }`}>
                     <svg className={`w-6 h-6 ${pack.popular ? 'text-white' : 'text-purple-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
@@ -299,11 +294,10 @@ export default function PricingPage() {
                   </div>
 
                   <button
-                    className={`w-full py-2.5 px-4 rounded-lg font-semibold transition-all ${
-                      pack.popular
-                        ? 'bg-white text-emerald-700 hover:bg-emerald-50'
-                        : 'bg-slate-700 text-white hover:bg-slate-600'
-                    }`}
+                    className={`w-full py-2.5 px-4 rounded-lg font-semibold transition-all ${pack.popular
+                      ? 'bg-white text-emerald-700 hover:bg-emerald-50'
+                      : 'bg-slate-700 text-white hover:bg-slate-600'
+                      }`}
                   >
                     {locale === 'tr' ? 'Satın Al' : 'Purchase'}
                   </button>
@@ -323,7 +317,7 @@ export default function PricingPage() {
             {[
               {
                 q: locale === 'tr' ? 'Kredi nedir?' : 'What is a credit?',
-                a: locale === 'tr' 
+                a: locale === 'tr'
                   ? 'Krediler, AI ile web sitesi oluşturma ve düzenleme işlemlerinde kullanılır. Her işlem türü farklı miktarda kredi tüketir. Örneğin, yeni bir site oluşturmak 10 kredi, küçük bir düzenleme 2 kredi harcar.'
                   : 'Credits are used for AI website generation and editing operations. Each operation type consumes different amounts of credits. For example, creating a new site costs 10 credits, a small edit costs 2 credits.',
               },

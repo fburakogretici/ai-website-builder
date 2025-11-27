@@ -6,6 +6,7 @@ import { useLocale } from "next-intl";
 import { retryFetch, getErrorMessage } from "@/utils/retry";
 import { saveConversation, loadConversation } from "@/utils/conversation-storage";
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
+import { toast } from 'sonner';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -135,7 +136,7 @@ export default function EditorPage() {
       setIsLoading(false);
     } catch (error) {
       console.error("Load error:", error);
-      alert(locale === "tr" ? "Site yüklenemedi" : "Failed to load website");
+      toast.error(locale === "tr" ? "Site yüklenemedi" : "Failed to load website");
       router.push(`/${locale}/dashboard`);
     }
   };
@@ -319,7 +320,7 @@ export default function EditorPage() {
       }
 
       if (!silent) {
-        alert(locale === "tr" ? "✅ Kaydedildi!" : "✅ Saved!");
+        toast.success(locale === "tr" ? "Kaydedildi!" : "Saved!");
       }
 
       // Don't reload website data - it would override our current htmlContent!
@@ -329,7 +330,7 @@ export default function EditorPage() {
     } catch (error) {
       console.error("Save error:", error);
       if (!silent) {
-        alert(locale === "tr" ? "Kaydetme hatası" : "Save failed");
+        toast.error(locale === "tr" ? "Kaydetme hatası" : "Save failed");
       }
     } finally {
       setIsSaving(false);
@@ -337,71 +338,47 @@ export default function EditorPage() {
   };
 
   const handlePublish = async () => {
-    if (!confirm(locale === "tr"
-      ? "Siteyi canlıya almak istediğinize emin misiniz?"
-      : "Are you sure you want to publish this site?")) {
-      return;
-    }
+    toast.promise(
+      (async () => {
+        const { createBrowserClient } = await import("@/utils/supabase/client");
+        const supabase = createBrowserClient();
 
-    setIsPublishing(true);
-    try {
-      const { createBrowserClient } = await import("@/utils/supabase/client");
-      const supabase = createBrowserClient();
+        const { error } = await supabase
+          .from("websites")
+          .update({ status: "active" })
+          .eq("id", websiteId);
 
-      const { error } = await supabase
-        .from("websites")
-        .update({
-          status: "active"
-        })
-        .eq("id", websiteId);
-
-      if (error) {
-        console.error("Supabase error:", error);
-        throw error;
+        if (error) throw error;
+        await loadWebsite();
+      })(),
+      {
+        loading: locale === "tr" ? "Yayınlanıyor..." : "Publishing...",
+        success: locale === "tr" ? "Site yayında!" : "Site is now live!",
+        error: locale === "tr" ? "Yayınlama hatası" : "Publish failed",
       }
-
-      alert(locale === "tr" ? "🎉 Site yayında!" : "🎉 Site is now live!");
-      await loadWebsite(); // Refresh website data
-    } catch (error) {
-      console.error("Publish error:", error);
-      alert(locale === "tr" ? "Yayınlama hatası" : "Publish failed");
-    } finally {
-      setIsPublishing(false);
-    }
+    );
   };
 
   const handleUnpublish = async () => {
-    if (!confirm(locale === "tr"
-      ? "Siteyi yayından kaldırmak istediğinize emin misiniz?"
-      : "Are you sure you want to unpublish this site?")) {
-      return;
-    }
+    toast.promise(
+      (async () => {
+        const { createBrowserClient } = await import("@/utils/supabase/client");
+        const supabase = createBrowserClient();
 
-    setIsPublishing(true);
-    try {
-      const { createBrowserClient } = await import("@/utils/supabase/client");
-      const supabase = createBrowserClient();
+        const { error } = await supabase
+          .from("websites")
+          .update({ status: "draft" })
+          .eq("id", websiteId);
 
-      const { error } = await supabase
-        .from("websites")
-        .update({
-          status: "draft"
-        })
-        .eq("id", websiteId);
-
-      if (error) {
-        console.error("Supabase error:", error);
-        throw error;
+        if (error) throw error;
+        await loadWebsite();
+      })(),
+      {
+        loading: locale === "tr" ? "İşleniyor..." : "Processing...",
+        success: locale === "tr" ? "Site taslağa alındı" : "Site moved to draft",
+        error: locale === "tr" ? "Yayından kaldırma hatası" : "Unpublish failed",
       }
-
-      alert(locale === "tr" ? "📝 Site taslağa alındı" : "📝 Site moved to draft");
-      await loadWebsite(); // Refresh website data
-    } catch (error) {
-      console.error("Unpublish error:", error);
-      alert(locale === "tr" ? "Yayından kaldırma hatası" : "Unpublish failed");
-    } finally {
-      setIsPublishing(false);
-    }
+    );
   };
 
   const handleAIRegenerate = async (sectionName: string, prompt: string) => {

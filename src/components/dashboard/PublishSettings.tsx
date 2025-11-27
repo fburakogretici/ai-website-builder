@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useLocale } from "next-intl";
+import { toast } from "sonner";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 interface PublishSettingsProps {
   websiteId: string;
@@ -17,6 +19,7 @@ interface DomainStatus {
 
 export default function PublishSettings({ websiteId, websiteName, onPublishChange }: PublishSettingsProps) {
   const locale = useLocale();
+  const { confirm } = useConfirm();
   const [isPublished, setIsPublished] = useState(false);
   const [subdomain, setSubdomain] = useState("");
   const [customDomain, setCustomDomain] = useState("");
@@ -84,8 +87,8 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
 
       setSubdomain(data.subdomain);
       setIsPublished(true);
-      setSuccess(locale === 'tr' 
-        ? `Siteniz yayınlandı! ${data.url}` 
+      setSuccess(locale === 'tr'
+        ? `Siteniz yayınlandı! ${data.url}`
         : `Your site is live! ${data.url}`
       );
       onPublishChange?.(true);
@@ -124,7 +127,7 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
 
   const handleAddCustomDomain = async () => {
     if (!customDomain) return;
-    
+
     setIsLoading(true);
     setError(null);
 
@@ -142,8 +145,8 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
 
       if (!response.ok) {
         if (data.upgrade) {
-          throw new Error(locale === 'tr' 
-            ? 'Custom domain için Pro veya üzeri plan gerekli' 
+          throw new Error(locale === 'tr'
+            ? 'Custom domain için Pro veya üzeri plan gerekli'
             : 'Custom domains require Pro or higher plan'
           );
         }
@@ -151,8 +154,8 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
       }
 
       setDnsInstructions(data.dnsInstructions);
-      setSuccess(locale === 'tr' 
-        ? 'Domain eklendi. DNS ayarlarını yapılandırın.' 
+      setSuccess(locale === 'tr'
+        ? 'Domain eklendi. DNS ayarlarını yapılandırın.'
         : 'Domain added. Configure your DNS settings.'
       );
 
@@ -181,12 +184,12 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
       }
 
       setDomainStatus(data.checks);
-      
+
       if (data.verified) {
         setSuccess(locale === 'tr' ? 'Domain doğrulandı!' : 'Domain verified!');
         setDnsInstructions(null);
       } else {
-        setError(locale === 'tr' 
+        setError(locale === 'tr'
           ? 'DNS kayıtları henüz yayılmadı. Birkaç dakika bekleyip tekrar deneyin.'
           : 'DNS records not propagated yet. Wait a few minutes and try again.'
         );
@@ -200,9 +203,17 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
   };
 
   const handleRemoveDomain = async () => {
-    if (!confirm(locale === 'tr' ? 'Domain bağlantısını kaldırmak istediğinize emin misiniz?' : 'Are you sure you want to remove this domain?')) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: locale === 'tr' ? 'Domain Kaldır' : 'Remove Domain',
+      message: locale === 'tr'
+        ? 'Domain bağlantısını kaldırmak istediğinize emin misiniz?'
+        : 'Are you sure you want to remove this domain?',
+      confirmText: locale === 'tr' ? 'Kaldır' : 'Remove',
+      cancelText: locale === 'tr' ? 'İptal' : 'Cancel',
+      variant: 'warning'
+    });
+
+    if (!confirmed) return;
 
     setIsLoading(true);
     try {
@@ -278,7 +289,7 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
             </button>
           )}
         </div>
-        
+
         {isPublished && subdomain && (
           <a
             href={`https://${subdomain}.nocodepage.app`}
@@ -409,7 +420,7 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
             {dnsInstructions && !domainStatus?.verified && (
               <div className="p-4 bg-slate-700/30 rounded-lg space-y-3">
                 <p className="text-sm text-slate-300">
-                  {locale === 'tr' 
+                  {locale === 'tr'
                     ? 'Domain sağlayıcınızda aşağıdaki DNS kayıtlarını ekleyin:'
                     : 'Add the following DNS records at your domain provider:'
                   }

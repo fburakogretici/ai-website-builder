@@ -34,9 +34,12 @@ body {
 
 /* Custom Animations */
 @keyframes gradient {
-  0%, 100% {
+
+  0%,
+  100% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
@@ -47,6 +50,7 @@ body {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -60,4 +64,156 @@ body {
 
 .animate-fade-in {
   animation: fade-in 0.6s ease-out;
+}
+
+/* Toast animations */
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Sonner Toast Custom Styles - FORCED WITH !important */
+[data-sonner-toaster] {
+  font-family: inherit !important;
+}
+
+[data-sonner-toast] {
+  animation: toast-slide-in 0.3s cubic-bezier(0.21, 1.02, 0.73, 1) forwards !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  padding: 14px 16px !important;
+  border-radius: 10px !important;
+  max-width: 420px !important;
+  font-size: 14px !important;
+}
+
+/* Success toast - Yeşil */
+[data-sonner-toast][data-type="success"],
+[data-sonner-toaster] [data-sonner-toast][data-type="success"] {
+  background: #35cf9c !important;
+  color: white !important;
+  border: 1px solid #059669 !important;
+}
+
+[data-sonner-toast][data-type="success"] *,
+[data-sonner-toast][data-type="success"] [data-title],
+[data-sonner-toast][data-type="success"] [data-description],
+[data-sonner-toast][data-type="success"] [data-content] {
+  color: white !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-close-button] {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border: none !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-close-button]:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-sonner-toast][data-type="success"] svg {
+  color: white !important;
+}
+
+/* Error toast - Kırmızı */
+[data-sonner-toast][data-type="error"],
+[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
+  background: #ef4444 !important;
+  color: white !important;
+  border: 1px solid #dc2626 !important;
+}
+
+[data-sonner-toast][data-type="error"] *,
+[data-sonner-toast][data-type="error"] [data-title],
+[data-sonner-toast][data-type="error"] [data-description],
+[data-sonner-toast][data-type="error"] [data-content] {
+  color: white !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-close-button] {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border: none !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-close-button]:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-sonner-toast][data-type="error"] svg {
+  color: white !important;
+}
+
+/* Info/Default toast - Mavi */
+[data-sonner-toast][data-type="info"],
+[data-sonner-toast]:not([data-type]),
+[data-sonner-toaster] [data-sonner-toast][data-type="info"],
+[data-sonner-toaster] [data-sonner-toast]:not([data-type]) {
+  background: #3b82f6 !important;
+  color: white !important;
+  border: 1px solid #2563eb !important;
+}
+
+[data-sonner-toast][data-type="info"] *,
+[data-sonner-toast]:not([data-type]) *,
+[data-sonner-toast][data-type="info"] [data-title],
+[data-sonner-toast][data-type="info"] [data-description],
+[data-sonner-toast][data-type="info"] [data-content],
+[data-sonner-toast]:not([data-type]) [data-title],
+[data-sonner-toast]:not([data-type]) [data-description],
+[data-sonner-toast]:not([data-type]) [data-content] {
+  color: white !important;
+}
+
+[data-sonner-toast][data-type="info"] [data-close-button],
+[data-sonner-toast]:not([data-type]) [data-close-button] {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border: none !important;
+}
+
+[data-sonner-toast][data-type="info"] [data-close-button]:hover,
+[data-sonner-toast]:not([data-type]) [data-close-button]:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-sonner-toast][data-type="info"] svg,
+[data-sonner-toast]:not([data-type]) svg {
+  color: white !important;
+}
+
+/* Warning toast - Turuncu */
+[data-sonner-toast][data-type="warning"],
+[data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
+  background: #f59e0b !important;
+  color: white !important;
+  border: 1px solid #d97706 !important;
+}
+
+[data-sonner-toast][data-type="warning"] *,
+[data-sonner-toast][data-type="warning"] [data-title],
+[data-sonner-toast][data-type="warning"] [data-description],
+[data-sonner-toast][data-type="warning"] [data-content] {
+  color: white !important;
+}
+
+[data-sonner-toast][data-type="warning"] [data-close-button] {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border: none !important;
+}
+
+[data-sonner-toast][data-type="warning"] [data-close-button]:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-sonner-toast][data-type="warning"] svg {
+  color: white !important;
 }

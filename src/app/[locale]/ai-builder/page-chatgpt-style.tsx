@@ -34,10 +34,10 @@ export default function AIBuilderPage() {
   // Welcome message on mount
   useEffect(() => {
     if (messages.length === 0) {
-      const welcomeText = locale === "tr" 
+      const welcomeText = locale === "tr"
         ? "Merhaba! 👋 Ben AI web sitesi asistanınızım.\n\nİstediğiniz web sitesini anlatın, ben sizin için oluşturayım. Örneğin:\n\n• \"Modern bir kafe için web sitesi istiyorum. Adı 'Kahve Dükkanı'...\"\n• \"Grafik tasarım portföy sitesi, minimalist ve yaratıcı\"\n• \"Yazılım danışmanlık firması web sitesi\"\n\nHazır olduğunuzda mesajınızı yazıp gönderin!"
         : "Hello! 👋 I'm your AI website assistant.\n\nDescribe the website you want, and I'll create it for you. For example:\n\n• \"I want a website for a modern coffee shop. Name is 'Coffee House'...\"\n• \"Graphic design portfolio site, minimalist and creative\"\n• \"Software consulting firm website\"\n\nWhen ready, type your message and send!";
-      
+
       setMessages([{
         role: 'assistant',
         content: welcomeText,
@@ -77,14 +77,14 @@ export default function AIBuilderPage() {
 
       const result = await response.json();
       setGeneratedHtml(result.html);
-      
+
       if (result.businessName && !websiteName) {
         setWebsiteName(result.businessName);
       }
 
       const assistantMessage: Message = {
         role: 'assistant',
-        content: result.explanation || (locale === "tr" 
+        content: result.explanation || (locale === "tr"
           ? "✅ Web siteniz hazır! Sağ tarafta önizleyebilirsiniz."
           : "✅ Your website is ready! Preview it on the right."),
         timestamp: new Date()
@@ -96,7 +96,7 @@ export default function AIBuilderPage() {
       console.error("Generation error:", error);
       const errorMessage: Message = {
         role: 'assistant',
-        content: locale === "tr" 
+        content: locale === "tr"
           ? `❌ Üzgünüm, bir hata oluştu: ${error.message}`
           : `❌ Sorry, an error occurred: ${error.message}`,
         timestamp: new Date()
@@ -152,15 +152,15 @@ export default function AIBuilderPage() {
         throw new Error("Failed to save website");
       }
 
-      alert(locale === "tr" 
+      alert(locale === "tr"
         ? "✅ Site kaydedildi! Dashboard'a yönlendiriliyorsunuz..."
         : "✅ Website saved! Redirecting to dashboard...");
-      
+
       router.push(`/${locale}/dashboard`);
 
     } catch (error: any) {
       console.error("Save error:", error);
-      alert(locale === "tr" 
+      alert(locale === "tr"
         ? `❌ Kaydetme hatası: ${error.message}`
         : `❌ Save error: ${error.message}`);
     } finally {
@@ -235,11 +235,10 @@ export default function AIBuilderPage() {
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                    message.role === 'user'
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${message.role === 'user'
                       ? 'bg-indigo-600 text-white'
                       : 'bg-slate-700/50 text-slate-100'
-                  }`}
+                    }`}
                 >
                   <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
                   <p className="text-xs opacity-60 mt-2">
@@ -261,8 +260,8 @@ export default function AIBuilderPage() {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={locale === "tr" 
-                  ? "Mesajınızı yazın... (Enter: gönder, Shift+Enter: yeni satır)" 
+                placeholder={locale === "tr"
+                  ? "Mesajınızı yazın... (Enter: gönder, Shift+Enter: yeni satır)"
                   : "Type your message... (Enter: send, Shift+Enter: new line)"}
                 rows={3}
                 className="flex-1 px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 resize-none"
@@ -329,8 +328,8 @@ export default function AIBuilderPage() {
                   {locale === "tr" ? "Henüz site oluşturulmadı" : "No website created yet"}
                 </p>
                 <p className="text-sm">
-                  {locale === "tr" 
-                    ? "Soldaki chat'te mesaj göndererek başlayın" 
+                  {locale === "tr"
+                    ? "Soldaki chat'te mesaj göndererek başlayın"
                     : "Start by sending a message in the chat"}
                 </p>
               </div>

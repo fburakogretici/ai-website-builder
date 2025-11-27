@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 export default function NotificationsPage() {
   const t = useTranslations();
@@ -18,7 +19,7 @@ export default function NotificationsPage() {
   });
 
   const handleSave = () => {
-    alert("Bildirim ayarları kaydedildi!");
+    toast.success("Bildirim ayarları kaydedildi!");
   };
 
   return (

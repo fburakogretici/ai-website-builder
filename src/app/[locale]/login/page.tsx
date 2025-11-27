@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from 'next-intl';
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 import type { Session } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -98,7 +99,7 @@ export default function LoginPage() {
         setAuthError(t('auth.register.error'));
       } else {
         setAuthError(null);
-        alert(t('auth.register.success'));
+        toast.success(t('auth.register.success'));
       }
     } catch (error) {
       console.error('Signup error:', error);
@@ -179,8 +180,8 @@ export default function LoginPage() {
                   setAuthError(null);
                 }}
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 ${isLogin
-                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
               >
                 {t('auth.login.title')}
@@ -191,8 +192,8 @@ export default function LoginPage() {
                   setAuthError(null);
                 }}
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 ${!isLogin
-                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
               >
                 {t('auth.register.title')}

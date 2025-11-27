@@ -6,6 +6,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 import type { Session } from '@supabase/supabase-js';
 import WebsiteCard from '@/components/dashboard/WebsiteCard';
+import { toast } from "sonner";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function DashboardPage() {
   const [session, setSession] = useState<Session | null>(null);
@@ -14,6 +16,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const t = useTranslations();
   const locale = useLocale();
+  const { confirm } = useConfirm();
 
   const supabase = useSupabaseClient();
 
@@ -82,11 +85,15 @@ export default function DashboardPage() {
   const handleDeleteWebsite = async (websiteId: string, websiteName: string, e: React.MouseEvent) => {
     e.stopPropagation();
 
-    const confirmed = window.confirm(
-      locale === 'tr'
+    const confirmed = await confirm({
+      title: locale === 'tr' ? 'Siteyi Sil' : 'Delete Website',
+      message: locale === 'tr'
         ? `"${websiteName}" adlı siteyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`
-        : `Are you sure you want to delete "${websiteName}"? This action cannot be undone.`
-    );
+        : `Are you sure you want to delete "${websiteName}"? This action cannot be undone.`,
+      confirmText: locale === 'tr' ? 'Sil' : 'Delete',
+      cancelText: locale === 'tr' ? 'İptal' : 'Cancel',
+      variant: 'danger'
+    });
 
     if (!confirmed) return;
 
@@ -102,9 +109,10 @@ export default function DashboardPage() {
       if (session) {
         loadWebsites(session.user.id);
       }
+      toast.success(locale === 'tr' ? 'Site silindi' : 'Website deleted');
     } catch (error) {
       console.error('Error deleting website:', error);
-      alert(locale === 'tr' ? 'Site silinirken bir hata oluştu.' : 'Error deleting website.');
+      toast.error(locale === 'tr' ? 'Site silinirken bir hata oluştu.' : 'Error deleting website.');
     }
   };
 
