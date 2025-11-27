@@ -184,7 +184,7 @@ export default function LoginPage() {
             backgroundSize: '32px 32px'
           }}>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-indigo-900/50 to-purple-950/50"></div>
+        {/* <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-indigo-900/50 to-purple-950/50"></div> */}
 
         {/* Brand Logo */}
         <button
@@ -202,7 +202,7 @@ export default function LoginPage() {
         </button>
 
         {/* Testimonial / Value Prop */}
-        <div className="relative z-10 max-w-lg">
+        <div className="relative z-10 max-w-lg mb-12">
           <blockquote className="space-y-6">
             <p className="text-3xl font-medium text-white leading-tight">
               "{locale === 'tr'
