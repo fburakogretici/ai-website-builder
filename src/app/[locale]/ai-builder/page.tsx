@@ -3,11 +3,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
+import { retryFetch, getErrorMessage } from "@/utils/retry";
+import { saveConversation, loadConversation } from "@/utils/conversation-storage";
+import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  tokenUsage?: {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+  };
 }
 
 export default function AIBuilderPage() {
@@ -17,17 +25,31 @@ export default function AIBuilderPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isLongRunning, setIsLongRunning] = useState(false);
   const [generatedHtml, setGeneratedHtml] = useState("");
   const [websiteName, setWebsiteName] = useState("");
   const [websiteId, setWebsiteId] = useState<string | null>(null);
   const [websiteStatus, setWebsiteStatus] = useState<'draft' | 'published'>('draft');
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // History management for undo/redo
   const [htmlHistory, setHtmlHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+
+  const supabase = useSupabaseClient();
+  const [session, setSession] = useState<any>(null);
+
+  // Load session
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+    });
+  }, [supabase]);
 
   // Auto-scroll to bottom when messages change
   const scrollToBottom = () => {
@@ -42,6 +64,29 @@ export default function AIBuilderPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load conversation when websiteId exists (after save)
+  useEffect(() => {
+    if (websiteId && supabase && session) {
+      loadConversation(websiteId, supabase).then(savedMessages => {
+        if (savedMessages.length > 0) {
+          console.log(`📝 Loaded ${savedMessages.length} messages from conversation`);
+          setMessages(savedMessages);
+        }
+      });
+    }
+  }, [websiteId, supabase, session]);
+
+  // Auto-save conversation (debounced 3 seconds)
+  useEffect(() => {
+    if (messages.length > 0 && websiteId && supabase && session?.user?.id) {
+      const timer = setTimeout(() => {
+        saveConversation(websiteId, session.user.id, messages, supabase);
+      }, 3000); // 3 second debounce
+
+      return () => clearTimeout(timer);
+    }
+  }, [messages, websiteId, supabase, session]);
 
   // Welcome message on mount
   useEffect(() => {
@@ -70,21 +115,47 @@ export default function AIBuilderPage() {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
     setIsGenerating(true);
+    setRetryCount(0);
+    setIsLongRunning(false);
+
+    // Show "taking longer than usual" message after 20 seconds
+    const longRunningTimer = setTimeout(() => {
+      setIsLongRunning(true);
+    }, 20000);
 
     try {
-      const response = await fetch("/api/generate-html", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: inputMessage,
-          currentHtml: generatedHtml || null,
-          locale: locale,
-        }),
-      });
+      const response = await retryFetch(
+        "/api/generate-html",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: inputMessage,
+            currentHtml: generatedHtml || null,
+            conversationHistory: messages,
+            locale: locale,
+            websiteId: websiteId,
+          }),
+        },
+        {
+          maxRetries: 3,
+          initialDelayMs: 1000,
+          timeoutMs: 60000,
+          onRetry: (attempt, error) => {
+            setRetryCount(attempt);
+            console.log(`Retry attempt ${attempt}:`, error.message);
+          },
+        }
+      );
+
+      clearTimeout(longRunningTimer);
+      setIsLongRunning(false);
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.details || "Generation failed");
+        const error: any = new Error(errorData.details || "Generation failed");
+        error.status = response.status;
+        throw error;
       }
 
       const result = await response.json();
@@ -96,7 +167,9 @@ export default function AIBuilderPage() {
         return newHistory;
       });
       setHistoryIndex(prev => prev + 1);
+      setHistoryIndex(prev => prev + 1);
       setGeneratedHtml(newHtml);
+      setHasUnsavedChanges(true);
 
       if (result.businessName && !websiteName) {
         setWebsiteName(result.businessName);
@@ -111,19 +184,20 @@ export default function AIBuilderPage() {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-
     } catch (error: any) {
+      clearTimeout(longRunningTimer);
+      setIsLongRunning(false);
+
       console.error("Generation error:", error);
       const errorMessage: Message = {
         role: 'assistant',
-        content: locale === "tr"
-          ? `❌ Üzgünüm, bir hata oluştu: ${error.message}`
-          : `❌ Sorry, an error occurred: ${error.message}`,
+        content: getErrorMessage(error, locale as 'tr' | 'en'),
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsGenerating(false);
+      setRetryCount(0);
     }
   };
 
@@ -204,6 +278,7 @@ export default function AIBuilderPage() {
         : `❌ Save error: ${error.message}`);
     } finally {
       setIsSaving(false);
+      setHasUnsavedChanges(false);
     }
   };
 
@@ -366,7 +441,7 @@ export default function AIBuilderPage() {
                 {/* Save Button */}
                 <button
                   onClick={handleSave}
-                  disabled={isSaving || !websiteName.trim()}
+                  disabled={isSaving || !generatedHtml || !hasUnsavedChanges}
                   className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30"
                 >
                   {isSaving ? (
@@ -449,12 +524,22 @@ export default function AIBuilderPage() {
                       )}
                       <div className="flex-1">
                         <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
-                        <p className="text-xs opacity-60 mt-2">
-                          {message.timestamp.toLocaleTimeString(locale === 'tr' ? 'tr-TR' : 'en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-xs opacity-60">
+                            {message.timestamp.toLocaleTimeString(locale === 'tr' ? 'tr-TR' : 'en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                          {message.tokenUsage && (
+                            <p className="text-[10px] opacity-50 flex items-center gap-1" title={locale === 'tr' ? 'Token Kullanımı' : 'Token Usage'}>
+                              <span>🔢 {message.tokenUsage.totalTokens}</span>
+                              <span className="hidden group-hover:inline">
+                                (In: {message.tokenUsage.inputTokens}, Out: {message.tokenUsage.outputTokens})
+                              </span>
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -470,10 +555,31 @@ export default function AIBuilderPage() {
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
                       </div>
-                      <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce"></span>
-                        <span className="w-2 h-2 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
-                        <span className="w-2 h-2 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-700 dark:text-slate-200">
+                            {locale === "tr" ? "AI düşünüyor" : "AI is thinking"}
+                          </span>
+                          <div className="flex gap-1 mt-1">
+                            <span className="w-1.5 h-1.5 bg-gray-500 dark:bg-slate-400 rounded-full animate-bounce"></span>
+                            <span className="w-1.5 h-1.5 bg-gray-500 dark:bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
+                            <span className="w-1.5 h-1.5 bg-gray-500 dark:bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                          </div>
+                        </div>
+                        {retryCount > 0 && (
+                          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                            {locale === "tr"
+                              ? `🔄 Yeniden deneniyor (${retryCount}/3)...`
+                              : `🔄 Retrying (${retryCount}/3)...`}
+                          </span>
+                        )}
+                        {isLongRunning && (
+                          <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                            {locale === "tr"
+                              ? "⏱️ Normalden uzun sürüyor, lütfen bekleyin..."
+                              : "⏱️ Taking longer than usual, please wait..."}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -545,9 +651,33 @@ export default function AIBuilderPage() {
                     {locale === "tr" ? "Tam Ekran" : "Fullscreen"}
                   </button>
                 </div>
-                <div className="flex-1 overflow-hidden bg-white">
+                <div className="relative flex-1 overflow-hidden bg-white">
+                  {isGenerating && (
+                    <div className="absolute inset-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-slate-300 animate-pulse">
+                          {locale === "tr" ? "Site güncelleniyor..." : "Updating website..."}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   <iframe
-                    srcDoc={generatedHtml}
+                    key={generatedHtml.substring(0, 100)} // Force re-render when HTML changes
+                    srcDoc={generatedHtml + `
+                      <script>
+                        document.addEventListener('click', function(e) {
+                          if (e.target.closest('a')) {
+                            e.preventDefault();
+                            console.log('Navigation prevented in preview');
+                          }
+                        }, true);
+                        document.addEventListener('submit', function(e) {
+                          e.preventDefault();
+                          console.log('Form submission prevented in preview');
+                        }, true);
+                      </script>
+                    `}
                     className="w-full h-full border-0"
                     title="Website Preview"
                     sandbox="allow-scripts allow-same-origin"

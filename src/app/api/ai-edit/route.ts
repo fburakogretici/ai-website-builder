@@ -20,12 +20,12 @@ interface Message {
 export async function POST(request: NextRequest) {
   try {
     console.log('🔵 AI Edit API called');
-    const { 
-      websiteId, 
-      currentHtml, 
-      userPrompt, 
+    const {
+      websiteId,
+      currentHtml,
+      userPrompt,
       conversationHistory = [],
-      locale = 'en' 
+      locale = 'en'
     } = await request.json();
 
     console.log('📋 Request data:', { websiteId, userPromptLength: userPrompt?.length, locale });
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Build conversation context for Claude
-    const systemPrompt = locale === 'tr' 
+    const systemPrompt = locale === 'tr'
       ? `Sen bir HTML editörüsün. Kullanıcının HTML kodunda değişiklik yapıyorsun.
 
 MUTLAKA UYULMASI GEREKEN KURALLAR:
@@ -51,7 +51,7 @@ MUTLAKA UYULMASI GEREKEN KURALLAR:
 
 ZORUNLU FORMAT:
 [EXPLANATION]
-Kısa açıklama (1-2 cümle)
+Yaptığın değişiklikleri anlatan doğal ve direkt bir mesaj. Direkt ne yaptığını anlat.
 [HTML]
 <!DOCTYPE html>
 <html lang="tr">
@@ -64,7 +64,8 @@ Kısa açıklama (1-2 cümle)
 </body>
 </html>
 
-ÖNEMLİ: [HTML] etiketinden sonra direkt olarak <!DOCTYPE html> ile başla. Başka hiçbir şey yazma!`
+ÖNEMLİ: [HTML] etiketinden sonra direkt olarak <!DOCTYPE html> ile başla. Başka hiçbir şey yazma! KESİNLİKLE SADECE DEĞİŞEN KISMI DEĞİL, TÜM HTML KODUNU BAŞTAN SONA DÖNDÜR.
+"<!-- geri kalan kod -->" veya "<!-- ... -->" GİBİ YER TUTUCULAR KULLANMA. HTML'İN HER SATIRINI TEK TEK YAZMALISIN. YER TUTUCU KULLANIRSAN SİTE BOZULUR.`
       : `You are an HTML editor. You modify the user's HTML code.
 
 MANDATORY RULES:
@@ -76,7 +77,7 @@ MANDATORY RULES:
 
 REQUIRED FORMAT:
 [EXPLANATION]
-Brief description (1-2 sentences)
+A direct and natural message describing your changes.
 [HTML]
 <!DOCTYPE html>
 <html lang="en">
@@ -89,14 +90,15 @@ Brief description (1-2 sentences)
 </body>
 </html>
 
-IMPORTANT: After the [HTML] tag, start directly with <!DOCTYPE html>. Write nothing else!`;
+IMPORTANT: After the [HTML] tag, start directly with <!DOCTYPE html>. Write nothing else! RETURN THE COMPLETE HTML CODE FROM START TO FINISH. DO NOT RETURN ONLY THE CHANGED PARTS.
+DO NOT USE PLACEHOLDERS LIKE "<!-- rest of code -->" OR "<!-- ... -->". YOU MUST WRITE EVERY SINGLE LINE OF HTML. IF YOU USE PLACEHOLDERS, THE SITE WILL BREAK.`;
 
     // Format conversation history for Claude - ONLY include user prompts, not HTML
     const formattedHistory = conversationHistory
       .filter((msg: Message) => msg.role === 'user')
       .map((msg: Message, index: number) => ({
         role: 'user' as const,
-        content: locale === 'tr' 
+        content: locale === 'tr'
           ? `Önceki değişiklik talebi ${index + 1}: ${msg.content}`
           : `Previous change request ${index + 1}: ${msg.content}`
       }));
@@ -132,15 +134,15 @@ REMINDER: Your response should contain ONLY [EXPLANATION] and [HTML] sections. I
     console.log('🤖 Calling Claude API...');
     const response = await anthropic.messages.create({
       model: "claude-3-5-haiku-20241022",
-      max_tokens: 8000,
+      max_tokens: 8192,
       system: systemPrompt,
       messages: messages
     });
 
     console.log('✅ Claude API response received');
 
-    const fullResponse = response.content[0].type === 'text' 
-      ? response.content[0].text 
+    const fullResponse = response.content[0].type === 'text'
+      ? response.content[0].text
       : '';
 
     console.log('📝 Response length:', fullResponse.length);
@@ -149,28 +151,55 @@ REMINDER: Your response should contain ONLY [EXPLANATION] and [HTML] sections. I
     const explanationMatch = fullResponse.match(/\[EXPLANATION\]([\s\S]*?)\[HTML\]/);
     const htmlMatch = fullResponse.match(/\[HTML\]([\s\S]*)/);
 
-    let explanation = explanationMatch 
-      ? explanationMatch[1].trim() 
+    let explanation = explanationMatch
+      ? explanationMatch[1].trim()
       : (locale === 'tr' ? 'Değişiklikler yapıldı.' : 'Changes applied.');
-    
-    let html = htmlMatch 
-      ? htmlMatch[1].trim() 
-      : currentHtml;
+
+    let html = "";
+
+    if (htmlMatch) {
+      html = htmlMatch[1].trim();
+    } else {
+      // Fallback: Look for <!DOCTYPE html>
+      const doctypeIndex = fullResponse.indexOf("<!DOCTYPE html>");
+      if (doctypeIndex !== -1) {
+        html = fullResponse.substring(doctypeIndex);
+        // If explanation wasn't found with tags, try to get everything before doctype
+        if (!explanationMatch) {
+          const potentialExplanation = fullResponse.substring(0, doctypeIndex).trim();
+          if (potentialExplanation) {
+            explanation = potentialExplanation;
+          }
+        }
+      } else {
+        html = fullResponse; // Last resort
+      }
+    }
 
     console.log('🔍 Parsed explanation:', explanation.substring(0, 100));
     console.log('🔍 Parsed HTML length:', html.length);
 
     // Clean up HTML (remove markdown code blocks if present)
-    html = html.replace(/```html\n?/g, '').replace(/```\n?$/g, '').trim();
+    if (html.includes("```html")) {
+      html = html.match(/```html\n([\s\S]*?)\n```/)?.[1] || html;
+    } else if (html.includes("```")) {
+      html = html.match(/```\n([\s\S]*?)\n```/)?.[1] || html;
+    }
+
+    // Clean up end of HTML if it contains closing markers or extra text
+    if (html.includes("</html>")) {
+      const htmlEndIndex = html.lastIndexOf("</html>") + 7;
+      html = html.substring(0, htmlEndIndex);
+    }
 
     // Validate HTML (basic check)
     if (!html.includes('<!DOCTYPE') && !html.includes('<html')) {
       console.error('❌ Invalid HTML returned by AI');
       console.log('First 200 chars:', html.substring(0, 200));
       return NextResponse.json(
-        { 
-          error: locale === 'tr' 
-            ? 'AI geçersiz HTML döndürdü. Lütfen tekrar deneyin.' 
+        {
+          error: locale === 'tr'
+            ? 'AI geçersiz HTML döndürdü. Lütfen tekrar deneyin.'
             : 'AI returned invalid HTML. Please try again.',
           html: currentHtml,
           explanation: locale === 'tr'
@@ -184,33 +213,71 @@ REMINDER: Your response should contain ONLY [EXPLANATION] and [HTML] sections. I
     console.log('✅ HTML validated successfully');
 
     // Update database with new HTML
-    const { error: updateError } = await supabase
+    const { data: websiteData, error: updateError } = await supabase
       .from("websites")
-      .update({ 
+      .update({
         html_content: html,
         updated_at: new Date().toISOString()
       })
-      .eq("id", websiteId);
+      .eq("id", websiteId)
+      .select('user_id')
+      .single();
 
     if (updateError) {
       console.error('⚠️ Database update error:', updateError);
       // Continue anyway, client will still get the updated HTML
     } else {
       console.log('✅ Database updated successfully');
+
+      // Save conversation history
+      if (websiteData?.user_id) {
+        const { saveConversation } = await import("@/utils/conversation-storage");
+
+        // Construct the new messages to append
+        const newMessages: Message[] = [
+          { role: 'user', content: userPrompt, timestamp: new Date() },
+          { role: 'assistant', content: explanation, timestamp: new Date() }
+        ];
+
+        // Combine with existing history for saving (optional, or just save new ones if upsert handles it? 
+        // The utility replaces the whole array or appends? 
+        // Looking at conversation-storage.ts: it uses UPSERT on the 'conversations' table which has a 'messages' jsonb column.
+        // It seems to expect the FULL history to be passed if we want to store the full history.
+        // But wait, the utility `saveConversation` takes `messages: Message[]`.
+        // Let's check `conversation-storage.ts` again.
+        // It maps `messages` to `messagesForDb` and upserts.
+        // So we should pass the FULL updated history.
+
+        const updatedHistory: Message[] = [
+          ...conversationHistory.map((msg: any) => ({
+            role: msg.role,
+            content: msg.content,
+            timestamp: new Date(msg.timestamp || Date.now())
+          })),
+          ...newMessages
+        ];
+
+        await saveConversation(websiteId, websiteData.user_id, updatedHistory, supabase);
+      }
     }
 
     console.log('🎉 Returning success response');
     return NextResponse.json({
       html,
-      explanation
+      explanation,
+      tokenUsage: {
+        inputTokens: response.usage.input_tokens,
+        outputTokens: response.usage.output_tokens,
+        totalTokens: response.usage.input_tokens + response.usage.output_tokens
+      }
     });
 
   } catch (error: unknown) {
     console.error("❌ AI Edit Error:", error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
+
     return NextResponse.json(
-      { 
+      {
         error: "AI processing failed: " + errorMessage,
         html: '',
         explanation: 'An error occurred during AI processing.'

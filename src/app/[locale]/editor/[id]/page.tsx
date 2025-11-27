@@ -3,11 +3,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
+import { retryFetch, getErrorMessage } from "@/utils/retry";
+import { saveConversation, loadConversation } from "@/utils/conversation-storage";
+import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  tokenUsage?: {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+  };
 }
 
 export default function EditorPage() {
@@ -21,6 +29,7 @@ export default function EditorPage() {
   const [htmlContent, setHtmlContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // History management for undo/redo
   const [htmlHistory, setHtmlHistory] = useState<string[]>([]);
@@ -30,10 +39,23 @@ export default function EditorPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isAIProcessing, setIsAIProcessing] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isLongRunning, setIsLongRunning] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const shouldSkipInitialScroll = useRef(true);
+
+  const supabase = useSupabaseClient();
+  const [session, setSession] = useState<any>(null);
+
+  // Load session
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+    });
+  }, [supabase]);
 
   useEffect(() => {
     loadWebsite();
@@ -46,6 +68,38 @@ export default function EditorPage() {
     }
     scrollToBottom();
   }, [messages]);
+
+  // Load conversation when Editor opens
+  useEffect(() => {
+    if (websiteId && supabase && session && website && website.id === websiteId) {
+      loadConversation(websiteId, supabase).then(savedMessages => {
+        if (savedMessages.length > 0) {
+          console.log(`📝 Loaded ${savedMessages.length} messages from conversation`);
+          setMessages(savedMessages);
+        } else {
+          // No history, show welcome message
+          setMessages([{
+            role: 'assistant',
+            content: locale === 'tr'
+              ? `Merhaba! "${website.name}" sitenizi düzenlemeye hazırım. Ne yapmak istersiniz?\n\nÖrnek:\n- "Renkleri daha modern yap"\n- "Hero bölümünü daha çekici hale getir"\n- "İletişim formunu ekle"`
+              : `Hello! I'm ready to edit your "${website.name}" website. What would you like to do?\n\nExamples:\n- "Make colors more modern"\n- "Make hero section more attractive"\n- "Add contact form"`,
+            timestamp: new Date()
+          }]);
+        }
+      });
+    }
+  }, [websiteId, supabase, session, website]);
+
+  // Auto-save conversation (debounced 3 seconds)
+  useEffect(() => {
+    if (messages.length > 0 && websiteId && supabase && session?.user?.id) {
+      const timer = setTimeout(() => {
+        saveConversation(websiteId, session.user.id, messages, supabase);
+      }, 3000); // 3 second debounce
+
+      return () => clearTimeout(timer);
+    }
+  }, [messages, websiteId, supabase, session]);
 
   const scrollToBottom = () => {
     const container = messagesContainerRef.current;
@@ -76,14 +130,7 @@ export default function EditorPage() {
       setHtmlHistory([data.html_content]);
       setHistoryIndex(0);
 
-      // Initialize with welcome message
-      setMessages([{
-        role: 'assistant',
-        content: locale === 'tr'
-          ? `Merhaba! "${data.name}" sitenizi düzenlemeye hazırım. Ne yapmak istersiniz?\n\nÖrnek:\n- "Renkleri daha modern yap"\n- "Hero bölümünü daha çekici hale getir"\n- "İletişim formunu ekle"`
-          : `Hello! I'm ready to edit your "${data.name}" website. What would you like to do?\n\nExamples:\n- "Make colors more modern"\n- "Make hero section more attractive"\n- "Add contact form"`,
-        timestamp: new Date()
-      }]);
+      setIsLoading(false);
 
       setIsLoading(false);
     } catch (error) {
@@ -106,6 +153,7 @@ export default function EditorPage() {
     }
 
     setHtmlHistory(newHistory);
+    setHasUnsavedChanges(true);
   };
 
   const handleUndo = () => {
@@ -113,6 +161,7 @@ export default function EditorPage() {
       const newIndex = historyIndex - 1;
       setHistoryIndex(newIndex);
       setHtmlContent(htmlHistory[newIndex]);
+      setHasUnsavedChanges(true);
       console.log('⬅️ Undo to version', newIndex);
     }
   };
@@ -122,6 +171,7 @@ export default function EditorPage() {
       const newIndex = historyIndex + 1;
       setHistoryIndex(newIndex);
       setHtmlContent(htmlHistory[newIndex]);
+      setHasUnsavedChanges(true);
       console.log('➡️ Redo to version', newIndex);
     }
   };
@@ -138,6 +188,13 @@ export default function EditorPage() {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
     setIsAIProcessing(true);
+    setRetryCount(0);
+    setIsLongRunning(false);
+
+    // Show "taking longer than usual" message after 20 seconds
+    const longRunningTimer = setTimeout(() => {
+      setIsLongRunning(true);
+    }, 20000);
 
     try {
       // Call AI API to modify website
@@ -147,21 +204,41 @@ export default function EditorPage() {
         currentHtmlLength: htmlContent.length
       });
 
-      const response = await fetch('/api/ai-edit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          websiteId,
-          currentHtml: htmlContent,
-          userPrompt: userMessage.content,
-          conversationHistory: messages,
-          locale
-        })
-      });
+      const response = await retryFetch(
+        '/api/ai-edit',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            websiteId,
+            currentHtml: htmlContent,
+            userPrompt: userMessage.content,
+            conversationHistory: messages,
+            locale
+          })
+        },
+        {
+          maxRetries: 3,
+          initialDelayMs: 1000,
+          timeoutMs: 60000,
+          onRetry: (attempt, error) => {
+            setRetryCount(attempt);
+            console.log(`Retry attempt ${attempt}:`, error.message);
+          },
+        }
+      );
+
+      clearTimeout(longRunningTimer);
+      setIsLongRunning(false);
 
       console.log('📡 Response status:', response.status);
 
-      if (!response.ok) throw new Error('AI request failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        const error: any = new Error(errorData.error || 'AI request failed');
+        error.status = response.status;
+        throw error;
+      }
 
       const data = await response.json();
 
@@ -183,7 +260,8 @@ export default function EditorPage() {
         content: data.explanation || (locale === 'tr'
           ? '✅ Değişiklikler uygulandı!'
           : '✅ Changes applied!'),
-        timestamp: new Date()
+        timestamp: new Date(),
+        tokenUsage: data.tokenUsage
       };
 
       console.log('💬 Adding AI message:', aiMessage.content);
@@ -193,23 +271,24 @@ export default function EditorPage() {
         return updated;
       });
 
-      // Auto-save after AI edit
-      console.log('💾 Auto-saving...');
-      await handleSave(true);
+      // Auto-save removed to allow manual save
+      // await handleSave(true);
       console.log('✅ All done!');
 
     } catch (error) {
+      clearTimeout(longRunningTimer);
+      setIsLongRunning(false);
+
       console.error('❌ AI edit error:', error);
       const errorMessage: Message = {
         role: 'assistant',
-        content: locale === 'tr'
-          ? '❌ Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.'
-          : '❌ Sorry, an error occurred. Please try again.',
+        content: getErrorMessage(error, locale as 'tr' | 'en'),
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsAIProcessing(false);
+      setRetryCount(0);
     }
   };
 
@@ -245,6 +324,7 @@ export default function EditorPage() {
 
       // Don't reload website data - it would override our current htmlContent!
       console.log('✅ Saved successfully without reloading');
+      setHasUnsavedChanges(false);
 
     } catch (error) {
       console.error("Save error:", error);
@@ -412,8 +492,8 @@ export default function EditorPage() {
             </div>
 
             <button
-              onClick={() => handleSave()}
-              disabled={isSaving}
+              onClick={() => handleSave(false)}
+              disabled={isSaving || !hasUnsavedChanges}
               className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold text-sm shadow-lg transition-all hover:scale-[1.02] disabled:opacity-50"
             >
               {isSaving ? (
@@ -514,12 +594,22 @@ export default function EditorPage() {
                       )}
                       <div className="flex-1">
                         <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
-                        <p className="text-xs opacity-60 mt-2">
-                          {message.timestamp.toLocaleTimeString(locale === 'tr' ? 'tr-TR' : 'en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-xs opacity-60">
+                            {message.timestamp.toLocaleTimeString(locale === 'tr' ? 'tr-TR' : 'en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                          {message.tokenUsage && (
+                            <p className="text-[10px] opacity-50 flex items-center gap-1" title={locale === 'tr' ? 'Token Kullanımı' : 'Token Usage'}>
+                              <span>🔢 {message.tokenUsage.totalTokens}</span>
+                              <span className="hidden group-hover:inline">
+                                (In: {message.tokenUsage.inputTokens}, Out: {message.tokenUsage.outputTokens})
+                              </span>
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -610,10 +700,33 @@ export default function EditorPage() {
                 {locale === 'tr' ? 'Tam Ekran' : 'Full Screen'}
               </button>
             </div>
-            <div className="flex-1 bg-white overflow-hidden">
+            <div className="relative flex-1 bg-white overflow-hidden">
+              {isAIProcessing && (
+                <div className="absolute inset-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-slate-300 animate-pulse">
+                      {locale === "tr" ? "Site güncelleniyor..." : "Updating website..."}
+                    </p>
+                  </div>
+                </div>
+              )}
               <iframe
                 key={htmlContent.substring(0, 100)} // Force re-render when HTML changes
-                srcDoc={htmlContent}
+                srcDoc={htmlContent + `
+                  <script>
+                    document.addEventListener('click', function(e) {
+                      if (e.target.closest('a')) {
+                        e.preventDefault();
+                        console.log('Navigation prevented in preview');
+                      }
+                    }, true);
+                    document.addEventListener('submit', function(e) {
+                      e.preventDefault();
+                      console.log('Form submission prevented in preview');
+                    }, true);
+                  </script>
+                `}
                 className="w-full h-full"
                 title="Preview"
                 sandbox="allow-scripts allow-same-origin"

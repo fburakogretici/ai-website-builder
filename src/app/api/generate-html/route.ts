@@ -1,14 +1,21 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { Message } from "@/utils/conversation-storage";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+);
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { prompt, currentHtml = null, conversationHistory = [], locale = "tr" } = body;
+    const { prompt, currentHtml = null, conversationHistory = [], locale = "tr", websiteId = null } = body;
 
     if (!prompt || !prompt.trim()) {
       return NextResponse.json({ error: "Missing prompt" }, { status: 400 });
@@ -16,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`🎨 ${currentHtml ? 'Modifying existing website' : 'Generating HTML from scratch'}...`);
 
-    const systemPrompt = currentHtml 
+    const systemPrompt = currentHtml
       ? `Expert Full-Stack Web Developer. Modify existing HTML+CSS website based on user requests.
 
 RULES:
@@ -29,7 +36,12 @@ RULES:
 - Smooth animations
 - Accessibility (semantic HTML, ARIA)
 
-OUTPUT: Return ONLY the complete modified HTML code. No explanations!`
+OUTPUT FORMAT:
+Your response MUST contain exactly two sections:
+[EXPLANATION]
+A friendly, conversational message to the user describing what you changed. Be enthusiastic!
+[HTML]
+The complete modified HTML code.`
       : `Expert Full-Stack Web Developer. Generate COMPLETELY FROM SCRATCH professional HTML+CSS website.
 
 RULES:
@@ -42,10 +54,26 @@ RULES:
 - Smooth animations
 - Accessibility (semantic HTML, ARIA)
 
-OUTPUT: Return ONLY working HTML code. No explanations!`;
+OUTPUT FORMAT:
+Your response MUST contain exactly two sections:
+[EXPLANATION]
+A direct, concise, and natural message describing what you created.Just say what you did.
+[HTML]
+The complete working HTML code.`;
 
     let userPrompt = "";
-    
+
+    // Format conversation history
+    let historyContext = "";
+    if (conversationHistory && conversationHistory.length > 0) {
+      historyContext = conversationHistory
+        .filter((msg: any) => msg.role === 'user')
+        .map((msg: any, index: number) => locale === 'tr'
+          ? `Önceki Talep ${index + 1}: ${msg.content}`
+          : `Previous Request ${index + 1}: ${msg.content}`
+        ).join('\n');
+    }
+
     if (currentHtml) {
       // Modification mode
       userPrompt = locale === "tr"
@@ -54,77 +82,130 @@ OUTPUT: Return ONLY working HTML code. No explanations!`;
 ${currentHtml}
 \`\`\`
 
-Kullanıcı İsteği: "${prompt}"
+${historyContext ? `GEÇMİŞ KONUŞMA (Bağlam için):\n${historyContext}\n\n` : ''}
 
-GÖREV: Yukarıdaki HTML'i kullanıcı isteğine göre değiştir. SADECE TAM HTML KODUNU DÖNDÜR!`
+Kullanıcı İsteği (ŞİMDİ YAPILACAK): "${prompt}"
+
+GÖREV: Yukarıdaki HTML'i kullanıcı isteğine göre değiştir.
+YANIT FORMATI:
+[EXPLANATION]
+Yaptığın değişiklikleri anlatan doğal ve direkt bir mesaj. Direkt ne yaptığını anlat.
+[HTML]
+<!DOCTYPE html>
+...TÜM HTML KODU...
+</html>
+
+ÖNEMLİ: KESİNLİKLE SADECE DEĞİŞEN KISMI DEĞİL, TÜM HTML KODUNU BAŞTAN SONA DÖNDÜR. EKSİK KOD DÖNDÜRME.
+"<!-- geri kalan kod -->" veya "<!-- ... -->" GİBİ YER TUTUCULAR KULLANMA. HTML'İN HER SATIRINI TEK TEK YAZMALISIN. YER TUTUCU KULLANIRSAN SİTE BOZULUR.`
         : `Current Website:
 \`\`\`html
 ${currentHtml}
 \`\`\`
 
-User Request: "${prompt}"
+${historyContext ? `CONVERSATION HISTORY (For context):\n${historyContext}\n\n` : ''}
 
-TASK: Modify the above HTML according to user request. RETURN ONLY COMPLETE HTML CODE!`;
+User Request (ACTION TO TAKE NOW): "${prompt}"
+
+TASK: Modify the above HTML according to user request.
+RESPONSE FORMAT:
+[EXPLANATION]
+A direct and natural message describing your changes. Do not start with "Hello" every time.
+[HTML]
+<!DOCTYPE html>
+...ENTIRE HTML CODE...
+</html>
+
+IMPORTANT: RETURN THE COMPLETE HTML CODE FROM START TO FINISH. DO NOT RETURN ONLY THE CHANGED PARTS.
+DO NOT USE PLACEHOLDERS LIKE "<!-- rest of code -->" OR "<!-- ... -->". YOU MUST WRITE EVERY SINGLE LINE OF HTML. IF YOU USE PLACEHOLDERS, THE SITE WILL BREAK.`;
     } else {
       // Generation from scratch mode
-      userPrompt = locale === "tr" 
+      userPrompt = locale === "tr"
         ? `Kullanıcı İsteği: "${prompt}"
 
 GÖREV:
-1. İsteği analiz et (işletme/proje adı, sektör, hizmetler, stil)
-2. Sektöre uygun renk paleti seç (restaurant→warm, tech→blue, cafe→brown, saas→purple vb.)
-3. Tam çalışan HTML+CSS web sitesi oluştur
+1. İsteği analiz et
+2. Modern ve profesyonel bir site oluştur
 
-SAYFA YAPISI (Tek sayfa):
-- Header: Sticky navigasyon, logo, menü (Hakkında, Hizmetler, İletişim)
-- Hero: Tam ekran, başlık, alt başlık, 2 CTA butonu
-- Hakkında: 2-3 paragraf (~150 kelime), değerler
-- Hizmetler: Grid layout, 3-4 kart (iconlar ile)
-- Referanslar: 2-3 gerçekçi yorum, isim, yıldız
-- İletişim: Form (İsim, Email, Mesaj) + bilgiler
-- Footer: Logo, linkler, sosyal medya, telif
-
-İçeriği ${prompt} için ÖZELLEŞTİR. Mobile-first tasarım. Sistem fontları kullan. ŞİMDİ OLUŞTUR!`
+YANIT FORMATI:
+[EXPLANATION]
+Oluşturduğun siteyi anlatan doğal ve direkt bir mesaj. Sitenin özelliklerinden bahset.
+[HTML]
+Tam HTML kodu.`
         : `User Request: "${prompt}"
 
 TASK:
-1. Analyze request (business/project name, sector, services, style)
-2. Choose sector-appropriate color palette (restaurant→warm, tech→blue, cafe→brown, saas→purple etc.)
-3. Create fully working HTML+CSS website
+1. Analyze request
+2. Create a modern, professional website
 
-PAGE STRUCTURE (Single-page):
-- Header: Sticky nav, logo, menu (About, Services, Contact)
-- Hero: Full-screen, headline, subheadline, 2 CTA buttons
-- About: 2-3 paragraphs (~150 words), values
-- Services: Grid layout, 3-4 cards with icons
-- Testimonials: 2-3 realistic reviews, names, stars
-- Contact: Form (Name, Email, Message) + info
-- Footer: Logo, links, social media, copyright
-
-CUSTOMIZE content for ${prompt}. Mobile-first design. System fonts. CREATE NOW!`;
+RESPONSE FORMAT:
+[EXPLANATION]
+A direct and natural message describing the site you created. Do not start with "Hello" every time. Mention key features.
+[HTML]
+Complete HTML code.`;
     }
 
     console.log("🤖 Calling Claude 3.5 Haiku (fast & cost-effective)...");
 
     const message = await anthropic.messages.create({
       model: "claude-3-5-haiku-20241022",
-      max_tokens: 4096,
-      temperature: 0.8,
+      max_tokens: 8192,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     });
 
-    let html = message.content[0].type === "text" ? message.content[0].text : "";
+    const fullResponse = message.content[0].type === "text" ? message.content[0].text : "";
 
-    // Remove markdown blocks
+    // Parse response
+    const explanationMatch = fullResponse.match(/\[EXPLANATION\]([\s\S]*?)\[HTML\]/);
+    const htmlMatch = fullResponse.match(/\[HTML\]([\s\S]*)/);
+
+    let explanation = explanationMatch
+      ? explanationMatch[1].trim()
+      : (currentHtml
+        ? (locale === 'tr' ? '✅ Değişiklikler uygulandı!' : '✅ Changes applied!')
+        : (locale === 'tr' ? '✅ Web siteniz oluşturuldu!' : '✅ Website created!')
+      );
+
+    let html = "";
+
+    if (htmlMatch) {
+      html = htmlMatch[1].trim();
+    } else {
+      // Fallback: Look for <!DOCTYPE html>
+      const doctypeIndex = fullResponse.indexOf("<!DOCTYPE html>");
+      if (doctypeIndex !== -1) {
+        html = fullResponse.substring(doctypeIndex);
+        // If explanation wasn't found with tags, try to get everything before doctype
+        if (!explanationMatch) {
+          const potentialExplanation = fullResponse.substring(0, doctypeIndex).trim();
+          if (potentialExplanation) {
+            explanation = potentialExplanation;
+          }
+        }
+      } else {
+        html = fullResponse; // Last resort
+      }
+    }
+
+    // Remove markdown blocks from HTML if present
     if (html.includes("```html")) {
       html = html.match(/```html\n([\s\S]*?)\n```/)?.[1] || html;
     } else if (html.includes("```")) {
       html = html.match(/```\n([\s\S]*?)\n```/)?.[1] || html;
     }
 
-    if (!html.includes("<!DOCTYPE") && !html.includes("<html")) {
-      throw new Error("Invalid HTML generated");
+    // Clean up end of HTML if it contains closing markers or extra text
+    if (html.includes("</html>")) {
+      const htmlEndIndex = html.lastIndexOf("</html>") + 7;
+      html = html.substring(0, htmlEndIndex);
+    }
+
+    // Case-insensitive check for HTML validity
+    const lowerHtml = html.toLowerCase();
+    if (!lowerHtml.includes("<!doctype") && !lowerHtml.includes("<html")) {
+      console.error("❌ Invalid HTML generated. Full response:", fullResponse.substring(0, 500) + "...");
+      console.error("❌ Extracted HTML:", html.substring(0, 200) + "...");
+      throw new Error("Invalid HTML generated: Missing DOCTYPE or html tag");
     }
 
     console.log(`✅ HTML generated! Tokens: ${message.usage.output_tokens}`);
@@ -133,13 +214,52 @@ CUSTOMIZE content for ${prompt}. Mobile-first design. System fonts. CREATE NOW!`
     const businessNameMatch = html.match(/<title>(.*?)<\/title>/);
     const businessName = businessNameMatch ? businessNameMatch[1] : "My Website";
 
+    // Save conversation history if websiteId is present
+    if (websiteId) {
+      try {
+        // Fetch user_id from websites table
+        const { data: websiteData } = await supabase
+          .from("websites")
+          .select("user_id")
+          .eq("id", websiteId)
+          .single();
+
+        if (websiteData?.user_id) {
+          const { saveConversation } = await import("@/utils/conversation-storage");
+
+          const newMessages: Message[] = [
+            { role: 'user', content: prompt, timestamp: new Date() },
+            { role: 'assistant', content: explanation, timestamp: new Date() }
+          ];
+
+          const updatedHistory: Message[] = [
+            ...conversationHistory.map((msg: any) => ({
+              role: msg.role,
+              content: msg.content,
+              timestamp: new Date(msg.timestamp || Date.now())
+            })),
+            ...newMessages
+          ];
+
+          await saveConversation(websiteId, websiteData.user_id, updatedHistory, supabase);
+        }
+      } catch (saveError) {
+        console.error("Failed to save conversation:", saveError);
+        // Don't block response
+      }
+    }
+
     return NextResponse.json({
       success: true,
       html: html.trim(),
       businessName: businessName,
-      explanation: currentHtml ? (locale === 'tr' ? '✅ Değişiklikler uygulandı!' : '✅ Changes applied!') : (locale === 'tr' ? '✅ Web siteniz oluşturuldu!' : '✅ Website created!'),
+      explanation: explanation,
       model: "claude-3-5-haiku-20241022",
-      tokensUsed: message.usage.output_tokens,
+      tokenUsage: {
+        inputTokens: message.usage.input_tokens,
+        outputTokens: message.usage.output_tokens,
+        totalTokens: message.usage.input_tokens + message.usage.output_tokens
+      },
       method: currentHtml ? "modification" : "direct-generation",
     });
 
