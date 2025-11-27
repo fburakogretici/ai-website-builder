@@ -187,12 +187,12 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-indigo-900/50 to-purple-950/50"></div>
 
         {/* Brand Logo */}
-        <div className="relative z-10 inline-block group cursor-pointer">
+        <div className="relative z-10 inline-block group cursor-pointer mt-6 -ml-4">
           <div className="relative">
             <img
               src="/nocodepage_logo.png"
               alt="NoCodePage"
-              className="h-16 w-auto transition-all duration-300 group-hover:scale-105 brightness-0 invert"
+              className="h-20 w-auto transition-all duration-300 group-hover:scale-105 brightness-0 invert"
             />
             <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/0 via-purple-500/20 to-pink-500/0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-2xl"></div>
           </div>
