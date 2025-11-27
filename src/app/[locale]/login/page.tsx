@@ -189,7 +189,7 @@ export default function LoginPage() {
         {/* Brand Logo */}
         <button
           onClick={() => router.push(`/${locale}`)}
-          className="relative z-10 inline-block group cursor-pointer mt-6 -ml-4"
+          className="relative z-10 inline-block group cursor-pointer mt-6 -ml-6"
         >
           <div className="relative">
             <img
