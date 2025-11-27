@@ -62,8 +62,12 @@ export default function Navbar({ session }: NavbarProps) {
 
   const handleLogout = async () => {
     if (!supabase) return;
-    await supabase.auth.signOut();
+
+    // Redirect immediately for instant feel
     router.push(`/${locale}/login`);
+
+    // Sign out in background
+    supabase.auth.signOut().catch(console.error);
   };
 
   return (

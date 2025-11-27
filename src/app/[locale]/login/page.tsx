@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from 'next-intl';
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
@@ -18,6 +18,7 @@ export default function LoginPage() {
   const router = useRouter();
   const t = useTranslations();
   const locale = useLocale();
+  const formRef = useRef<HTMLDivElement>(null);
 
   const supabase = useSupabaseClient();
 
@@ -49,6 +50,18 @@ export default function LoginPage() {
       authListener.subscription.unsubscribe();
     };
   }, [supabase, router, locale]);
+
+  // Auto-scroll to form when page loads
+  useEffect(() => {
+    if (!loading && formRef.current) {
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 150);
+    }
+  }, [loading]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,7 +166,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900 flex flex-col">
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-6">
+      <div ref={formRef} className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-6">
         <div className="max-w-md w-full">
           {/* Card */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-5 sm:p-6 border border-gray-200 dark:border-gray-700">
