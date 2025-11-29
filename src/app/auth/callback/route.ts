@@ -9,42 +9,37 @@ export async function GET(request: Request) {
 
   if (code) {
     const cookieStore = await cookies()
-    
-    // Create the response first
     const response = NextResponse.redirect(new URL(next, requestUrl.origin))
-    
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
+          getAll() {
+            const all = cookieStore.getAll()
+            return all
           },
-          set(name: string, value: string, options: CookieOptions) {
-            // Set cookie in both places
-            response.cookies.set(name, value, options)
-          },
-          remove(name: string, options: CookieOptions) {
-            // Remove cookie in both places
-            response.cookies.set(name, '', { ...options, maxAge: 0 })
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                cookieStore.set(name, value, options)
+                response.cookies.set(name, value, options)
+              })
+            } catch (error) {
+              // Cookie setting might fail in some contexts
+            }
           },
         },
       }
     )
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
-    
-    console.log('Exchange code result:', { error, next })
-    
+
     if (!error) {
-      // Return the response with cookies set
       return response
     }
-    
-    console.error('Auth callback error:', error)
   }
 
-  // If no code or error, redirect to login
   return NextResponse.redirect(new URL('/tr/login', requestUrl.origin))
 }

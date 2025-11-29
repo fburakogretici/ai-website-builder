@@ -31,11 +31,11 @@ export default function WebsiteCard({ website, onDelete, onUpdate }: WebsiteCard
 
   return (
     <>
-      <div 
+      <div
         className="group bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 hover:shadow-lg transition-all duration-200"
       >
         {/* Preview */}
-        <div 
+        <div
           className="w-full h-48 bg-white dark:bg-gray-800 rounded-lg mb-3 overflow-hidden border border-gray-200 dark:border-gray-700 relative cursor-pointer"
           onClick={() => router.push(`/${locale}/editor/${website.id}`)}
         >
@@ -47,7 +47,7 @@ export default function WebsiteCard({ website, onDelete, onUpdate }: WebsiteCard
               sandbox=""
             />
           </div>
-          
+
           {/* Published Badge */}
           {website.is_published && website.subdomain && (
             <div className="absolute top-2 left-2 bg-emerald-500/90 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
@@ -60,18 +60,17 @@ export default function WebsiteCard({ website, onDelete, onUpdate }: WebsiteCard
         {/* Info */}
         <div className="space-y-2">
           <div className="flex items-start justify-between gap-2">
-            <h3 
+            <h3
               className="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1 text-base cursor-pointer"
               onClick={() => router.push(`/${locale}/editor/${website.id}`)}
             >
               {website.name}
             </h3>
             <div className="flex items-center gap-2">
-              <span className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${
-                website.is_published 
+              <span className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${website.is_published
                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                   : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-400'
-              }`}>
+                }`}>
                 {website.is_published ? (locale === 'tr' ? 'Yayında' : 'Live') : (locale === 'tr' ? 'Taslak' : 'Draft')}
               </span>
               <button
@@ -85,11 +84,11 @@ export default function WebsiteCard({ website, onDelete, onUpdate }: WebsiteCard
               </button>
             </div>
           </div>
-          
+
           {/* Subdomain Link */}
           {website.is_published && website.subdomain && (
             <a
-              href={`https://${website.subdomain}.nocodepage.app`}
+              href={`/s/${website.subdomain}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
@@ -98,10 +97,10 @@ export default function WebsiteCard({ website, onDelete, onUpdate }: WebsiteCard
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-              {website.subdomain}.nocodepage.app
+              /s/{website.subdomain}
             </a>
           )}
-          
+
           <p className="text-xs text-gray-500 dark:text-gray-400">
             {new Date(website.created_at).toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', {
               year: 'numeric',
@@ -125,11 +124,10 @@ export default function WebsiteCard({ website, onDelete, onUpdate }: WebsiteCard
                 e.stopPropagation();
                 setShowPublishModal(true);
               }}
-              className={`py-2 px-3 rounded-lg transition-colors text-sm font-medium ${
-                website.is_published
+              className={`py-2 px-3 rounded-lg transition-colors text-sm font-medium ${website.is_published
                   ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50'
                   : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-              }`}
+                }`}
               title={locale === 'tr' ? 'Yayınla' : 'Publish'}
             >
               🌐
@@ -157,11 +155,11 @@ export default function WebsiteCard({ website, onDelete, onUpdate }: WebsiteCard
       {showPublishModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowPublishModal(false)}
           />
-          
+
           {/* Modal Content */}
           <div className="relative bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
             {/* Header */}
@@ -178,7 +176,7 @@ export default function WebsiteCard({ website, onDelete, onUpdate }: WebsiteCard
                 </svg>
               </button>
             </div>
-            
+
             {/* Body */}
             <div className="p-4">
               <PublishSettings

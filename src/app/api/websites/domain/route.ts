@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+
     const { searchParams } = new URL(request.url);
     const websiteId = searchParams.get('websiteId');
 
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
         .select('*')
         .eq('website_id', websiteId)
         .single();
-      
+
       domainStatus = domainInfo;
     }
 
@@ -83,9 +84,9 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!profile || profile.subscription_tier === 'free') {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Custom domains require Pro or higher plan',
-        upgrade: true 
+        upgrade: true
       }, { status: 403 });
     }
 
@@ -269,7 +270,7 @@ async function verifyDns(domain: string, verificationToken: string): Promise<{
   try {
     // In production, use a DNS lookup service
     // For now, we'll use a simple fetch-based check
-    
+
     // Check CNAME by trying to resolve the domain
     let cnameValid = false;
     let txtValid = false;
@@ -278,9 +279,9 @@ async function verifyDns(domain: string, verificationToken: string): Promise<{
       // Simple check - try to fetch the domain and see if it points to our servers
       const response = await fetch(`https://dns.google/resolve?name=${domain}&type=CNAME`);
       const data = await response.json();
-      
+
       if (data.Answer) {
-        cnameValid = data.Answer.some((record: { data: string }) => 
+        cnameValid = data.Answer.some((record: { data: string }) =>
           record.data.includes('nocodepage.app')
         );
       }
@@ -292,9 +293,9 @@ async function verifyDns(domain: string, verificationToken: string): Promise<{
       // Check TXT record
       const txtResponse = await fetch(`https://dns.google/resolve?name=_nocodepage.${domain}&type=TXT`);
       const txtData = await txtResponse.json();
-      
+
       if (txtData.Answer) {
-        txtValid = txtData.Answer.some((record: { data: string }) => 
+        txtValid = txtData.Answer.some((record: { data: string }) =>
           record.data.includes(verificationToken)
         );
       }

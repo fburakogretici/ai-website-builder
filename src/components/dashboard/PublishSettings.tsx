@@ -41,7 +41,9 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
 
   const loadDomainSettings = async () => {
     try {
-      const response = await fetch(`/api/websites/domain?websiteId=${websiteId}`);
+      const response = await fetch(`/api/websites/domain?websiteId=${websiteId}`, {
+        credentials: 'include',
+      });
       if (response.ok) {
         const data = await response.json();
         setSubdomain(data.website?.subdomain || "");
@@ -69,6 +71,7 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
       const response = await fetch("/api/websites/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: 'include',
         body: JSON.stringify({
           websiteId,
           subdomain: subdomain || undefined,
@@ -107,6 +110,7 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
     try {
       const response = await fetch(`/api/websites/publish?websiteId=${websiteId}`, {
         method: "DELETE",
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -135,6 +139,7 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
       const response = await fetch("/api/websites/domain", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: 'include',
         body: JSON.stringify({
           websiteId,
           domain: customDomain,
@@ -174,6 +179,7 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
       const response = await fetch("/api/websites/domain", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: 'include',
         body: JSON.stringify({ websiteId }),
       });
 
@@ -219,6 +225,7 @@ export default function PublishSettings({ websiteId, websiteName, onPublishChang
     try {
       await fetch(`/api/websites/domain?websiteId=${websiteId}`, {
         method: "DELETE",
+        credentials: 'include',
       });
       setCustomDomain("");
       setDnsInstructions(null);

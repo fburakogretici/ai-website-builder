@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+
     const body = await request.json();
     const { websiteId, subdomain } = body;
 
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
     let finalSubdomain = subdomain;
     if (!finalSubdomain) {
       // Use website name or generate random
-      finalSubdomain = website.name 
+      finalSubdomain = website.name
         ? website.name.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30)
         : nanoid(8);
     }
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (existingSubdomain) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Subdomain already taken',
         suggestion: `${finalSubdomain}-${nanoid(4)}`
       }, { status: 409 });
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Upload to Supabase Storage
     const storagePath = `sites/${user.id}/${websiteId}/index.html`;
-    
+
     const { error: uploadError } = await supabase.storage
       .from('websites')
       .upload(storagePath, fullHtml, {
@@ -115,18 +116,20 @@ export async function POST(request: NextRequest) {
       .update({
         is_published: true,
         subdomain: finalSubdomain,
-        published_url: `https://${finalSubdomain}.nocodepage.app`,
+        published_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/s/${finalSubdomain}`,
         published_at: new Date().toISOString(),
       })
       .eq('id', websiteId);
 
+
     return NextResponse.json({
       success: true,
       subdomain: finalSubdomain,
-      url: `https://${finalSubdomain}.nocodepage.app`,
+      url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/s/${finalSubdomain}`,
       storageUrl: publicUrl.publicUrl,
       publishedAt: publishedSite.published_at,
     });
+
 
   } catch (error) {
     console.error('Publish error:', error);
