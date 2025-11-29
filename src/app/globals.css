@@ -109,13 +109,14 @@ body {
 }
 
 [data-sonner-toast][data-type="success"] [data-close-button] {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
   color: white !important;
-  border: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
 }
 
 [data-sonner-toast][data-type="success"] [data-close-button]:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  color: #059669 !important;
 }
 
 [data-sonner-toast][data-type="success"] svg {
@@ -138,13 +139,14 @@ body {
 }
 
 [data-sonner-toast][data-type="error"] [data-close-button] {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
   color: white !important;
-  border: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
 }
 
 [data-sonner-toast][data-type="error"] [data-close-button]:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  color: #dc2626 !important;
 }
 
 [data-sonner-toast][data-type="error"] svg {
@@ -174,14 +176,15 @@ body {
 
 [data-sonner-toast][data-type="info"] [data-close-button],
 [data-sonner-toast]:not([data-type]) [data-close-button] {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
   color: white !important;
-  border: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
 }
 
 [data-sonner-toast][data-type="info"] [data-close-button]:hover,
 [data-sonner-toast]:not([data-type]) [data-close-button]:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  color: #2563eb !important;
 }
 
 [data-sonner-toast][data-type="info"] svg,
@@ -205,13 +208,14 @@ body {
 }
 
 [data-sonner-toast][data-type="warning"] [data-close-button] {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
   color: white !important;
-  border: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
 }
 
 [data-sonner-toast][data-type="warning"] [data-close-button]:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  color: #d97706 !important;
 }
 
 [data-sonner-toast][data-type="warning"] svg {
