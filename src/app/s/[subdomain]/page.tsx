@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import Link from 'next/link';
 
 interface PageProps {
     params: Promise<{ subdomain: string }>;
@@ -115,12 +116,12 @@ export default function PublishedSitePage({ params }: PageProps) {
                     <p className="text-sm text-gray-500">
                         Subdomain: <code className="bg-gray-100 px-2 py-1 rounded">{subdomain}</code>
                     </p>
-                    <a
+                    <Link
                         href="/"
                         className="inline-block mt-6 px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
                     >
                         Go Home
-                    </a>
+                    </Link>
                 </div>
             </div>
         );
