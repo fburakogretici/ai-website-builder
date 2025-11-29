@@ -348,13 +348,15 @@ export default function AIBuilderPage() {
     }
   };
 
+  const [activeMobileTab, setActiveMobileTab] = useState<'chat' | 'preview'>('chat');
+
   return (
     <div className="fixed inset-0 z-[9999] bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-hidden flex flex-col">
       {/* Premium Header */}
-      <div className="bg-gradient-to-r from-white/80 via-white/60 to-white/80 dark:from-slate-800/80 dark:via-slate-800/60 dark:to-slate-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-white/5 px-8 py-3">
+      <div className="bg-gradient-to-r from-white/80 via-white/60 to-white/80 dark:from-slate-800/80 dark:via-slate-800/60 dark:to-slate-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-white/5 px-4 sm:px-6 lg:px-8 py-3">
         <div className="max-w-[1800px] mx-auto">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               {/* Back Button */}
               <button
                 onClick={() => router.push(`/${locale}/dashboard`)}
@@ -369,8 +371,8 @@ export default function AIBuilderPage() {
               {/* Logo & Title */}
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="w-10 h-10 bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25 ring-1 ring-white/10">
-                    <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25 ring-1 ring-white/10">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" viewBox="0 0 24 24" fill="none">
                       <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M2 17l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -378,7 +380,7 @@ export default function AIBuilderPage() {
                   </div>
                   <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white dark:border-slate-800 animate-pulse"></div>
                 </div>
-                <div>
+                <div className="hidden sm:block">
                   <h1 className="text-base font-bold text-gray-900 dark:text-white tracking-tight">
                     {locale === "tr" ? "AI Builder" : "AI Builder"}
                   </h1>
@@ -390,10 +392,10 @@ export default function AIBuilderPage() {
             </div>
 
             {generatedHtml && (
-              <div className="flex items-center gap-3">
-                {/* Status Chip */}
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* Status Chip - Hidden on mobile */}
                 {websiteId && (
-                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${websiteStatus === 'published'
+                  <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${websiteStatus === 'published'
                     ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
                     : 'bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20'
                     }`}>
@@ -404,8 +406,8 @@ export default function AIBuilderPage() {
                   </div>
                 )}
 
-                {/* Undo/Redo */}
-                <div className="flex items-center gap-1 bg-gray-100 dark:bg-slate-700/30 rounded-lg p-1 ring-1 ring-gray-200 dark:ring-white/5">
+                {/* Undo/Redo - Hidden on very small screens */}
+                <div className="hidden sm:flex items-center gap-1 bg-gray-100 dark:bg-slate-700/30 rounded-lg p-1 ring-1 ring-gray-200 dark:ring-white/5">
                   <button
                     onClick={handleUndo}
                     disabled={historyIndex <= 0}
@@ -428,22 +430,22 @@ export default function AIBuilderPage() {
                   </button>
                 </div>
 
-                {/* Site Name Input */}
+                {/* Site Name Input - Compact on mobile */}
                 <div className="relative">
                   <input
                     type="text"
                     value={websiteName}
                     onChange={(e) => setWebsiteName(e.target.value)}
                     placeholder={locale === "tr" ? "Site adı..." : "Site name..."}
-                    className="px-3 py-2 bg-gray-100 dark:bg-slate-700/40 border border-gray-200 dark:border-slate-600/50 rounded-lg text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-slate-500 focus:outline-none focus:border-purple-400/50 focus:ring-1 focus:ring-purple-400/20 text-sm w-40 transition-all"
+                    className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-100 dark:bg-slate-700/40 border border-gray-200 dark:border-slate-600/50 rounded-lg text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-slate-500 focus:outline-none focus:border-purple-400/50 focus:ring-1 focus:ring-purple-400/20 text-xs sm:text-sm w-28 sm:w-40 transition-all"
                   />
                 </div>
 
-                {/* Save Button */}
+                {/* Save Button - Icon only on mobile */}
                 <button
                   onClick={handleSave}
                   disabled={isSaving || !generatedHtml || !hasUnsavedChanges}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30"
                 >
                   {isSaving ? (
                     <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
@@ -455,15 +457,17 @@ export default function AIBuilderPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                     </svg>
                   )}
-                  {isSaving ? (locale === "tr" ? "..." : "...") : (locale === "tr" ? "Kaydet" : "Save")}
+                  <span className="hidden sm:inline">
+                    {isSaving ? (locale === "tr" ? "..." : "...") : (locale === "tr" ? "Kaydet" : "Save")}
+                  </span>
                 </button>
 
-                {/* Publish Button */}
+                {/* Publish Button - Hidden on mobile if not published, or icon only */}
                 {websiteId && (
                   <button
                     onClick={websiteStatus === 'published' ? handleUnpublish : handlePublish}
                     disabled={isPublishing}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${websiteStatus === 'published'
+                    className={`hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${websiteStatus === 'published'
                       ? 'bg-gray-200 hover:bg-gray-300 dark:bg-slate-600/80 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-200 ring-1 ring-gray-300 dark:ring-slate-500/50'
                       : 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white shadow-lg shadow-purple-500/20'
                       }`}
@@ -482,12 +486,14 @@ export default function AIBuilderPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                       </svg>
                     )}
-                    {isPublishing
-                      ? "..."
-                      : websiteStatus === 'published'
-                        ? (locale === "tr" ? "Kaldır" : "Unpublish")
-                        : (locale === "tr" ? "Yayınla" : "Publish")
-                    }
+                    <span className="hidden lg:inline">
+                      {isPublishing
+                        ? "..."
+                        : websiteStatus === 'published'
+                          ? (locale === "tr" ? "Kaldır" : "Unpublish")
+                          : (locale === "tr" ? "Yayınla" : "Publish")
+                      }
+                    </span>
                   </button>
                 )}
               </div>
@@ -496,22 +502,46 @@ export default function AIBuilderPage() {
         </div>
       </div>
 
+      {/* Mobile Tab Switcher */}
+      <div className="lg:hidden bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-4 py-2">
+        <div className="flex p-1 bg-gray-100 dark:bg-slate-700/50 rounded-lg">
+          <button
+            onClick={() => setActiveMobileTab('chat')}
+            className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${activeMobileTab === 'chat'
+              ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
+              }`}
+          >
+            {locale === "tr" ? "Sohbet" : "Chat"}
+          </button>
+          <button
+            onClick={() => setActiveMobileTab('preview')}
+            className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${activeMobileTab === 'preview'
+              ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
+              }`}
+          >
+            {locale === "tr" ? "Önizleme" : "Preview"}
+          </button>
+        </div>
+      </div>
+
       {/* Main Content - ChatGPT Style */}
       <div className="flex-1 overflow-hidden">
-        <div className="h-full max-w-[1800px] mx-auto px-8 py-6 grid grid-cols-2 gap-6">
+        <div className="h-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Panel - Chat */}
-          <div className="flex flex-col bg-white dark:bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-white/5 overflow-hidden ring-1 ring-gray-200 dark:ring-white/5 shadow-xl dark:shadow-none">
+          <div className={`${activeMobileTab === 'chat' ? 'flex' : 'hidden lg:flex'} flex-col bg-white dark:bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-white/5 overflow-hidden ring-1 ring-gray-200 dark:ring-white/5 shadow-xl dark:shadow-none h-full`}>
             {/* Messages */}
             <div
               ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent"
+              className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent"
             >
               {messages.map((message, index) => (
                 <div
                   key={index}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${message.role === 'user'
+                  <div className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-3 ${message.role === 'user'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 dark:bg-slate-700/50 text-gray-800 dark:text-slate-100'
                     }`}>
@@ -523,8 +553,8 @@ export default function AIBuilderPage() {
                           </svg>
                         </div>
                       )}
-                      <div className="flex-1">
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed break-words">{message.content}</p>
                         <div className="flex items-center justify-between mt-2">
                           <p className="text-xs opacity-60">
                             {message.timestamp.toLocaleTimeString(locale === 'tr' ? 'tr-TR' : 'en-US', {
@@ -548,7 +578,7 @@ export default function AIBuilderPage() {
               ))}
               {isGenerating && (
                 <div className="flex justify-start">
-                  <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-gray-100 dark:bg-slate-700/50">
+                  <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-3 bg-gray-100 dark:bg-slate-700/50">
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
                         <svg className="w-4 h-4 text-white animate-spin" viewBox="0 0 24 24">
@@ -621,7 +651,7 @@ export default function AIBuilderPage() {
           </div>
 
           {/* Right Panel - Preview */}
-          <div className="flex flex-col bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-slate-700/50 overflow-hidden shadow-xl dark:shadow-none">
+          <div className={`${activeMobileTab === 'preview' ? 'flex' : 'hidden lg:flex'} flex-col bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-slate-700/50 overflow-hidden shadow-xl dark:shadow-none h-full`}>
             {generatedHtml ? (
               <>
                 <div className="flex-shrink-0 px-3 py-2 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700/50 flex items-center justify-between">

@@ -31,6 +31,7 @@ export default function EditorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [activeMobileTab, setActiveMobileTab] = useState<'chat' | 'preview'>('chat');
 
   // History management for undo/redo
   const [htmlHistory, setHtmlHistory] = useState<string[]>([]);
@@ -406,12 +407,14 @@ export default function EditorPage() {
     );
   }
 
+
+
   return (
     <div className="fixed inset-0 z-[9999] bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-hidden flex flex-col">
       {/* Compact Header */}
-      <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border-b border-gray-200/50 dark:border-slate-700/50 px-8 py-4">
+      <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border-b border-gray-200/50 dark:border-slate-700/50 px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
         <div className="max-w-[1800px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => router.push(`/${locale}/dashboard`)}
               className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700/50 rounded-xl transition-colors"
@@ -420,30 +423,32 @@ export default function EditorPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+            <div className="flex flex-col">
+              <h1 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate max-w-[150px] sm:max-w-xs">
                 {website?.name}
               </h1>
-              <p className="text-xs text-gray-500 dark:text-slate-400">
+              <p className="hidden sm:block text-xs text-gray-500 dark:text-slate-400">
                 {locale === "tr" ? "AI ile Düzenle" : "Edit with AI"}
               </p>
             </div>
-            {/* Status Badge */}
-            {website?.status === 'active' ? (
-              <span className="px-3 py-1.5 bg-green-500/90 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-green-500/30">
-                <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                {locale === "tr" ? "Yayında" : "Live"}
-              </span>
-            ) : (
-              <span className="px-3 py-1.5 bg-gray-200/90 dark:bg-slate-700/90 text-gray-700 dark:text-slate-200 rounded-lg text-xs font-bold flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-gray-400 dark:bg-slate-400 rounded-full"></span>
-                {locale === "tr" ? "Taslak" : "Draft"}
-              </span>
-            )}
+            {/* Status Badge - Hidden on very small screens */}
+            <div className="hidden sm:block">
+              {website?.status === 'active' ? (
+                <span className="px-3 py-1.5 bg-green-500/90 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-green-500/30">
+                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                  {locale === "tr" ? "Yayında" : "Live"}
+                </span>
+              ) : (
+                <span className="px-3 py-1.5 bg-gray-200/90 dark:bg-slate-700/90 text-gray-700 dark:text-slate-200 rounded-lg text-xs font-bold flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-gray-400 dark:bg-slate-400 rounded-full"></span>
+                  {locale === "tr" ? "Taslak" : "Draft"}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            {/* Undo/Redo Buttons */}
-            <div className="flex items-center gap-2 border-r border-gray-200 dark:border-slate-700 pr-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Undo/Redo Buttons - Hidden on mobile */}
+            <div className="hidden md:flex items-center gap-2 border-r border-gray-200 dark:border-slate-700 pr-3">
               <button
                 onClick={handleUndo}
                 disabled={historyIndex <= 0}
@@ -453,7 +458,7 @@ export default function EditorPage() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                 </svg>
-                <span className="hidden sm:inline">{locale === "tr" ? "Geri" : "Undo"}</span>
+                <span className="hidden lg:inline">{locale === "tr" ? "Geri" : "Undo"}</span>
               </button>
               <button
                 onClick={handleRedo}
@@ -461,7 +466,7 @@ export default function EditorPage() {
                 className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-slate-700/50 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-lg text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-slate-700/50"
                 title={locale === "tr" ? "İleri Al (Ctrl+Y)" : "Redo (Ctrl+Y)"}
               >
-                <span className="hidden sm:inline">{locale === "tr" ? "İleri" : "Redo"}</span>
+                <span className="hidden lg:inline">{locale === "tr" ? "İleri" : "Redo"}</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
                 </svg>
@@ -471,7 +476,7 @@ export default function EditorPage() {
             <button
               onClick={() => handleSave(false)}
               disabled={isSaving || !hasUnsavedChanges}
-              className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold text-sm shadow-lg transition-all hover:scale-[1.02] disabled:opacity-50"
+              className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold text-sm shadow-lg transition-all hover:scale-[1.02] disabled:opacity-50"
             >
               {isSaving ? (
                 <>
@@ -479,14 +484,14 @@ export default function EditorPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  {locale === "tr" ? "Kaydediliyor..." : "Saving..."}
+                  <span className="hidden sm:inline">{locale === "tr" ? "Kaydediliyor..." : "Saving..."}</span>
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                   </svg>
-                  {locale === "tr" ? "Kaydet" : "Save"}
+                  <span className="hidden sm:inline">{locale === "tr" ? "Kaydet" : "Save"}</span>
                 </>
               )}
             </button>
@@ -494,7 +499,7 @@ export default function EditorPage() {
               <button
                 onClick={handlePublish}
                 disabled={isPublishing}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-semibold text-sm shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] disabled:opacity-50"
+                className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-semibold text-sm shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] disabled:opacity-50"
               >
                 {isPublishing ? (
                   <>
@@ -502,14 +507,14 @@ export default function EditorPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    {locale === "tr" ? "Yayınlanıyor..." : "Publishing..."}
+                    <span className="hidden sm:inline">{locale === "tr" ? "Yayınlanıyor..." : "Publishing..."}</span>
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    {locale === "tr" ? "Yayınla" : "Publish"}
+                    <span className="hidden sm:inline">{locale === "tr" ? "Yayınla" : "Publish"}</span>
                   </>
                 )}
               </button>
@@ -517,7 +522,7 @@ export default function EditorPage() {
               <button
                 onClick={handleUnpublish}
                 disabled={isPublishing}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
               >
                 {isPublishing ? (
                   <>
@@ -525,14 +530,14 @@ export default function EditorPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    {locale === "tr" ? "İşleniyor..." : "Processing..."}
+                    <span className="hidden sm:inline">{locale === "tr" ? "İşleniyor..." : "Processing..."}</span>
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    {locale === "tr" ? "Taslağa Al" : "Unpublish"}
+                    <span className="hidden sm:inline">{locale === "tr" ? "Taslağa Al" : "Unpublish"}</span>
                   </>
                 )}
               </button>
@@ -541,23 +546,47 @@ export default function EditorPage() {
         </div>
       </div>
 
+      {/* Mobile Tab Switcher */}
+      <div className="lg:hidden bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-4 py-2">
+        <div className="flex p-1 bg-gray-100 dark:bg-slate-700/50 rounded-lg">
+          <button
+            onClick={() => setActiveMobileTab('chat')}
+            className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${activeMobileTab === 'chat'
+              ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
+              }`}
+          >
+            {locale === "tr" ? "Sohbet" : "Chat"}
+          </button>
+          <button
+            onClick={() => setActiveMobileTab('preview')}
+            className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${activeMobileTab === 'preview'
+              ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
+              }`}
+          >
+            {locale === "tr" ? "Önizleme" : "Preview"}
+          </button>
+        </div>
+      </div>
+
       {/* Main Content - ChatGPT Style */}
       <div className="flex-1 overflow-hidden">
-        <div className="h-full max-w-[1800px] mx-auto px-8 py-6 grid grid-cols-2 gap-6">
+        <div className="h-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Left: Chat Interface */}
-          <div className="flex flex-col bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-slate-700/50 overflow-hidden shadow-xl dark:shadow-none">
+          <div className={`${activeMobileTab === 'chat' ? 'flex' : 'hidden lg:flex'} flex-col bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-slate-700/50 overflow-hidden shadow-xl dark:shadow-none h-full`}>
             {/* Chat Messages */}
             <div
               ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent"
+              className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent"
             >
               {messages.map((message, index) => (
                 <div
                   key={index}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${message.role === 'user'
+                  <div className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-3 ${message.role === 'user'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 dark:bg-slate-700/50 text-gray-800 dark:text-slate-100'
                     }`}>
@@ -569,8 +598,8 @@ export default function EditorPage() {
                           </svg>
                         </div>
                       )}
-                      <div className="flex-1">
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed break-words">{message.content}</p>
                         <div className="flex items-center justify-between mt-2">
                           <p className="text-xs opacity-60">
                             {message.timestamp.toLocaleTimeString(locale === 'tr' ? 'tr-TR' : 'en-US', {
@@ -595,7 +624,7 @@ export default function EditorPage() {
 
               {isAIProcessing && (
                 <div className="flex justify-start">
-                  <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-gray-100 dark:bg-slate-700/50">
+                  <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-3 bg-gray-100 dark:bg-slate-700/50">
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
                         <svg className="w-4 h-4 text-white animate-spin" viewBox="0 0 24 24">
@@ -652,7 +681,7 @@ export default function EditorPage() {
           </div>
 
           {/* Right: Live Preview */}
-          <div className="flex flex-col bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-slate-700/50 overflow-hidden shadow-xl dark:shadow-none">
+          <div className={`${activeMobileTab === 'preview' ? 'flex' : 'hidden lg:flex'} flex-col bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-slate-700/50 overflow-hidden shadow-xl dark:shadow-none h-full`}>
             <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700/50 flex items-center justify-between bg-gray-50 dark:bg-transparent">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
