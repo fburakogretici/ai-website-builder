@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useLocale } from 'next-intl';
+import { toast } from "sonner";
 
 export default function Footer() {
   const router = useRouter();
@@ -37,18 +38,50 @@ export default function Footer() {
             {/* Newsletter */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-gray-900 dark:text-white">{locale === 'tr' ? 'Bültene Abone Ol' : 'Subscribe to Newsletter'}</h4>
-              <div className="flex gap-2">
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const form = e.currentTarget;
+                  const input = form.elements.namedItem('email') as HTMLInputElement;
+                  const email = input.value;
+
+                  if (!email) return;
+
+                  const button = form.querySelector('button');
+                  if (button) button.disabled = true;
+
+                  try {
+                    const res = await fetch('/api/newsletter/subscribe', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email }),
+                    });
+
+                    if (!res.ok) throw new Error('Subscription failed');
+
+                    toast.success(locale === 'tr' ? 'Bültene başarıyla abone oldunuz! 🎉' : 'Successfully subscribed to newsletter! 🎉');
+                    input.value = '';
+                  } catch (error) {
+                    toast.error(locale === 'tr' ? 'Bir hata oluştu. Lütfen tekrar deneyin.' : 'Something went wrong. Please try again.');
+                  } finally {
+                    if (button) button.disabled = false;
+                  }
+                }}
+                className="flex gap-2"
+              >
                 <input
+                  name="email"
                   type="email"
+                  required
                   placeholder={locale === 'tr' ? 'E-posta adresiniz' : 'Your email'}
                   className="flex-1 px-4 py-2 bg-white border border-gray-200 dark:bg-white/5 dark:border-white/10 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-all"
                 />
-                <button className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/25">
+                <button type="submit" className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
                 </button>
-              </div>
+              </form>
             </div>
           </div>
 

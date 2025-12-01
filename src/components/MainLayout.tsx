@@ -9,6 +9,7 @@ import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 import type { Session } from '@supabase/supabase-js';
 import { Toaster } from 'sonner';
 import { ConfirmProvider } from './ConfirmProvider';
+import ScrollToTop from './ScrollToTop';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -74,6 +75,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         expand={true}
         duration={4000}
       />
+      <ScrollToTop />
       <div>
         <Navbar session={session} />
       </div>

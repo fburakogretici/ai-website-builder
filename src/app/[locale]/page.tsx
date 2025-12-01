@@ -11,7 +11,7 @@ export default function Home() {
   const [businessName, setBusinessName] = useState("");
   const [industry, setIndustry] = useState("");
   const [session, setSession] = useState<Session | null>(null);
-  const [showScrollTop, setShowScrollTop] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const t = useTranslations();
@@ -40,25 +40,7 @@ export default function Home() {
     };
   }, [supabase]);
 
-  // Scroll to top functionality
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 300) {
-        setShowScrollTop(true);
-      } else {
-        setShowScrollTop(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  };
 
   const handleWebsiteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,10 +79,10 @@ export default function Home() {
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-pink-400/30 to-orange-400/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
 
           {/* Floating Code Symbols */}
-          <div className="absolute top-20 left-10 text-indigo-400/20 dark:text-indigo-400/10 text-6xl font-mono animate-float">{'<>'}</div>
-          <div className="absolute top-40 right-20 text-purple-400/20 dark:text-purple-400/10 text-5xl font-mono animate-float" style={{ animationDelay: '0.5s' }}>{'{ }'}</div>
-          <div className="absolute bottom-32 left-1/4 text-pink-400/20 dark:text-pink-400/10 text-7xl font-mono animate-float" style={{ animationDelay: '1s' }}>{'</>'}</div>
-          <div className="absolute top-1/3 right-10 text-cyan-400/20 dark:text-cyan-400/10 text-4xl font-mono animate-float" style={{ animationDelay: '1.5s' }}>{'[ ]'}</div>
+          <div className="hidden md:block absolute top-20 left-10 text-indigo-400/20 dark:text-indigo-400/10 text-6xl font-mono animate-float">{'<>'}</div>
+          <div className="hidden md:block absolute top-40 right-20 text-purple-400/20 dark:text-purple-400/10 text-5xl font-mono animate-float" style={{ animationDelay: '0.5s' }}>{'{ }'}</div>
+          <div className="hidden md:block absolute bottom-32 left-1/4 text-pink-400/20 dark:text-pink-400/10 text-7xl font-mono animate-float" style={{ animationDelay: '1s' }}>{'</>'}</div>
+          <div className="hidden md:block absolute top-1/3 right-10 text-cyan-400/20 dark:text-cyan-400/10 text-4xl font-mono animate-float" style={{ animationDelay: '1.5s' }}>{'[ ]'}</div>
 
           {/* AI Sparkles */}
           <div className="absolute top-1/4 right-1/3 w-2 h-2 bg-indigo-400 rounded-full animate-ping" style={{ animationDelay: '0.3s' }}></div>
@@ -108,7 +90,7 @@ export default function Home() {
           <div className="absolute top-1/2 right-1/4 w-2 h-2 bg-pink-400 rounded-full animate-ping" style={{ animationDelay: '1.2s' }}></div>
 
           {/* Browser Window Mockups */}
-          <div className="absolute top-10 right-10 w-32 h-24 bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-indigo-300/20 dark:border-indigo-500/10 rounded-lg animate-float-slow">
+          <div className="hidden md:block absolute top-10 right-10 w-32 h-24 bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-indigo-300/20 dark:border-indigo-500/10 rounded-lg animate-float-slow">
             <div className="flex gap-1 p-2">
               <div className="w-2 h-2 rounded-full bg-red-400/40"></div>
               <div className="w-2 h-2 rounded-full bg-yellow-400/40"></div>
@@ -121,7 +103,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="absolute bottom-20 left-10 w-36 h-28 bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-purple-300/20 dark:border-purple-500/10 rounded-lg animate-float-slow" style={{ animationDelay: '0.8s' }}>
+          <div className="hidden md:block absolute bottom-20 left-10 w-36 h-28 bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-purple-300/20 dark:border-purple-500/10 rounded-lg animate-float-slow" style={{ animationDelay: '0.8s' }}>
             <div className="flex gap-1 p-2">
               <div className="w-2 h-2 rounded-full bg-red-400/40"></div>
               <div className="w-2 h-2 rounded-full bg-yellow-400/40"></div>
@@ -221,7 +203,7 @@ export default function Home() {
       </section>
 
       {/* How It Works - 3 Steps */}
-      <section id="how" className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
+      <section id="how" className="relative py-16 lg:min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
         <div className="max-w-6xl mx-auto w-full">
           {/* Section Header */}
           <div className="text-center mb-10">
@@ -241,11 +223,11 @@ export default function Home() {
           </div>
 
           {/* 3 Step Cards */}
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
             {/* Step 1 */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-pink-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-700 transition-all duration-300 h-full">
+              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-700 transition-all duration-300 h-full">
                 <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl mb-6 shadow-lg shadow-orange-500/30">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -268,7 +250,7 @@ export default function Home() {
             {/* Step 2 */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-300 h-full">
+              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-300 h-full">
                 <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl mb-6 shadow-lg shadow-purple-500/30">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -291,7 +273,7 @@ export default function Home() {
             {/* Step 3 */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-teal-500/20 to-cyan-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-teal-300 dark:hover:border-teal-700 transition-all duration-300 h-full">
+              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-teal-300 dark:hover:border-teal-700 transition-all duration-300 h-full">
                 <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl mb-6 shadow-lg shadow-teal-500/30">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -383,7 +365,7 @@ export default function Home() {
       </main>
 
       {/* Features Section */}
-      <section id="features" className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
+      <section id="features" className="relative py-16 lg:min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
         <div className="max-w-6xl mx-auto w-full">
           {/* Section Header */}
           <div className="text-center mb-10">
@@ -403,11 +385,11 @@ export default function Home() {
           </div>
 
           {/* Feature Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {/* Feature 1 - AI Powered */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all duration-300 h-full">
+              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all duration-300 h-full">
                 <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl mb-6 shadow-lg shadow-indigo-500/30 group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -423,7 +405,7 @@ export default function Home() {
             {/* Feature 2 - Fast */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-green-300 dark:hover:border-green-700 transition-all duration-300 h-full">
+              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-green-300 dark:hover:border-green-700 transition-all duration-300 h-full">
                 <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl mb-6 shadow-lg shadow-green-500/30 group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -439,7 +421,7 @@ export default function Home() {
             {/* Feature 3 - Customizable */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-rose-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-pink-300 dark:hover:border-pink-700 transition-all duration-300 h-full">
+              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-pink-300 dark:hover:border-pink-700 transition-all duration-300 h-full">
                 <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl mb-6 shadow-lg shadow-pink-500/30 group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
@@ -460,7 +442,7 @@ export default function Home() {
       </section>
 
       {/* Templates Section - Static Website Themes Only */}
-      <section id="templates" className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
+      <section id="templates" className="relative py-16 lg:min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
@@ -471,7 +453,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {/* Portfolio Creative Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
               <div className="relative h-48 w-full bg-gradient-to-br from-purple-500 to-pink-500">
@@ -572,7 +554,7 @@ export default function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
+      <section id="pricing" className="relative py-16 lg:min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
@@ -583,9 +565,9 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {/* Free Plan */}
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 transition-all duration-300">
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 sm:p-8 border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 transition-all duration-300">
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {locale === 'tr' ? 'Başlangıç' : 'Starter'}
               </h3>
@@ -627,7 +609,7 @@ export default function Home() {
             </div>
 
             {/* Pro Plan - Popular */}
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-8 transform scale-105 shadow-2xl relative">
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 sm:p-8 transform scale-105 shadow-2xl relative">
               <div className="absolute top-0 right-0 bg-yellow-400 text-gray-900 px-4 py-1 rounded-bl-lg rounded-tr-lg font-bold text-sm">
                 {locale === 'tr' ? 'Popüler' : 'Popular'}
               </div>
@@ -680,7 +662,7 @@ export default function Home() {
             </div>
 
             {/* Enterprise Plan */}
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 border-2 border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-400 transition-all duration-300">
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 sm:p-8 border-2 border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-400 transition-all duration-300">
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {locale === 'tr' ? 'Kurumsal' : 'Enterprise'}
               </h3>
@@ -759,23 +741,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Scroll to Top Button */}
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-8 right-8 w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group z-50 animate-bounce hover:animate-none"
-          aria-label={locale === 'tr' ? 'Yukarı çık' : 'Scroll to top'}
-        >
-          <svg
-            className="w-6 h-6 group-hover:scale-110 transition-transform duration-200"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-          </svg>
-        </button>
-      )}
+
     </div>
   );
 }
