@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 export default function NotificationsPage() {
-  const t = useTranslations();
   const [emailNotifications, setEmailNotifications] = useState({
     newWebsite: true,
     weeklyReport: true,
