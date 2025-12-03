@@ -7,6 +7,7 @@ import { retryFetch, getErrorMessage } from "@/utils/retry";
 import { saveConversation, loadConversation } from "@/utils/conversation-storage";
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 import { toast } from 'sonner';
+import PublishSettings from '@/components/dashboard/PublishSettings';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -35,6 +36,7 @@ export default function AIBuilderPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // History management for undo/redo
@@ -283,37 +285,23 @@ export default function AIBuilderPage() {
     }
   };
 
-  const handlePublish = async () => {
+  const handlePublishClick = () => {
     if (!websiteId) {
       toast.error(locale === "tr" ? "Önce siteyi kaydedin" : "Save the website first");
       return;
     }
+    setShowPublishModal(true);
+  };
 
-    setIsPublishing(true);
-
-    try {
-      const { createBrowserClient } = await import("@/utils/supabase/client");
-      const supabase = createBrowserClient();
-
-      const { error } = await supabase
-        .from('websites')
-        .update({ status: 'published' })
-        .eq('id', websiteId);
-
-      if (error) throw error;
-
-      setWebsiteStatus('published');
-      toast.success(locale === "tr"
-        ? "Site yayınlandı!"
-        : "✅ Website published!");
-
-    } catch (error: any) {
-      console.error("Publish error:", error);
-      toast.error(locale === "tr"
-        ? `Yayınlama hatası: ${error.message}`
-        : `Publish error: ${error.message}`);
-    } finally {
-      setIsPublishing(false);
+  const handlePublishSuccess = () => {
+    // Refresh website status
+    if (websiteId) {
+      supabase?.from('websites').select('is_published').eq('id', websiteId).single()
+        .then(({ data }) => {
+          if (data?.is_published) {
+            setWebsiteStatus('published');
+          }
+        });
     }
   };
 
@@ -465,7 +453,7 @@ export default function AIBuilderPage() {
                 {/* Publish Button - Hidden on mobile if not published, or icon only */}
                 {websiteId && (
                   <button
-                    onClick={websiteStatus === 'published' ? handleUnpublish : handlePublish}
+                    onClick={websiteStatus === 'published' ? handleUnpublish : handlePublishClick}
                     disabled={isPublishing}
                     className={`hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${websiteStatus === 'published'
                       ? 'bg-gray-200 hover:bg-gray-300 dark:bg-slate-600/80 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-200 ring-1 ring-gray-300 dark:ring-slate-500/50'
@@ -774,6 +762,20 @@ export default function AIBuilderPage() {
           background: rgba(71, 85, 105, 0.7);
         }
       `}</style>
-    </div >
+
+      {/* Publish Settings Modal */}
+      {showPublishModal && websiteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md">
+            <PublishSettings
+              websiteId={websiteId as string}
+              websiteName={websiteName}
+              onClose={() => setShowPublishModal(false)}
+              onPublishSuccess={handlePublishSuccess}
+            />
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

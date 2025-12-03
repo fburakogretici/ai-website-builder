@@ -121,6 +121,16 @@ export async function POST(request: NextRequest) {
       })
       .eq('id', websiteId);
 
+    // Trigger email notification (fire and forget)
+    // Notify user that their website is now live
+    import("@/utils/sendEmail").then(({ sendNotificationEmail }) => {
+      sendNotificationEmail("new_website", user.id, {
+        websiteName: website.name,
+        websiteUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://nocodepage.vercel.app'}/s/${finalSubdomain}`,
+        thumbnailUrl: "https://placehold.co/600x400/e2e8f0/475569?text=Website+Preview", // Placeholder
+      }).catch(err => console.error("Failed to send email:", err));
+    });
+
 
     return NextResponse.json({
       success: true,
