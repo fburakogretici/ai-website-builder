@@ -8,7 +8,7 @@ const intlMiddleware = createMiddleware({
   localePrefix: 'always',
   localeDetection: true
 });
-
+ 
 export default async function middleware(request: NextRequest) {
   // 1. Skip middleware for auth callbacks and static files
   if (
