@@ -54,7 +54,7 @@ export default function SettingsLayout({
     );
   }
 
-  const locale = usePathname()?.split('/')[1] || 'tr';
+  const locale = pathname?.split('/')[1] || 'tr';
 
   const menuItems = [
     {
