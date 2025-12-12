@@ -253,6 +253,17 @@
         "connected": "{provider} connected!",
         "removed": "Connection removed"
       }
+    },
+    "modelDescriptions": {
+      "claudeSonnet45": "Smart model for complex agents and coding",
+      "claudeHaiku45": "Fastest model with near-frontier intelligence",
+      "claudeOpus45": "Premium model combining maximum intelligence",
+      "gpt4o": "Most capable multimodal",
+      "gpt4oMini": "Fast & affordable",
+      "gpt4Turbo": "Powerful and fast",
+      "gpt4TurboPreview": "Latest preview",
+      "o1Preview": "Advanced reasoning",
+      "o1Mini": "Efficient reasoning"
     }
   }
 }

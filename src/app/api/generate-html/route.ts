@@ -277,11 +277,28 @@ Complete HTML code.`;
       }
     }
 
-    // Remove markdown blocks from HTML if present
+    // Remove markdown blocks from HTML if present - AGGRESSIVE CLEANING
+    // Remove ```html blocks
     if (html.includes("```html")) {
-      html = html.match(/```html\n([\s\S]*?)\n```/)?.[1] || html;
-    } else if (html.includes("```")) {
-      html = html.match(/```\n([\s\S]*?)\n```/)?.[1] || html;
+      const match = html.match(/```html\s*\n?([\s\S]*?)\n?```/);
+      if (match) {
+        html = match[1];
+      }
+    }
+    // Remove generic ``` blocks
+    else if (html.includes("```")) {
+      const match = html.match(/```\s*\n?([\s\S]*?)\n?```/);
+      if (match) {
+        html = match[1];
+      }
+    }
+
+    // Remove any remaining backticks at start/end
+    html = html.replace(/^`+|`+$/g, '').trim();
+
+    // Remove "html" text if it appears at the very beginning
+    if (html.toLowerCase().startsWith('html')) {
+      html = html.substring(4).trim();
     }
 
     // Clean up end of HTML

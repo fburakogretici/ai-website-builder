@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { retryFetch, getErrorMessage } from "@/utils/retry";
 import { saveConversation, loadConversation } from "@/utils/conversation-storage";
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
@@ -47,6 +47,14 @@ export default function EditorPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const shouldSkipInitialScroll = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Model selection - dynamic based on user's API keys
+  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [loadingModels, setLoadingModels] = useState(true);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const t = useTranslations('settings.modelDescriptions');
 
   const supabase = useSupabaseClient();
   const [session, setSession] = useState<any>(null);
@@ -102,6 +110,50 @@ export default function EditorPage() {
       return () => clearTimeout(timer);
     }
   }, [messages, websiteId, supabase, session]);
+
+  // Load available models based on user's API keys
+  useEffect(() => {
+    const loadAvailableModels = async () => {
+      if (!supabase || !session) {
+        setLoadingModels(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/user/available-models', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableModels(data.models || []);
+
+          // Set default model from localStorage or first available
+          const savedModel = localStorage.getItem('selectedModel');
+          if (savedModel && data.models.some((m: any) => m.id === savedModel)) {
+            setSelectedModel(savedModel);
+          } else if (data.models.length > 0) {
+            setSelectedModel(data.models[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load models:', error);
+      } finally {
+        setLoadingModels(false);
+      }
+    };
+
+    loadAvailableModels();
+  }, [supabase, session]);
+
+  // Save selected model to localStorage
+  useEffect(() => {
+    if (selectedModel) {
+      localStorage.setItem('selectedModel', selectedModel);
+    }
+  }, [selectedModel]);
 
   const scrollToBottom = () => {
     const container = messagesContainerRef.current;
@@ -190,8 +242,10 @@ export default function EditorPage() {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
     setIsAIProcessing(true);
-    setRetryCount(0);
     setIsLongRunning(false);
+
+    // Create abort controller for this request
+    abortControllerRef.current = new AbortController();
 
     // Show "taking longer than usual" message after 20 seconds
     const longRunningTimer = setTimeout(() => {
@@ -199,36 +253,26 @@ export default function EditorPage() {
     }, 20000);
 
     try {
-      // Call AI API to modify website
+      // Call AI API to modify website - Direct fetch without retry
       console.log('🔵 Sending AI edit request...', {
         websiteId,
         userPrompt: userMessage.content,
         currentHtmlLength: htmlContent.length
       });
 
-      const response = await retryFetch(
-        '/api/ai-edit',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            websiteId,
-            currentHtml: htmlContent,
-            userPrompt: userMessage.content,
-            conversationHistory: messages,
-            locale
-          })
-        },
-        {
-          maxRetries: 3,
-          initialDelayMs: 1000,
-          timeoutMs: 60000,
-          onRetry: (attempt, error) => {
-            setRetryCount(attempt);
-            console.log(`Retry attempt ${attempt}:`, error.message);
-          },
-        }
-      );
+      const response = await fetch('/api/ai-edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          websiteId,
+          currentHtml: htmlContent,
+          userPrompt: userMessage.content,
+          conversationHistory: messages,
+          locale,
+          model: selectedModel
+        }),
+        signal: abortControllerRef.current.signal
+      });
 
       clearTimeout(longRunningTimer);
       setIsLongRunning(false);
@@ -277,9 +321,21 @@ export default function EditorPage() {
       // await handleSave(true);
       console.log('✅ All done!');
 
-    } catch (error) {
+    } catch (error: any) {
       clearTimeout(longRunningTimer);
       setIsLongRunning(false);
+
+      // Check if request was cancelled
+      if (error.name === 'AbortError') {
+        console.log('Request cancelled by user');
+        const cancelMessage: Message = {
+          role: 'assistant',
+          content: locale === 'tr' ? '❌ İstek iptal edildi.' : '❌ Request cancelled.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, cancelMessage]);
+        return;
+      }
 
       console.error('❌ AI edit error:', error);
       const errorMessage: Message = {
@@ -290,7 +346,14 @@ export default function EditorPage() {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsAIProcessing(false);
-      setRetryCount(0);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleCancelGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setIsAIProcessing(false);
     }
   };
 

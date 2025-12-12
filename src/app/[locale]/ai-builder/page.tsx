@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { retryFetch, getErrorMessage } from "@/utils/retry";
 import { saveConversation, loadConversation } from "@/utils/conversation-storage";
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
@@ -23,6 +23,7 @@ interface Message {
 export default function AIBuilderPage() {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations('settings.modelDescriptions');
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -38,21 +39,13 @@ export default function AIBuilderPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Model selection
-  const [selectedModel, setSelectedModel] = useState<string>('claude-3-5-haiku-20241022');
-
-  const modelOptions = {
-    anthropic: [
-      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', desc: 'Most capable' },
-      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', desc: 'Fast & affordable' },
-    ],
-    openai: [
-      { id: 'gpt-4o', name: 'GPT-4o', desc: 'Latest' },
-      { id: 'gpt-4o-mini', name: 'GPT-4o Mini', desc: 'Fast & affordable' },
-      { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', desc: 'Powerful' },
-    ]
-  };
+  // Model selection - dynamic based on user's API keys
+  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [loadingModels, setLoadingModels] = useState(true);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
 
   // History management for undo/redo
   const [htmlHistory, setHtmlHistory] = useState<string[]>([]);
@@ -95,6 +88,50 @@ export default function AIBuilderPage() {
     }
   }, [websiteId, supabase, session]);
 
+  // Load available models based on user's API keys
+  useEffect(() => {
+    const loadAvailableModels = async () => {
+      if (!supabase || !session) {
+        setLoadingModels(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/user/available-models', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableModels(data.models || []);
+
+          // Set default model from localStorage or first available
+          const savedModel = localStorage.getItem('selectedModel');
+          if (savedModel && data.models.some((m: any) => m.id === savedModel)) {
+            setSelectedModel(savedModel);
+          } else if (data.models.length > 0) {
+            setSelectedModel(data.models[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load models:', error);
+      } finally {
+        setLoadingModels(false);
+      }
+    };
+
+    loadAvailableModels();
+  }, [supabase, session]);
+
+  // Save selected model to localStorage
+  useEffect(() => {
+    if (selectedModel) {
+      localStorage.setItem('selectedModel', selectedModel);
+    }
+  }, [selectedModel]);
+
   // Auto-save conversation (debounced 3 seconds)
   useEffect(() => {
     if (messages.length > 0 && websiteId && supabase && session?.user?.id) {
@@ -133,8 +170,10 @@ export default function AIBuilderPage() {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
     setIsGenerating(true);
-    setRetryCount(0);
     setIsLongRunning(false);
+
+    // Create abort controller for this request
+    abortControllerRef.current = new AbortController();
 
     // Show "taking longer than usual" message after 20 seconds
     const longRunningTimer = setTimeout(() => {
@@ -142,31 +181,21 @@ export default function AIBuilderPage() {
     }, 20000);
 
     try {
-      const response = await retryFetch(
-        "/api/generate-html",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt: inputMessage,
-            model: selectedModel,
-            currentHtml: generatedHtml || null,
-            conversationHistory: messages,
-            locale: locale,
-            websiteId: websiteId,
-            userId: session?.user?.id || null,
-          }),
-        },
-        {
-          maxRetries: 3,
-          initialDelayMs: 1000,
-          timeoutMs: 60000,
-          onRetry: (attempt, error) => {
-            setRetryCount(attempt);
-            console.log(`Retry attempt ${attempt}:`, error.message);
-          },
-        }
-      );
+      // Direct fetch without retry to save tokens
+      const response = await fetch("/api/generate-html", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: inputMessage,
+          model: selectedModel,
+          currentHtml: generatedHtml || null,
+          conversationHistory: messages,
+          locale: locale,
+          websiteId: websiteId,
+          userId: session?.user?.id || null,
+        }),
+        signal: abortControllerRef.current.signal,
+      });
 
       clearTimeout(longRunningTimer);
       setIsLongRunning(false);
@@ -208,6 +237,18 @@ export default function AIBuilderPage() {
       clearTimeout(longRunningTimer);
       setIsLongRunning(false);
 
+      // Check if request was cancelled
+      if (error.name === 'AbortError') {
+        console.log('Request cancelled by user');
+        const cancelMessage: Message = {
+          role: 'assistant',
+          content: locale === 'tr' ? '❌ İstek iptal edildi.' : '❌ Request cancelled.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, cancelMessage]);
+        return;
+      }
+
       console.error("Generation error:", error);
       const errorMessage: Message = {
         role: 'assistant',
@@ -217,7 +258,14 @@ export default function AIBuilderPage() {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsGenerating(false);
-      setRetryCount(0);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleCancelGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setIsGenerating(false);
     }
   };
 
@@ -435,28 +483,6 @@ export default function AIBuilderPage() {
                   </button>
                 </div>
 
-                {/* Model Selector */}
-                <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-100 dark:bg-slate-700/40 border border-gray-200 dark:border-slate-600/50 rounded-lg text-gray-900 dark:text-white text-xs sm:text-sm transition-all focus:outline-none focus:border-purple-400/50 focus:ring-1 focus:ring-purple-400/20"
-                >
-                  <optgroup label="🧠 Anthropic Claude">
-                    {modelOptions.anthropic.map(model => (
-                      <option key={model.id} value={model.id}>
-                        {model.name} - {model.desc}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="🤖 OpenAI GPT">
-                    {modelOptions.openai.map(model => (
-                      <option key={model.id} value={model.id}>
-                        {model.name} - {model.desc}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-
                 {/* Site Name Input - Compact on mobile */}
                 <div className="relative">
                   <input
@@ -613,7 +639,7 @@ export default function AIBuilderPage() {
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
                       </div>
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-gray-700 dark:text-slate-200">
                             {locale === "tr" ? "AI düşünüyor" : "AI is thinking"}
@@ -624,18 +650,11 @@ export default function AIBuilderPage() {
                             <span className="w-1.5 h-1.5 bg-gray-500 dark:bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
                           </div>
                         </div>
-                        {retryCount > 0 && (
-                          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-                            {locale === "tr"
-                              ? `🔄 Yeniden deneniyor (${retryCount}/3)...`
-                              : `🔄 Retrying (${retryCount}/3)...`}
-                          </span>
-                        )}
                         {isLongRunning && (
                           <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
                             {locale === "tr"
-                              ? "⏱️ Normalden uzun sürüyor, lütfen bekleyin..."
-                              : "⏱️ Taking longer than usual, please wait..."}
+                              ? "⏱️ Normalden uzun sürüyor..."
+                              : "⏱️ Taking longer than usual..."}
                           </span>
                         )}
                       </div>
@@ -647,6 +666,59 @@ export default function AIBuilderPage() {
 
             {/* Input Area */}
             <div className="p-3 border-t border-gray-100 dark:border-slate-700/50 bg-gray-50/50 dark:bg-transparent">
+              {/* Model Selector */}
+              {availableModels.length > 0 && (
+                <div className="mb-2 relative">
+                  <button
+                    onClick={() => setShowModelDropdown(!showModelDropdown)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-sm"
+                  >
+                    <span className="text-gray-700 dark:text-slate-300 font-medium">
+                      {availableModels.find(m => m.id === selectedModel)?.name || 'Select Model'}
+                    </span>
+                    <svg className={`w-4 h-4 text-gray-500 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {/* Dropdown */}
+                  {showModelDropdown && (
+                    <div className="absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-slate-500">
+                      {availableModels.map((model) => (
+                        <button
+                          key={model.id}
+                          onClick={() => {
+                            setSelectedModel(model.id);
+                            setShowModelDropdown(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors border-b border-gray-100 dark:border-slate-700/50 last:border-0 ${selectedModel === model.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                            }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="font-semibold text-gray-900 dark:text-white text-sm">
+                                {model.name}
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                                {t(model.descriptionKey)}
+                              </div>
+                              <div className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+                                {model.providerName}
+                              </div>
+                            </div>
+                            {selectedModel === model.id && (
+                              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <textarea
                   value={inputMessage}
@@ -658,15 +730,26 @@ export default function AIBuilderPage() {
                   disabled={isGenerating}
                 />
                 <button
-                  onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || isGenerating}
-                  className="px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  onClick={isGenerating ? handleCancelGeneration : handleSendMessage}
+                  disabled={!isGenerating && !inputMessage.trim()}
+                  className={`px-4 ${isGenerating
+                      ? 'bg-red-500 hover:bg-red-600'
+                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500'
+                    } text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[48px]`}
+                  title={isGenerating ? (locale === 'tr' ? 'İsteği iptal et' : 'Cancel request') : (locale === 'tr' ? 'Gönder' : 'Send')}
                 >
                   {isGenerating ? (
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
+                    <div className="relative w-5 h-5 flex items-center justify-center">
+                      {/* Spinning circle */}
+                      <svg className="absolute animate-spin w-5 h-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      {/* Stop square icon */}
+                      <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
+                        <rect x="6" y="6" width="12" height="12" rx="1" />
+                      </svg>
+                    </div>
                   ) : (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

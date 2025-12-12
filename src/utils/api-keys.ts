@@ -1,39 +1,43 @@
+import crypto from 'crypto';
+
 const ENCRYPTION_KEY = process.env.API_KEY_ENCRYPTION_SECRET || 'default-encryption-key-change-in-production';
+const ALGORITHM = 'aes-256-cbc';
 
-/**
- * Encrypts an API key using PostgreSQL's pgcrypto
- */
-export async function encryptApiKey(apiKey: string, supabaseClient: any): Promise<string> {
-    const { data, error } = await supabaseClient.rpc('pgp_sym_encrypt', {
-        data: apiKey,
-        key: ENCRYPTION_KEY
-    });
-
-    if (error) {
-        throw new Error(`Failed to encrypt API key: ${error.message}`);
-    }
-
-    // Convert bytea to base64 string for storage
-    return Buffer.from(data).toString('base64');
+// Ensure key is 32 bytes for AES-256
+function getEncryptionKey(): Buffer {
+    return crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
 }
 
 /**
- * Decrypts an API key using PostgreSQL's pgcrypto
+ * Encrypts an API key using AES-256-CBC
  */
-export async function decryptApiKey(encryptedKey: string, supabaseClient: any): Promise<string> {
-    // Convert base64 string back to bytea
-    const bytea = Buffer.from(encryptedKey, 'base64');
+export async function encryptApiKey(apiKey: string, supabaseClient?: any): Promise<string> {
+    const iv = crypto.randomBytes(16);
+    const key = getEncryptionKey();
+    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
-    const { data, error } = await supabaseClient.rpc('pgp_sym_decrypt', {
-        data: bytea,
-        key: ENCRYPTION_KEY
-    });
+    let encrypted = cipher.update(apiKey, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
 
-    if (error) {
-        throw new Error(`Failed to decrypt API key: ${error.message}`);
-    }
+    // Return IV + encrypted data as base64
+    return Buffer.from(iv.toString('hex') + ':' + encrypted).toString('base64');
+}
 
-    return data;
+/**
+ * Decrypts an API key using AES-256-CBC
+ */
+export async function decryptApiKey(encryptedKey: string, supabaseClient?: any): Promise<string> {
+    const decoded = Buffer.from(encryptedKey, 'base64').toString('utf8');
+    const [ivHex, encryptedHex] = decoded.split(':');
+
+    const iv = Buffer.from(ivHex, 'hex');
+    const key = getEncryptionKey();
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+
+    let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+
+    return decrypted;
 }
 
 /**

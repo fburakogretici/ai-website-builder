@@ -253,6 +253,17 @@
         "connected": "{provider} bağlandı!",
         "removed": "Bağlantı kaldırıldı"
       }
+    },
+    "modelDescriptions": {
+      "claudeSonnet45": "Karmaşık görevler ve kodlama için akıllı model",
+      "claudeHaiku45": "Sınıra yakın zeka ile en hızlı model",
+      "claudeOpus45": "Maksimum zeka birleştiren premium model",
+      "gpt4o": "En yetenekli çok modlu model",
+      "gpt4oMini": "Hızlı ve uygun fiyatlı",
+      "gpt4Turbo": "Güçlü ve hızlı",
+      "gpt4TurboPreview": "En yeni önizleme",
+      "o1Preview": "Gelişmiş akıl yürütme",
+      "o1Mini": "Verimli akıl yürütme"
     }
   }
 }
