@@ -9,7 +9,7 @@ const supabase = createClient(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, websiteName, html, analysis, prompt, status = "draft" } = body;
+    const { websiteId, userId, websiteName, html, analysis, prompt, status = "draft" } = body;
 
     if (!userId || !websiteName || !html) {
       return NextResponse.json(
@@ -21,28 +21,56 @@ export async function POST(request: NextRequest) {
     // Parse HTML to extract sections for future editing
     const sections = extractSections(html);
 
-    // Generate slug from website name
-    const slug = websiteName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      + '-' + Date.now();
+    let data, error;
 
-    // Save to Supabase
-    const { data, error } = await supabase
-      .from("websites")
-      .insert({
-        user_id: userId,
-        name: websiteName,
-        slug: slug,
-        html_content: html,
-        sections: sections,
-        analysis: analysis,
-        original_prompt: prompt,
-        status: status, // 'draft' or 'active'
-      })
-      .select()
-      .single();
+    if (websiteId) {
+      // Update existing website
+      console.log('🔄 Updating existing website:', websiteId);
+      const result = await supabase
+        .from("websites")
+        .update({
+          name: websiteName,
+          html_content: html,
+          sections: sections,
+          analysis: analysis,
+          status: status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', websiteId)
+        .eq('user_id', userId) // Security: ensure user owns the website
+        .select()
+        .single();
+
+      data = result.data;
+      error = result.error;
+    } else {
+      // Create new website
+      console.log('✨ Creating new website');
+      // Generate slug from website name
+      const slug = websiteName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        + '-' + Date.now();
+
+      const result = await supabase
+        .from("websites")
+        .insert({
+          user_id: userId,
+          name: websiteName,
+          slug: slug,
+          html_content: html,
+          sections: sections,
+          analysis: analysis,
+          original_prompt: prompt,
+          status: status,
+        })
+        .select()
+        .single();
+
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) {
       console.error("Supabase error:", error);
@@ -52,7 +80,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("✅ Website saved:", data.id);
+    console.log(websiteId ? "✅ Website updated:" : "✅ Website created:", data.id);
 
     return NextResponse.json({
       success: true,

@@ -319,6 +319,7 @@ export default function AIBuilderPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          websiteId: websiteId, // Include existing websiteId for updates
           userId: session.user.id,
           websiteName: websiteName,
           html: generatedHtml,
@@ -733,8 +734,8 @@ export default function AIBuilderPage() {
                   onClick={isGenerating ? handleCancelGeneration : handleSendMessage}
                   disabled={!isGenerating && !inputMessage.trim()}
                   className={`px-4 ${isGenerating
-                      ? 'bg-red-500 hover:bg-red-600'
-                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500'
+                    ? 'bg-red-500 hover:bg-red-600'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500'
                     } text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[48px]`}
                   title={isGenerating ? (locale === 'tr' ? 'İsteği iptal et' : 'Cancel request') : (locale === 'tr' ? 'Gönder' : 'Send')}
                 >

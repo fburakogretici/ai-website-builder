@@ -25,10 +25,11 @@ export async function POST(request: NextRequest) {
       currentHtml,
       userPrompt,
       conversationHistory = [],
-      locale = 'en'
+      locale = 'en',
+      model = null
     } = await request.json();
 
-    console.log('📋 Request data:', { websiteId, userPromptLength: userPrompt?.length, locale });
+    console.log('📋 Request data:', { websiteId, userPromptLength: userPrompt?.length, locale, model });
 
     if (!websiteId || !currentHtml || !userPrompt) {
       console.error('❌ Missing required fields');
@@ -130,20 +131,97 @@ REMINDER: Your response should contain ONLY [EXPLANATION] and [HTML] sections. I
       }
     ];
 
-    // Call Claude API
-    console.log('🤖 Calling Claude API...');
-    const response = await anthropic.messages.create({
-      model: "claude-3-5-haiku-20241022",
-      max_tokens: 8192,
-      system: systemPrompt,
-      messages: messages
-    });
+    // Determine provider and model
+    const { getUserApiKey } = await import("@/utils/api-keys");
 
-    console.log('✅ Claude API response received');
+    // Get website to find user_id
+    const { data: websiteData } = await supabase
+      .from('websites')
+      .select('user_id')
+      .eq('id', websiteId)
+      .single();
 
-    const fullResponse = response.content[0].type === 'text'
-      ? response.content[0].text
-      : '';
+    const userId = websiteData?.user_id;
+
+    let preferredProvider = 'anthropic';
+    let apiKey = process.env.ANTHROPIC_API_KEY || '';
+    let selectedModel = model;
+
+    // Try to get user's API key if userId exists
+    if (userId && model) {
+      // Detect provider from model ID
+      if (model.startsWith('gpt-') || model.startsWith('o1-')) {
+        preferredProvider = 'openai';
+        const userKey = await getUserApiKey(userId, 'openai', supabase);
+        if (userKey) {
+          apiKey = userKey;
+        } else {
+          apiKey = process.env.OPENAI_API_KEY || '';
+        }
+      } else if (model.startsWith('claude-')) {
+        preferredProvider = 'anthropic';
+        const userKey = await getUserApiKey(userId, 'anthropic', supabase);
+        if (userKey) {
+          apiKey = userKey;
+        } else {
+          apiKey = process.env.ANTHROPIC_API_KEY || '';
+        }
+      }
+    }
+
+    // Fallback to default model if not specified
+    if (!selectedModel) {
+      selectedModel = preferredProvider === 'openai'
+        ? 'gpt-4o-mini'
+        : 'claude-3-5-sonnet-20241022'; // Use Sonnet for better quality
+    }
+
+    console.log(`🤖 Calling ${preferredProvider.toUpperCase()} with model: ${selectedModel}...`);
+
+    let fullResponse = "";
+    let tokenUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
+
+    if (preferredProvider === 'openai') {
+      // OpenAI API
+      const OpenAI = (await import('openai')).default;
+      const openai = new OpenAI({ apiKey });
+
+      const completion = await openai.chat.completions.create({
+        model: selectedModel,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages.map(m => ({ role: m.role, content: m.content }))
+        ],
+        max_tokens: 8192,
+        temperature: 0.7,
+      });
+
+      fullResponse = completion.choices[0]?.message?.content || "";
+      tokenUsage = {
+        inputTokens: completion.usage?.prompt_tokens || 0,
+        outputTokens: completion.usage?.completion_tokens || 0,
+        totalTokens: completion.usage?.total_tokens || 0
+      };
+    } else {
+      // Anthropic Claude API (default)
+      const response = await anthropic.messages.create({
+        model: selectedModel,
+        max_tokens: 8192,
+        system: systemPrompt,
+        messages: messages
+      });
+
+      fullResponse = response.content[0].type === 'text'
+        ? response.content[0].text
+        : '';
+      tokenUsage = {
+        inputTokens: response.usage.input_tokens,
+        outputTokens: response.usage.output_tokens,
+        totalTokens: response.usage.input_tokens + response.usage.output_tokens
+      };
+    }
+
+    console.log('✅ AI API response received');
 
     console.log('📝 Response length:', fullResponse.length);
 
@@ -179,11 +257,28 @@ REMINDER: Your response should contain ONLY [EXPLANATION] and [HTML] sections. I
     console.log('🔍 Parsed explanation:', explanation.substring(0, 100));
     console.log('🔍 Parsed HTML length:', html.length);
 
-    // Clean up HTML (remove markdown code blocks if present)
+    // Clean up HTML - AGGRESSIVE CLEANING
+    // Remove ```html blocks
     if (html.includes("```html")) {
-      html = html.match(/```html\n([\s\S]*?)\n```/)?.[1] || html;
-    } else if (html.includes("```")) {
-      html = html.match(/```\n([\s\S]*?)\n```/)?.[1] || html;
+      const match = html.match(/```html\s*\n?([\s\S]*?)\n?```/);
+      if (match) {
+        html = match[1];
+      }
+    }
+    // Remove generic ``` blocks
+    else if (html.includes("```")) {
+      const match = html.match(/```\s*\n?([\s\S]*?)\n?```/);
+      if (match) {
+        html = match[1];
+      }
+    }
+
+    // Remove any remaining backticks at start/end
+    html = html.replace(/^`+|`+$/g, '').trim();
+
+    // Remove "html" text if it appears at the very beginning
+    if (html.toLowerCase().startsWith('html')) {
+      html = html.substring(4).trim();
     }
 
     // Clean up end of HTML if it contains closing markers or extra text
@@ -213,7 +308,7 @@ REMINDER: Your response should contain ONLY [EXPLANATION] and [HTML] sections. I
     console.log('✅ HTML validated successfully');
 
     // Update database with new HTML
-    const { data: websiteData, error: updateError } = await supabase
+    const { data: updatedWebsiteData, error: updateError } = await supabase
       .from("websites")
       .update({
         html_content: html,
@@ -230,7 +325,7 @@ REMINDER: Your response should contain ONLY [EXPLANATION] and [HTML] sections. I
       console.log('✅ Database updated successfully');
 
       // Save conversation history
-      if (websiteData?.user_id) {
+      if (updatedWebsiteData?.user_id) {
         const { saveConversation } = await import("@/utils/conversation-storage");
 
         // Construct the new messages to append
@@ -257,7 +352,7 @@ REMINDER: Your response should contain ONLY [EXPLANATION] and [HTML] sections. I
           ...newMessages
         ];
 
-        await saveConversation(websiteId, websiteData.user_id, updatedHistory, supabase);
+        await saveConversation(websiteId, updatedWebsiteData.user_id, updatedHistory, supabase);
       }
     }
 
@@ -265,11 +360,7 @@ REMINDER: Your response should contain ONLY [EXPLANATION] and [HTML] sections. I
     return NextResponse.json({
       html,
       explanation,
-      tokenUsage: {
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
-        totalTokens: response.usage.input_tokens + response.usage.output_tokens
-      }
+      tokenUsage
     });
 
   } catch (error: unknown) {

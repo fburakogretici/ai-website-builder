@@ -222,28 +222,50 @@ body {
   color: white !important;
 }
 
-/* Custom Scrollbar Styles */
+/* Custom Scrollbar Styles - Premium Design */
 .scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
   background: transparent;
+  border-radius: 10px;
+  margin: 4px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: rgb(209 213 219);
-  border-radius: 3px;
+  background: linear-gradient(180deg, rgb(209 213 219) 0%, rgb(156 163 175) 100%);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: all 0.3s ease;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: rgb(156 163 175);
+  background: linear-gradient(180deg, rgb(156 163 175) 0%, rgb(107 114 128) 100%);
+  border-width: 1px;
 }
 
+.scrollbar-thin::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, rgb(107 114 128) 0%, rgb(75 85 99) 100%);
+}
+
+/* Dark mode scrollbar */
 .dark .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: rgb(71 85 105);
+  background: linear-gradient(180deg, rgb(71 85 105) 0%, rgb(51 65 85) 100%);
 }
 
 .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: rgb(100 116 139);
+  background: linear-gradient(180deg, rgb(100 116 139) 0%, rgb(71 85 105) 100%);
+  border-width: 1px;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, rgb(148 163 184) 0%, rgb(100 116 139) 100%);
+}
+
+/* Scrollbar corner */
+.scrollbar-thin::-webkit-scrollbar-corner {
+  background: transparent;
 }

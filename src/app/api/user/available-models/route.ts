@@ -36,8 +36,38 @@ const MODEL_CATALOG = {
 export async function GET(request: NextRequest) {
     try {
         const authHeader = request.headers.get('authorization');
+
+        // If no auth, return default models (system API keys)
         if (!authHeader) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            const defaultModels: any[] = [];
+
+            // Add Anthropic models if system key exists
+            if (process.env.ANTHROPIC_API_KEY) {
+                MODEL_CATALOG.anthropic.forEach(model => {
+                    defaultModels.push({
+                        ...model,
+                        provider: 'anthropic',
+                        providerName: 'Anthropic Claude'
+                    });
+                });
+            }
+
+            // Add OpenAI models if system key exists
+            if (process.env.OPENAI_API_KEY) {
+                MODEL_CATALOG.openai.forEach(model => {
+                    defaultModels.push({
+                        ...model,
+                        provider: 'openai',
+                        providerName: 'OpenAI GPT'
+                    });
+                });
+            }
+
+            return NextResponse.json({
+                models: defaultModels,
+                hasApiKeys: defaultModels.length > 0,
+                activeProviders: defaultModels.length > 0 ? ['system'] : []
+            });
         }
 
         // Get user from auth header
@@ -45,7 +75,31 @@ export async function GET(request: NextRequest) {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
         if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            // Return default models instead of 401
+            const defaultModels: any[] = [];
+            if (process.env.ANTHROPIC_API_KEY) {
+                MODEL_CATALOG.anthropic.forEach(model => {
+                    defaultModels.push({
+                        ...model,
+                        provider: 'anthropic',
+                        providerName: 'Anthropic Claude'
+                    });
+                });
+            }
+            if (process.env.OPENAI_API_KEY) {
+                MODEL_CATALOG.openai.forEach(model => {
+                    defaultModels.push({
+                        ...model,
+                        provider: 'openai',
+                        providerName: 'OpenAI GPT'
+                    });
+                });
+            }
+            return NextResponse.json({
+                models: defaultModels,
+                hasApiKeys: defaultModels.length > 0,
+                activeProviders: ['system']
+            });
         }
 
         // Get user's active API providers
