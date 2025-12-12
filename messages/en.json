@@ -123,7 +123,8 @@
       "profile": "Profile",
       "security": "Security",
       "billing": "Billing",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "api-keys": "API Keys"
     },
     "profile": {
       "title": "Profile Settings",
@@ -215,6 +216,43 @@
       "saveButton": "Save Preferences",
       "success": "Notification preferences updated!",
       "error": "An error occurred while updating preferences."
+    },
+    "apiKeys": {
+      "title": "AI Connections",
+      "subtitle": "Unlimited access with your own API keys",
+      "advancedReasoning": "Advanced reasoning & analysis",
+      "versatile": "Versatile & widely adopted",
+      "connected": "Connected",
+      "configuration": "Configuration",
+      "connectionActive": "Connection active. You can update by entering a new key.",
+      "enterApiKey": "Enter your API key to establish connection.",
+      "removeConnection": "Remove Connection",
+      "apiKeyLabel": "API Key",
+      "createKey": "Create Key",
+      "encryptionNote": "Your keys are securely stored with AES-256 encryption",
+      "connecting": "Connecting...",
+      "updateKey": "Update Key",
+      "connect": "Connect",
+      "benefits": {
+        "unlimited": "Unlimited Usage",
+        "unlimitedDesc": "Work without rate limits",
+        "allModels": "All Models",
+        "allModelsDesc": "Access the latest models",
+        "security": "Full Security",
+        "securityDesc": "End-to-end encryption"
+      },
+      "errors": {
+        "enterKey": "Please enter an API key",
+        "invalidFormat": "Invalid format. {provider} keys start with \"{prefix}\".",
+        "sessionNotFound": "Session not found",
+        "connectionFailed": "Connection failed",
+        "operationFailed": "Operation failed",
+        "error": "An error occurred"
+      },
+      "success": {
+        "connected": "{provider} connected!",
+        "removed": "Connection removed"
+      }
     }
   }
 }

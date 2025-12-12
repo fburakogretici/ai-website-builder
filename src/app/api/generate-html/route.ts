@@ -1,11 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Message } from "@/utils/conversation-storage";
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+import { getUserApiKey } from "@/utils/api-keys";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -15,10 +13,65 @@ const supabase = createClient(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { prompt, currentHtml = null, conversationHistory = [], locale = "tr", websiteId = null } = body;
+    const {
+      prompt,
+      model = null,
+      currentHtml = null,
+      conversationHistory = [],
+      locale = "tr",
+      websiteId = null,
+      userId = null
+    } = body;
 
     if (!prompt || !prompt.trim()) {
       return NextResponse.json({ error: "Missing prompt" }, { status: 400 });
+    }
+
+    // Get user's preferred AI provider
+    let preferredProvider = 'anthropic'; // Default
+    let usingUserKey = false;
+    let apiKey = '';
+
+    if (userId) {
+      // Get user's preferred provider
+      const { data: prefs } = await supabase
+        .from('user_preferences')
+        .select('preferred_ai_provider')
+        .eq('user_id', userId)
+        .single();
+
+      if (prefs?.preferred_ai_provider) {
+        preferredProvider = prefs.preferred_ai_provider;
+      }
+
+      // Try to get user's API key for their preferred provider
+      const userKey = await getUserApiKey(userId, preferredProvider as any, supabase);
+      if (userKey) {
+        apiKey = userKey;
+        usingUserKey = true;
+        console.log(`🔑 Using user's ${preferredProvider} API key`);
+      } else {
+        console.log(`🔑 No user ${preferredProvider} API key, trying system key`);
+      }
+    }
+
+    // Fallback to system keys if user key not found
+    if (!apiKey) {
+      if (preferredProvider === 'openai') {
+        apiKey = process.env.OPENAI_API_KEY || '';
+      } else if (preferredProvider === 'anthropic') {
+        apiKey = process.env.ANTHROPIC_API_KEY || '';
+      }
+    }
+
+    if (!apiKey) {
+      return NextResponse.json({
+        error: locale === 'tr'
+          ? `API anahtarı bulunamadı. Lütfen ayarlardan ${preferredProvider.toUpperCase()} API anahtarınızı ekleyin.`
+          : `API key not found. Please add your ${preferredProvider.toUpperCase()} API key in settings.`,
+        needsApiKey: true,
+        provider: preferredProvider
+      }, { status: 400 });
     }
 
     console.log(`🎨 ${currentHtml ? 'Modifying existing website' : 'Generating HTML from scratch'}...`);
@@ -57,7 +110,7 @@ RULES:
 OUTPUT FORMAT:
 Your response MUST contain exactly two sections:
 [EXPLANATION]
-A direct, concise, and natural message describing what you created.Just say what you did.
+A direct, concise, and natural message describing what you created. Just say what you did.
 [HTML]
 The complete working HTML code.`;
 
@@ -89,14 +142,13 @@ Kullanıcı İsteği (ŞİMDİ YAPILACAK): "${prompt}"
 GÖREV: Yukarıdaki HTML'i kullanıcı isteğine göre değiştir.
 YANIT FORMATI:
 [EXPLANATION]
-Yaptığın değişiklikleri anlatan doğal ve direkt bir mesaj. Direkt ne yaptığını anlat.
+Yaptığın değişiklikleri anlatan doğal ve direkt bir mesaj.
 [HTML]
 <!DOCTYPE html>
 ...TÜM HTML KODU...
 </html>
 
-ÖNEMLİ: KESİNLİKLE SADECE DEĞİŞEN KISMI DEĞİL, TÜM HTML KODUNU BAŞTAN SONA DÖNDÜR. EKSİK KOD DÖNDÜRME.
-"<!-- geri kalan kod -->" veya "<!-- ... -->" GİBİ YER TUTUCULAR KULLANMA. HTML'İN HER SATIRINI TEK TEK YAZMALISIN. YER TUTUCU KULLANIRSAN SİTE BOZULUR.`
+ÖNEMLİ: KESİNLİKLE SADECE DEĞİŞEN KISMI DEĞİL, TÜM HTML KODUNU BAŞTAN SONA DÖNDÜR.`
         : `Current Website:
 \`\`\`html
 ${currentHtml}
@@ -109,14 +161,13 @@ User Request (ACTION TO TAKE NOW): "${prompt}"
 TASK: Modify the above HTML according to user request.
 RESPONSE FORMAT:
 [EXPLANATION]
-A direct and natural message describing your changes. Do not start with "Hello" every time.
+A direct and natural message describing your changes.
 [HTML]
 <!DOCTYPE html>
 ...ENTIRE HTML CODE...
 </html>
 
-IMPORTANT: RETURN THE COMPLETE HTML CODE FROM START TO FINISH. DO NOT RETURN ONLY THE CHANGED PARTS.
-DO NOT USE PLACEHOLDERS LIKE "<!-- rest of code -->" OR "<!-- ... -->". YOU MUST WRITE EVERY SINGLE LINE OF HTML. IF YOU USE PLACEHOLDERS, THE SITE WILL BREAK.`;
+IMPORTANT: RETURN THE COMPLETE HTML CODE FROM START TO FINISH.`;
     } else {
       // Generation from scratch mode
       userPrompt = locale === "tr"
@@ -128,7 +179,7 @@ GÖREV:
 
 YANIT FORMATI:
 [EXPLANATION]
-Oluşturduğun siteyi anlatan doğal ve direkt bir mesaj. Sitenin özelliklerinden bahset.
+Oluşturduğun siteyi anlatan doğal ve direkt bir mesaj.
 [HTML]
 Tam HTML kodu.`
         : `User Request: "${prompt}"
@@ -139,21 +190,61 @@ TASK:
 
 RESPONSE FORMAT:
 [EXPLANATION]
-A direct and natural message describing the site you created. Do not start with "Hello" every time. Mention key features.
+A direct and natural message describing the site you created.
 [HTML]
 Complete HTML code.`;
     }
 
-    console.log("🤖 Calling Claude 3.5 Haiku (fast & cost-effective)...");
+    // Determine model to use
+    const selectedModel = model || (
+      preferredProvider === 'openai'
+        ? 'gpt-4o-mini'
+        : 'claude-3-5-haiku-20241022'
+    );
 
-    const message = await anthropic.messages.create({
-      model: "claude-3-5-haiku-20241022",
-      max_tokens: 8192,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
-    });
+    console.log(`🤖 Calling ${preferredProvider.toUpperCase()} with model: ${selectedModel}...`);
 
-    const fullResponse = message.content[0].type === "text" ? message.content[0].text : "";
+    let fullResponse = "";
+    let tokenUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
+
+    if (preferredProvider === 'openai') {
+      // OpenAI GPT API
+      const openai = new OpenAI({ apiKey });
+
+      const completion = await openai.chat.completions.create({
+        model: selectedModel,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        max_tokens: 8192,
+        temperature: 0.7,
+      });
+
+      fullResponse = completion.choices[0]?.message?.content || "";
+      tokenUsage = {
+        inputTokens: completion.usage?.prompt_tokens || 0,
+        outputTokens: completion.usage?.completion_tokens || 0,
+        totalTokens: completion.usage?.total_tokens || 0
+      };
+    } else {
+      // Anthropic Claude API (default)
+      const anthropic = new Anthropic({ apiKey });
+
+      const message = await anthropic.messages.create({
+        model: selectedModel,
+        max_tokens: 8192,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+      });
+
+      fullResponse = message.content[0].type === "text" ? message.content[0].text : "";
+      tokenUsage = {
+        inputTokens: message.usage.input_tokens,
+        outputTokens: message.usage.output_tokens,
+        totalTokens: message.usage.input_tokens + message.usage.output_tokens
+      };
+    }
 
     // Parse response
     const explanationMatch = fullResponse.match(/\[EXPLANATION\]([\s\S]*?)\[HTML\]/);
@@ -175,7 +266,6 @@ Complete HTML code.`;
       const doctypeIndex = fullResponse.indexOf("<!DOCTYPE html>");
       if (doctypeIndex !== -1) {
         html = fullResponse.substring(doctypeIndex);
-        // If explanation wasn't found with tags, try to get everything before doctype
         if (!explanationMatch) {
           const potentialExplanation = fullResponse.substring(0, doctypeIndex).trim();
           if (potentialExplanation) {
@@ -183,7 +273,7 @@ Complete HTML code.`;
           }
         }
       } else {
-        html = fullResponse; // Last resort
+        html = fullResponse;
       }
     }
 
@@ -194,30 +284,28 @@ Complete HTML code.`;
       html = html.match(/```\n([\s\S]*?)\n```/)?.[1] || html;
     }
 
-    // Clean up end of HTML if it contains closing markers or extra text
+    // Clean up end of HTML
     if (html.includes("</html>")) {
       const htmlEndIndex = html.lastIndexOf("</html>") + 7;
       html = html.substring(0, htmlEndIndex);
     }
 
-    // Case-insensitive check for HTML validity
+    // Validate HTML
     const lowerHtml = html.toLowerCase();
     if (!lowerHtml.includes("<!doctype") && !lowerHtml.includes("<html")) {
-      console.error("❌ Invalid HTML generated. Full response:", fullResponse.substring(0, 500) + "...");
-      console.error("❌ Extracted HTML:", html.substring(0, 200) + "...");
+      console.error("❌ Invalid HTML generated");
       throw new Error("Invalid HTML generated: Missing DOCTYPE or html tag");
     }
 
-    console.log(`✅ HTML generated! Tokens: ${message.usage.output_tokens}`);
+    console.log(`✅ HTML generated! Tokens: ${tokenUsage.outputTokens}`);
 
-    // Extract business name from generated HTML for response
+    // Extract business name
     const businessNameMatch = html.match(/<title>(.*?)<\/title>/);
     const businessName = businessNameMatch ? businessNameMatch[1] : "My Website";
 
     // Save conversation history if websiteId is present
     if (websiteId) {
       try {
-        // Fetch user_id from websites table
         const { data: websiteData } = await supabase
           .from("websites")
           .select("user_id")
@@ -245,7 +333,6 @@ Complete HTML code.`;
         }
       } catch (saveError) {
         console.error("Failed to save conversation:", saveError);
-        // Don't block response
       }
     }
 
@@ -254,11 +341,13 @@ Complete HTML code.`;
       html: html.trim(),
       businessName: businessName,
       explanation: explanation,
-      model: "claude-3-5-haiku-20241022",
+      model: selectedModel,
+      usingUserKey: usingUserKey,
+      provider: preferredProvider,
       tokenUsage: {
-        inputTokens: message.usage.input_tokens,
-        outputTokens: message.usage.output_tokens,
-        totalTokens: message.usage.input_tokens + message.usage.output_tokens
+        inputTokens: tokenUsage.inputTokens,
+        outputTokens: tokenUsage.outputTokens,
+        totalTokens: tokenUsage.totalTokens
       },
       method: currentHtml ? "modification" : "direct-generation",
     });

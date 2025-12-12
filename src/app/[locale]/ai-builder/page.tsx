@@ -39,6 +39,21 @@ export default function AIBuilderPage() {
   const [showPublishModal, setShowPublishModal] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  // Model selection
+  const [selectedModel, setSelectedModel] = useState<string>('claude-3-5-haiku-20241022');
+
+  const modelOptions = {
+    anthropic: [
+      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', desc: 'Most capable' },
+      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', desc: 'Fast & affordable' },
+    ],
+    openai: [
+      { id: 'gpt-4o', name: 'GPT-4o', desc: 'Latest' },
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini', desc: 'Fast & affordable' },
+      { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', desc: 'Powerful' },
+    ]
+  };
+
   // History management for undo/redo
   const [htmlHistory, setHtmlHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -134,10 +149,12 @@ export default function AIBuilderPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             prompt: inputMessage,
+            model: selectedModel,
             currentHtml: generatedHtml || null,
             conversationHistory: messages,
             locale: locale,
             websiteId: websiteId,
+            userId: session?.user?.id || null,
           }),
         },
         {
@@ -417,6 +434,28 @@ export default function AIBuilderPage() {
                     </svg>
                   </button>
                 </div>
+
+                {/* Model Selector */}
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-100 dark:bg-slate-700/40 border border-gray-200 dark:border-slate-600/50 rounded-lg text-gray-900 dark:text-white text-xs sm:text-sm transition-all focus:outline-none focus:border-purple-400/50 focus:ring-1 focus:ring-purple-400/20"
+                >
+                  <optgroup label="🧠 Anthropic Claude">
+                    {modelOptions.anthropic.map(model => (
+                      <option key={model.id} value={model.id}>
+                        {model.name} - {model.desc}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="🤖 OpenAI GPT">
+                    {modelOptions.openai.map(model => (
+                      <option key={model.id} value={model.id}>
+                        {model.name} - {model.desc}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
 
                 {/* Site Name Input - Compact on mobile */}
                 <div className="relative">

@@ -123,7 +123,8 @@
       "profile": "Profil",
       "security": "Güvenlik",
       "billing": "Faturalama",
-      "notifications": "Bildirimler"
+      "notifications": "Bildirimler",
+      "api-keys": "API Anahtarları"
     },
     "profile": {
       "title": "Profil Ayarları",
@@ -215,6 +216,43 @@
       "saveButton": "Tercihleri Kaydet",
       "success": "Bildirim tercihleri güncellendi!",
       "error": "Tercihler güncellenirken bir hata oluştu."
+    },
+    "apiKeys": {
+      "title": "AI Bağlantıları",
+      "subtitle": "Kendi API anahtarlarınızla sınırsız erişim",
+      "advancedReasoning": "Gelişmiş akıl yürütme ve analiz",
+      "versatile": "Çok yönlü ve yaygın kullanım",
+      "connected": "Bağlı",
+      "configuration": "Yapılandırması",
+      "connectionActive": "Bağlantı aktif. Yeni anahtar girerek güncelleyebilirsiniz.",
+      "enterApiKey": "API anahtarınızı girerek bağlantı kurun.",
+      "removeConnection": "Bağlantıyı Kaldır",
+      "apiKeyLabel": "API Anahtarı",
+      "createKey": "Anahtar Oluştur",
+      "encryptionNote": "Anahtarlarınız AES-256 şifreleme ile güvenle saklanır",
+      "connecting": "Bağlanıyor...",
+      "updateKey": "Anahtarı Güncelle",
+      "connect": "Bağlantı Kur",
+      "benefits": {
+        "unlimited": "Sınırsız Kullanım",
+        "unlimitedDesc": "Rate limit olmadan çalışın",
+        "allModels": "Tüm Modeller",
+        "allModelsDesc": "En yeni modellere erişin",
+        "security": "Tam Güvenlik",
+        "securityDesc": "Uçtan uca şifreleme"
+      },
+      "errors": {
+        "enterKey": "Lütfen bir API anahtarı girin",
+        "invalidFormat": "Geçersiz format. {provider} anahtarları \"{prefix}\" ile başlar.",
+        "sessionNotFound": "Oturum bulunamadı",
+        "connectionFailed": "Bağlantı başarısız",
+        "operationFailed": "İşlem başarısız",
+        "error": "Bir hata oluştu"
+      },
+      "success": {
+        "connected": "{provider} bağlandı!",
+        "removed": "Bağlantı kaldırıldı"
+      }
     }
   }
 }
