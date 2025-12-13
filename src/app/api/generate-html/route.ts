@@ -210,10 +210,12 @@ Complete HTML code.`;
     let tokenUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
 
     if (preferredProvider === 'openai') {
-      // OpenAI GPT API
+      // OpenAI GPT API with Streaming
       const openai = new OpenAI({ apiKey });
 
-      const completion = await openai.chat.completions.create({
+      console.log('🌊 Starting OpenAI streaming response...');
+
+      const stream = await openai.chat.completions.create({
         model: selectedModel,
         messages: [
           { role: "system", content: systemPrompt },
@@ -221,30 +223,47 @@ Complete HTML code.`;
         ],
         max_tokens: 8192,
         temperature: 0.7,
+        stream: true,
       });
 
-      fullResponse = completion.choices[0]?.message?.content || "";
+      // Collect the full response from stream
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content;
+        if (content) {
+          fullResponse += content;
+        }
+      }
+
       tokenUsage = {
-        inputTokens: completion.usage?.prompt_tokens || 0,
-        outputTokens: completion.usage?.completion_tokens || 0,
-        totalTokens: completion.usage?.total_tokens || 0
+        inputTokens: 0,
+        outputTokens: 0,
+        totalTokens: 0
       };
     } else {
-      // Anthropic Claude API (default)
+      // Anthropic Claude API with Streaming
       const anthropic = new Anthropic({ apiKey });
 
-      const message = await anthropic.messages.create({
+      console.log('🌊 Starting Anthropic streaming response...');
+
+      const stream = await anthropic.messages.stream({
         model: selectedModel,
         max_tokens: 8192,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
       });
 
-      fullResponse = message.content[0].type === "text" ? message.content[0].text : "";
+      // Collect the full response from stream
+      for await (const chunk of stream) {
+        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+          fullResponse += chunk.delta.text;
+        }
+      }
+
+      const finalMessage = await stream.finalMessage();
       tokenUsage = {
-        inputTokens: message.usage.input_tokens,
-        outputTokens: message.usage.output_tokens,
-        totalTokens: message.usage.input_tokens + message.usage.output_tokens
+        inputTokens: finalMessage.usage.input_tokens,
+        outputTokens: finalMessage.usage.output_tokens,
+        totalTokens: finalMessage.usage.input_tokens + finalMessage.usage.output_tokens
       };
     }
 
