@@ -117,10 +117,12 @@ The complete working HTML code.`;
     let userPrompt = "";
 
     // Format conversation history
+    // Limit to last 3 messages to prevent timeout issues
     let historyContext = "";
     if (conversationHistory && conversationHistory.length > 0) {
       historyContext = conversationHistory
         .filter((msg: any) => msg.role === 'user')
+        .slice(-3) // Only keep last 3 user messages
         .map((msg: any, index: number) => locale === 'tr'
           ? `Önceki Talep ${index + 1}: ${msg.content}`
           : `Previous Request ${index + 1}: ${msg.content}`

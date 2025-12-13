@@ -95,8 +95,10 @@ IMPORTANT: After the [HTML] tag, start directly with <!DOCTYPE html>. Write noth
 DO NOT USE PLACEHOLDERS LIKE "<!-- rest of code -->" OR "<!-- ... -->". YOU MUST WRITE EVERY SINGLE LINE OF HTML. IF YOU USE PLACEHOLDERS, THE SITE WILL BREAK.`;
 
     // Format conversation history for Claude - ONLY include user prompts, not HTML
+    // Limit to last 3 messages to prevent timeout issues
     const formattedHistory = conversationHistory
       .filter((msg: Message) => msg.role === 'user')
+      .slice(-3) // Only keep last 3 user messages
       .map((msg: Message, index: number) => ({
         role: 'user' as const,
         content: locale === 'tr'

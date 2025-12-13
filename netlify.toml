@@ -10,3 +10,5 @@
 
 [functions]
   node_bundler = "esbuild"
+  # Note: Free plan has 10s timeout, Pro plan has 26s timeout
+  # This config helps optimize function execution
