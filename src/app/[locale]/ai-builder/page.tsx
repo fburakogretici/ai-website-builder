@@ -8,6 +8,7 @@ import { saveConversation, loadConversation } from "@/utils/conversation-storage
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 import { toast } from 'sonner';
 import PublishSettings from '@/components/dashboard/PublishSettings';
+import ModelSelector from '@/components/ModelSelector';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -665,98 +666,108 @@ export default function AIBuilderPage() {
               )}
             </div>
 
+
+
+
             {/* Input Area */}
             <div className="p-3 border-t border-gray-100 dark:border-slate-700/50 bg-gray-50/50 dark:bg-transparent">
-              {/* Model Selector */}
-              {availableModels.length > 0 && (
-                <div className="mb-2 relative">
-                  <button
-                    onClick={() => setShowModelDropdown(!showModelDropdown)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-sm"
-                  >
-                    <span className="text-gray-700 dark:text-slate-300 font-medium">
-                      {availableModels.find(m => m.id === selectedModel)?.name || 'Select Model'}
-                    </span>
-                    <svg className={`w-4 h-4 text-gray-500 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-
-                  {/* Dropdown */}
-                  {showModelDropdown && (
-                    <div className="absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-slate-500">
-                      {availableModels.map((model) => (
-                        <button
-                          key={model.id}
-                          onClick={() => {
-                            setSelectedModel(model.id);
-                            setShowModelDropdown(false);
-                          }}
-                          className={`w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors border-b border-gray-100 dark:border-slate-700/50 last:border-0 ${selectedModel === model.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                            }`}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="font-semibold text-gray-900 dark:text-white text-sm">
-                                {model.name}
-                              </div>
-                              <div className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
-                                {t(model.descriptionKey)}
-                              </div>
-                              <div className="text-xs text-gray-400 dark:text-slate-500 mt-1">
-                                {model.providerName}
-                              </div>
-                            </div>
-                            {selectedModel === model.id && (
-                              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="flex gap-2">
+              <div className="relative bg-white dark:bg-slate-700/50 rounded-2xl border border-gray-200 dark:border-slate-600 shadow-sm hover:shadow-md transition-shadow focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
                 <textarea
+                  ref={(el) => {
+                    if (el) {
+                      el.style.height = 'auto';
+                      el.style.height = el.scrollHeight + 'px';
+                    }
+                  }}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = 'auto';
+                    target.style.height = target.scrollHeight + 'px';
+                  }}
                   onKeyPress={handleKeyPress}
                   placeholder={locale === 'tr' ? 'Mesajınızı yazın...' : 'Type your message...'}
-                  className="flex-1 bg-white dark:bg-slate-700/50 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 rounded-lg px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 dark:border-transparent shadow-sm dark:shadow-none"
-                  rows={2}
+                  className="w-full bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 px-4 py-3 pb-24 sm:pb-12 text-sm resize-none focus:outline-none"
+                  rows={1}
                   disabled={isGenerating}
+                  style={{ minHeight: '60px', maxHeight: '200px', overflowY: 'auto' }}
                 />
-                <button
-                  onClick={isGenerating ? handleCancelGeneration : handleSendMessage}
-                  disabled={!isGenerating && !inputMessage.trim()}
-                  className={`px-4 ${isGenerating
-                    ? 'bg-red-500 hover:bg-red-600'
-                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500'
-                    } text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[48px]`}
-                  title={isGenerating ? (locale === 'tr' ? 'İsteği iptal et' : 'Cancel request') : (locale === 'tr' ? 'Gönder' : 'Send')}
-                >
-                  {isGenerating ? (
-                    <div className="relative w-5 h-5 flex items-center justify-center">
-                      {/* Spinning circle */}
-                      <svg className="absolute animate-spin w-5 h-5" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                      {/* Stop square icon */}
-                      <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
-                        <rect x="6" y="6" width="12" height="12" rx="1" />
-                      </svg>
+
+                {/* Bottom Right Controls */}
+                <div className="absolute bottom-2 right-2 left-2 sm:left-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  {/* Model Selector Button */}
+                  {availableModels.length > 0 && (
+                    <div className="relative w-full sm:w-auto">
+                      <button
+                        onClick={() => setShowModelDropdown(!showModelDropdown)}
+                        className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1.5 bg-gray-100 dark:bg-slate-600 hover:bg-gray-200 dark:hover:bg-slate-500 rounded-lg transition-all text-xs font-medium text-gray-700 dark:text-slate-200"
+                        title={availableModels.find(m => m.id === selectedModel)?.name}
+                      >
+                        <span className="truncate">
+                          {availableModels.find(m => m.id === selectedModel)?.name || 'Model'}
+                        </span>
+                        <svg className={`w-3 h-3 text-gray-500 dark:text-slate-400 transition-transform flex-shrink-0 ${showModelDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+
+                      {/* Premium Model Selector */}
+                      <ModelSelector
+                        availableModels={availableModels}
+                        selectedModel={selectedModel}
+                        onModelSelect={setSelectedModel}
+                        onNewChat={() => {
+                          setMessages([{
+                            role: 'assistant',
+                            content: locale === "tr"
+                              ? "Merhaba! 👋 Ben AI web sitesi asistanınızım.\n\nİstediğiniz web sitesini anlatın, ben sizin için oluşturayım. Örneğin:\n\n• \"Modern bir kafe için web sitesi istiyorum. Adı 'Kahve Dükkanı'...\"\n• \"Grafik tasarım portföy sitesi, minimalist ve yaratıcı\"\n• \"Yazılım danışmanlık firması web sitesi\"\n\nHazır olduğunuzda mesajınızı yazıp gönderin!"
+                              : "Hello! 👋 I'm your AI website assistant.\n\nDescribe the website you want, and I'll create it for you. For example:\n\n• \"I want a website for a modern coffee shop. Name is 'Coffee House'...\"\n• \"Graphic design portfolio site, minimalist and creative\"\n• \"Software consulting firm website\"\n\nWhen ready, type your message and send!",
+                            timestamp: new Date()
+                          }]);
+                          setGeneratedHtml("");
+                          setWebsiteName("");
+                          setWebsiteId(null);
+                        }}
+                        isOpen={showModelDropdown}
+                        onClose={() => setShowModelDropdown(false)}
+                      />
                     </div>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
                   )}
-                </button>
+
+                  {/* Send Button */}
+                  <button
+                    onClick={isGenerating ? handleCancelGeneration : handleSendMessage}
+                    disabled={!isGenerating && !inputMessage.trim()}
+                    className={`w-full sm:w-auto px-4 py-2 sm:p-2 ${isGenerating
+                      ? 'bg-red-500 hover:bg-red-600'
+                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500'
+                      } text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+                    title={isGenerating ? (locale === 'tr' ? 'İsteği iptal et' : 'Cancel request') : (locale === 'tr' ? 'Gönder' : 'Send')}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <div className="relative w-5 h-5 flex items-center justify-center">
+                          <svg className="absolute animate-spin w-5 h-5" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                          <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
+                            <rect x="6" y="6" width="12" height="12" rx="1" />
+                          </svg>
+                        </div>
+                        <span className="sm:hidden">{locale === 'tr' ? 'İptal' : 'Cancel'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                        <span className="sm:hidden">{locale === 'tr' ? 'Gönder' : 'Send'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
