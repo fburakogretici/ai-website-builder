@@ -1,0 +1,15 @@
+{
+  "default_branch": "master",
+  "branches": [
+    "feature/streaming-api",
+    "master"
+  ],
+  "parent": {
+    "feature/streaming-api": "master",
+    "master": null
+  },
+  "order": [
+    "master",
+    "feature/streaming-api"
+  ]
+}
