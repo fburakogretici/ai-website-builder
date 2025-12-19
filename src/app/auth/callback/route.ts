@@ -7,9 +7,12 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get('code')
   const next = requestUrl.searchParams.get('next') || '/tr/dashboard'
 
+  // Use NEXT_PUBLIC_APP_URL for redirects to avoid container hostname issues
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || requestUrl.origin
+
   if (code) {
     const cookieStore = await cookies()
-    const response = NextResponse.redirect(new URL(next, requestUrl.origin))
+    const response = NextResponse.redirect(new URL(next, baseUrl))
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,5 +44,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(new URL('/tr/login', requestUrl.origin))
+  return NextResponse.redirect(new URL('/tr/login', baseUrl))
 }
