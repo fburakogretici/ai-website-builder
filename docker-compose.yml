@@ -2,8 +2,9 @@ services:
   app:
     build: .
     restart: always
-    hostname: localhost
     ports:
       - "3000:3000"
     env_file:
       - .env
+    environment:
+      - HOSTNAME=nocodepage.tech
