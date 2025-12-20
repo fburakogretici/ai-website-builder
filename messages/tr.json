@@ -265,5 +265,16 @@
       "o1Preview": "Gelişmiş akıl yürütme",
       "o1Mini": "Verimli akıl yürütme"
     }
+  },
+  "blog": {
+    "title": "Kaynaklar ve İçerikler",
+    "resources": "BLOG • KAYNAKLAR",
+    "futureOfWeb": "Dijital varlığın geleceğini tasarlıyoruz.",
+    "subtitle": "Yapay zeka odaklı geliştirme, bilişsel mimariler ve no-code mühendisliğin evrimi üzerine elit içerikler.",
+    "backToInsights": "Merkeze Dön",
+    "readyToBuild": "Vizyonunuzu İnşa Etmeye Hazır mısınız?",
+    "ctaSubtitle": "Gelişmiş nöral tasarım motorumuzla dakikalar içinde prodüksiyon kalitesinde dijital deneyimler yayınlayın.",
+    "getStarted": "Çalışma Alanını Başlat",
+    "transmissionPending": "Veri Sekmentleri Senkronize Ediliyor..."
   }
 }

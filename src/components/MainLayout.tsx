@@ -18,7 +18,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const supabase = useSupabaseClient();
 
   // Routes that should not show navbar and footer
-  const noLayoutRoutes = ['/login', '/forgot-password', '/reset-password', '/ai-builder', '/editor', '/s/'];
+  const noLayoutRoutes = ['/login', '/forgot-password', '/reset-password', '/ai-builder', '/editor', '/s/', '/blog'];
   const shouldShowLayout = !noLayoutRoutes.some(route => pathname?.includes(route));
 
   useEffect(() => {

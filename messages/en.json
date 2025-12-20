@@ -265,5 +265,16 @@
       "o1Preview": "Advanced reasoning",
       "o1Mini": "Efficient reasoning"
     }
+  },
+  "blog": {
+    "title": "Resources & Insights",
+    "resources": "THE BLOG • RESOURCES",
+    "futureOfWeb": "Engineering the future of digital presence.",
+    "subtitle": "Elite insights on AI-driven development, cognitive architectures, and the evolution of no-code engineering.",
+    "backToInsights": "Back to the Lab",
+    "readyToBuild": "Ready to Architect Your Vision?",
+    "ctaSubtitle": "Deploy production-grade digital experiences in minutes with our sophisticated neural design engine.",
+    "getStarted": "Initialize Workspace",
+    "transmissionPending": "Syncing Data Fragments..."
   }
 }

@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from 'next-intl/plugin';
+import createMDX from '@next/mdx';
+import rehypeHighlight from 'rehype-highlight';
+import remarkGfm from 'remark-gfm';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
@@ -9,6 +12,9 @@ const nextConfig: NextConfig = {
 
   // Performance optimizations
   reactStrictMode: true,
+
+  // MDX support
+  pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
 
   // Optimize bundle
   compiler: {
@@ -50,4 +56,11 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 };
 
-export default withNextIntl(nextConfig);
+const withMDX = createMDX({
+  options: {
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [rehypeHighlight],
+  },
+});
+
+export default withNextIntl(withMDX(nextConfig));

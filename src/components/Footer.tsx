@@ -130,7 +130,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm flex items-center group">
+                <a href={`/${locale}/blog`} className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-white transition-colors duration-200 text-sm flex items-center group">
                   <span className="w-0 group-hover:w-4 h-0.5 bg-purple-500 mr-0 group-hover:mr-2 transition-all duration-200"></span>
                   Blog
                 </a>
