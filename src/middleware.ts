@@ -8,7 +8,7 @@ const intlMiddleware = createMiddleware({
   localePrefix: 'always',
   localeDetection: true
 });
- 
+
 export default async function middleware(request: NextRequest) {
   // 1. Skip middleware for auth callbacks and static files
   if (
@@ -34,11 +34,11 @@ export default async function middleware(request: NextRequest) {
   // Define allowed system domains
   // localhost:3000, localhost:3001, etc.
   // *.vercel.app (preview deployments)
-  // nocodepage.app (production)
+  // nocodepage.tech (production)
   const isSystemDomain =
     hostname.includes('localhost') ||
     hostname.includes('vercel.app') ||
-    hostname.includes('nocodepage.app');
+    hostname.includes('nocodepage.tech');
 
   if (!isSystemDomain) {
     // This is a custom domain (e.g. burakogretici.com)

@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       website,
       domainStatus,
       urls: {
-        subdomain: website.subdomain ? `https://${website.subdomain}.nocodepage.app` : null,
+        subdomain: website.subdomain ? `https://${website.subdomain}.nocodepage.tech` : null,
         customDomain: website.custom_domain ? `https://${website.custom_domain}` : null,
       },
     });
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
       dnsInstructions: {
         type: 'CNAME',
         name: domain.startsWith('www.') ? 'www' : '@',
-        value: 'sites.nocodepage.app',
+        value: 'sites.nocodepage.tech',
         ttl: 3600,
         txtRecord: {
           name: '_nocodepage',
@@ -282,7 +282,7 @@ async function verifyDns(domain: string, verificationToken: string): Promise<{
 
       if (data.Answer) {
         cnameValid = data.Answer.some((record: { data: string }) =>
-          record.data.includes('nocodepage.app')
+          record.data.includes('nocodepage.tech')
         );
       }
     } catch {

@@ -106,7 +106,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
       '50 AI credits/month',
       '1 website',
       'Basic templates',
-      'Subdomain (site.nocodepage.app)',
+      'Subdomain (site.nocodepage.tech)',
       'Email support',
     ],
     limits: {

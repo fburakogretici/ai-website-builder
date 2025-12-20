@@ -70,7 +70,7 @@ export const WelcomeEmail = ({
 
                             <Text className="text-gray-500 text-xs text-center border-t border-gray-200 pt-8">
                                 If you have any questions, feel free to reply to this email or visit our{" "}
-                                <Link href="https://nocodepage.app/help" className="text-indigo-600 underline">
+                                <Link href="https://nocodepage.tech/help" className="text-indigo-600 underline">
                                     Help Center
                                 </Link>.
                             </Text>
