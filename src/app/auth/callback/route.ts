@@ -12,7 +12,6 @@ export async function GET(request: Request) {
 
   if (code) {
     const cookieStore = await cookies()
-    const response = NextResponse.redirect(new URL(next, baseUrl))
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,14 +19,12 @@ export async function GET(request: Request) {
       {
         cookies: {
           getAll() {
-            const all = cookieStore.getAll()
-            return all
+            return cookieStore.getAll()
           },
           setAll(cookiesToSet) {
             try {
               cookiesToSet.forEach(({ name, value, options }) => {
                 cookieStore.set(name, value, options)
-                response.cookies.set(name, value, options)
               })
             } catch (error) {
               // Cookie setting might fail in some contexts
@@ -40,9 +37,47 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      return response
+      // Use HTML redirect to avoid Nginx buffer issues with large cookies
+      const redirectUrl = new URL(next, baseUrl).toString()
+      return new NextResponse(
+        `<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="refresh" content="0;url=${redirectUrl}">
+  <script>window.location.href="${redirectUrl}";</script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
+</html>`,
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/html',
+          },
+        }
+      )
     }
   }
 
-  return NextResponse.redirect(new URL('/tr/login', baseUrl))
+  // Use HTML redirect for error case too
+  const loginUrl = new URL('/tr/login', baseUrl).toString()
+  return new NextResponse(
+    `<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="refresh" content="0;url=${loginUrl}">
+  <script>window.location.href="${loginUrl}";</script>
+</head>
+<body>
+  <p>Redirecting to login...</p>
+</body>
+</html>`,
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html',
+      },
+    }
+  )
 }
