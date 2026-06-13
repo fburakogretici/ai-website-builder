@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🪄 NoCodePage | AI-Powered Website Builder
 
-## Getting Started
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![AI](https://img.shields.io/badge/Generative%20AI-000000?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Live-success?style=for-the-badge)
 
-First, run the development server:
+**NoCodePage** is a next-generation, AI-driven website generation platform available at [nocodepage.tech](https://nocodepage.tech). It empowers users to instantly transform plain text prompts and ideas into fully functional, responsive websites without writing a single line of code.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 The Vision
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Traditional website building requires either deep technical expertise or spending hours wrestling with complex drag-and-drop interfaces. NoCodePage eliminates this friction by leveraging advanced Generative AI to architect, design, and deploy web pages autonomously based on user intentions.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ✨ Key Features & Capabilities
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* **🤖 Prompt-to-Website Engine:** Generates complete page layouts, modern styling, and relevant copy purely from natural language descriptions.
+* **🔐 Secure Authentication:** Seamless user signups, login flows, and secure session management engineered with **Supabase**.
+* **⚡ Real-Time Render:** Instantly parses AI outputs into viewable, interactive DOM elements before final publication.
+* **📈 SEO & Indexing Ready:** Architecture structured for search engine visibility, actively monitored via Google Search Console.
+* **☁️ Serverless Deployment:** Optimized for high-speed delivery using modern cloud hosting infrastructure.
 
-## Learn More
+## 🏗️ Technical Architecture
 
-To learn more about Next.js, take a look at the following resources:
+* **Frontend:** React (Modern UI/UX principles, Component-based architecture)
+* **Backend, Database & Auth:** Supabase (PostgreSQL)
+* **AI Engine:** Generative AI APIs for dynamic code and content rendering
+* **Hosting:** Vercel / Firebase
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 👨‍💻 Architect & Developer
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Faruk Burak ÖĞRETİCİ**  
+*Full-Stack Developer & AI Automation Architect*  
+[Connect on LinkedIn/Upwork]
