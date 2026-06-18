@@ -184,11 +184,13 @@ REMINDER: Your response should contain ONLY [EXPLANATION] and [HTML] sections. I
     let tokenUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
 
     if (preferredProvider === 'openai') {
-      // OpenAI API
+      // OpenAI API with Streaming
       const OpenAI = (await import('openai')).default;
       const openai = new OpenAI({ apiKey });
 
-      const completion = await openai.chat.completions.create({
+      console.log('🌊 Starting OpenAI streaming response...');
+
+      const stream = await openai.chat.completions.create({
         model: selectedModel,
         messages: [
           { role: "system", content: systemPrompt },
@@ -196,30 +198,47 @@ REMINDER: Your response should contain ONLY [EXPLANATION] and [HTML] sections. I
         ],
         max_tokens: 8192,
         temperature: 0.7,
+        stream: true,
       });
 
-      fullResponse = completion.choices[0]?.message?.content || "";
+      // Collect the full response from stream
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content;
+        if (content) {
+          fullResponse += content;
+        }
+      }
+
+      // Note: OpenAI streaming doesn't provide usage in stream
+      // We'll estimate or leave as 0
       tokenUsage = {
-        inputTokens: completion.usage?.prompt_tokens || 0,
-        outputTokens: completion.usage?.completion_tokens || 0,
-        totalTokens: completion.usage?.total_tokens || 0
+        inputTokens: 0,
+        outputTokens: 0,
+        totalTokens: 0
       };
     } else {
-      // Anthropic Claude API (default)
-      const response = await anthropic.messages.create({
+      // Anthropic Claude API with Streaming
+      console.log('🌊 Starting streaming response...');
+
+      const stream = await anthropic.messages.stream({
         model: selectedModel,
         max_tokens: 8192,
         system: systemPrompt,
         messages: messages
       });
 
-      fullResponse = response.content[0].type === 'text'
-        ? response.content[0].text
-        : '';
+      // Collect the full response from stream
+      for await (const chunk of stream) {
+        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+          fullResponse += chunk.delta.text;
+        }
+      }
+
+      const finalMessage = await stream.finalMessage();
       tokenUsage = {
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
-        totalTokens: response.usage.input_tokens + response.usage.output_tokens
+        inputTokens: finalMessage.usage.input_tokens,
+        outputTokens: finalMessage.usage.output_tokens,
+        totalTokens: finalMessage.usage.input_tokens + finalMessage.usage.output_tokens
       };
     }
 
