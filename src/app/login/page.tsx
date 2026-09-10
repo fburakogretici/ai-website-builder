@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createBrowserClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import type { Session } from "@supabase/supabase-js";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,7 +17,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Hızlı session kontrolü
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       if (session) {
         router.replace("/dashboard");
       }
@@ -25,7 +26,7 @@ export default function LoginPage() {
 
     // Auth değişikliklerini dinle
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (_event: any, session: Session | null) => {
         if (session) {
           router.replace("/dashboard");
         }
@@ -40,9 +41,9 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    
+
     if (error) {
       setAuthError(error.message);
     } else if (data.session) {
@@ -54,14 +55,14 @@ export default function LoginPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    
+
     if (!email || !password) {
       setAuthError("Lütfen e-posta ve şifreyi doldurun.");
       return;
     }
-    
+
     const { error } = await supabase.auth.signUp({ email, password });
-    
+
     if (error) {
       setAuthError(error.message);
     } else {
@@ -91,9 +92,9 @@ export default function LoginPage() {
               onClick={() => router.push("/")}
               className="flex items-center cursor-pointer"
             >
-              <img 
-                src="/nocodepage_logo.png" 
-                alt="NoCodePage" 
+              <img
+                src="/nocodepage_logo.png"
+                alt="NoCodePage"
                 className="h-14 w-auto"
               />
             </button>
@@ -117,8 +118,8 @@ export default function LoginPage() {
                 {isLogin ? "Hoş Geldiniz" : "Hesap Oluşturun"}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                {isLogin 
-                  ? "Hesabınıza giriş yapın ve AI ile web sitenizi oluşturmaya başlayın" 
+                {isLogin
+                  ? "Hesabınıza giriş yapın ve AI ile web sitenizi oluşturmaya başlayın"
                   : "Ücretsiz hesap oluşturun ve hemen başlayın"}
               </p>
             </div>

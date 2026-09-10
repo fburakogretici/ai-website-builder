@@ -1,100 +1,96 @@
-"use client";
 
+"use client";
 import { useState, useEffect } from "react";
-import { createBrowserClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from 'next-intl';
+import Image from 'next/image';
+import { useSupabaseClient } from '@/hooks/useSupabaseClient';
+import type { Session } from '@supabase/supabase-js';
 
 export default function Home() {
   const [businessName, setBusinessName] = useState("");
   const [industry, setIndustry] = useState("");
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(false); // Changed to false - show content immediately
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const t = useTranslations();
   const locale = useLocale();
 
-  const supabase = createBrowserClient();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
+    if (!supabase) return;
+
     // Check session in background, don't block UI
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
+      try {
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+      } catch (error) {
+        console.error('Session check error:', error);
+      }
     };
-    
     checkSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  // Scroll to top functionality
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 300) {
-        setShowScrollTop(true);
-      } else {
-        setShowScrollTop(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
+    const { data: authListener } = supabase.auth.onAuthStateChange((_: any, newSession: Session | null) => {
+      setSession(newSession);
     });
-  };
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+
 
   const handleWebsiteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!session) {
       router.replace(`/${locale}/login`);
       return;
     }
-
     console.log("Web Sitesi Oluşturma Formu Submitted:", { businessName, industry, userId: session.user.id });
     router.replace(`/${locale}/dashboard`);
   };
 
-  // Removed loading screen - show content immediately
+  // Listen for route changes to hide loading spinner
+  useEffect(() => {
+    // Next.js App Router navigation events
+    const handleRouteChange = () => setLoading(false);
+    window.addEventListener('next-route-change', handleRouteChange);
+    return () => {
+      window.removeEventListener('next-route-change', handleRouteChange);
+    };
+  }, []);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900 relative z-0">
+      {/* Loading Spinner Overlay */}
+      {loading && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
+        </div>
+      )}
       {/* Hero Section - Compact & Visual */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden z-0">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Gradient Orbs */}
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-indigo-400/30 to-purple-400/30 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-pink-400/30 to-orange-400/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          
+
           {/* Floating Code Symbols */}
-          <div className="absolute top-20 left-10 text-indigo-400/20 dark:text-indigo-400/10 text-6xl font-mono animate-float">{'<>'}</div>
-          <div className="absolute top-40 right-20 text-purple-400/20 dark:text-purple-400/10 text-5xl font-mono animate-float" style={{ animationDelay: '0.5s' }}>{'{ }'}</div>
-          <div className="absolute bottom-32 left-1/4 text-pink-400/20 dark:text-pink-400/10 text-7xl font-mono animate-float" style={{ animationDelay: '1s' }}>{'</>'}</div>
-          <div className="absolute top-1/3 right-10 text-cyan-400/20 dark:text-cyan-400/10 text-4xl font-mono animate-float" style={{ animationDelay: '1.5s' }}>{'[ ]'}</div>
-          
+          <div className="hidden md:block absolute top-20 left-10 text-indigo-400/20 dark:text-indigo-400/10 text-6xl font-mono animate-float">{'<>'}</div>
+          <div className="hidden md:block absolute top-40 right-20 text-purple-400/20 dark:text-purple-400/10 text-5xl font-mono animate-float" style={{ animationDelay: '0.5s' }}>{'{ }'}</div>
+          <div className="hidden md:block absolute bottom-32 left-1/4 text-pink-400/20 dark:text-pink-400/10 text-7xl font-mono animate-float" style={{ animationDelay: '1s' }}>{'</>'}</div>
+          <div className="hidden md:block absolute top-1/3 right-10 text-cyan-400/20 dark:text-cyan-400/10 text-4xl font-mono animate-float" style={{ animationDelay: '1.5s' }}>{'[ ]'}</div>
+
           {/* AI Sparkles */}
           <div className="absolute top-1/4 right-1/3 w-2 h-2 bg-indigo-400 rounded-full animate-ping" style={{ animationDelay: '0.3s' }}></div>
           <div className="absolute bottom-1/3 left-1/4 w-2 h-2 bg-purple-400 rounded-full animate-ping" style={{ animationDelay: '0.7s' }}></div>
           <div className="absolute top-1/2 right-1/4 w-2 h-2 bg-pink-400 rounded-full animate-ping" style={{ animationDelay: '1.2s' }}></div>
-          
+
           {/* Browser Window Mockups */}
-          <div className="absolute top-10 right-10 w-32 h-24 bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-indigo-300/20 dark:border-indigo-500/10 rounded-lg animate-float-slow">
+          <div className="hidden md:block absolute top-10 right-10 w-32 h-24 bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-indigo-300/20 dark:border-indigo-500/10 rounded-lg animate-float-slow">
             <div className="flex gap-1 p-2">
               <div className="w-2 h-2 rounded-full bg-red-400/40"></div>
               <div className="w-2 h-2 rounded-full bg-yellow-400/40"></div>
@@ -106,8 +102,8 @@ export default function Home() {
               <div className="h-1 bg-pink-400/20 rounded w-2/3"></div>
             </div>
           </div>
-          
-          <div className="absolute bottom-20 left-10 w-36 h-28 bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-purple-300/20 dark:border-purple-500/10 rounded-lg animate-float-slow" style={{ animationDelay: '0.8s' }}>
+
+          <div className="hidden md:block absolute bottom-20 left-10 w-36 h-28 bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-purple-300/20 dark:border-purple-500/10 rounded-lg animate-float-slow" style={{ animationDelay: '0.8s' }}>
             <div className="flex gap-1 p-2">
               <div className="w-2 h-2 rounded-full bg-red-400/40"></div>
               <div className="w-2 h-2 rounded-full bg-yellow-400/40"></div>
@@ -119,7 +115,7 @@ export default function Home() {
               <div className="h-1 bg-cyan-400/20 rounded w-5/6"></div>
             </div>
           </div>
-          
+
           {/* Grid Pattern */}
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzg4OCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-5"></div>
         </div>
@@ -152,7 +148,10 @@ export default function Home() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-8">
             <button
-              onClick={() => session ? router.push(`/${locale}/dashboard`) : router.push(`/${locale}/login`)}
+              onClick={() => {
+                setLoading(true);
+                session ? router.push(`/${locale}/dashboard`) : router.push(`/${locale}/login`);
+              }}
               className="group relative px-7 py-3.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold text-base rounded-xl shadow-xl hover:shadow-indigo-500/50 transition-all duration-300 hover:scale-105"
             >
               <span className="flex items-center gap-2">
@@ -204,31 +203,31 @@ export default function Home() {
       </section>
 
       {/* How It Works - 3 Steps */}
-      <section id="how" className="pt-12 pb-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 min-h-screen flex items-start">
-        <div className="max-w-6xl mx-auto w-full mt-8">
+      <section id="how" className="relative py-16 lg:min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
+        <div className="max-w-6xl mx-auto w-full">
           {/* Section Header */}
-          <div className="text-center mb-20">
+          <div className="text-center mb-10">
             <div className="inline-flex items-center px-4 py-2 bg-indigo-100/80 dark:bg-indigo-900/30 backdrop-blur-sm rounded-full mb-4">
               <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
                 {locale === 'tr' ? '⚡ NASIL ÇALIŞIR' : '⚡ HOW IT WORKS'}
               </span>
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               {locale === 'tr' ? 'Sadece 3 basit adımda' : 'Just 3 simple steps'}
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              {locale === 'tr' 
+            <p className="text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              {locale === 'tr'
                 ? 'AI destekli web sitesi oluşturucumuz, işletmeniz için özel olarak tasarlanmış, profesyonel görünümlü bir web sitesi oluşturacaktır.'
                 : 'Our AI-powered website builder will create a professional-looking website specifically designed for your business.'}
             </p>
           </div>
 
           {/* 3 Step Cards */}
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
             {/* Step 1 */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-pink-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-700 transition-all duration-300 h-full">
+              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-700 transition-all duration-300 h-full">
                 <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl mb-6 shadow-lg shadow-orange-500/30">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -251,7 +250,7 @@ export default function Home() {
             {/* Step 2 */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-300 h-full">
+              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-300 h-full">
                 <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl mb-6 shadow-lg shadow-purple-500/30">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -274,7 +273,7 @@ export default function Home() {
             {/* Step 3 */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-teal-500/20 to-cyan-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-teal-300 dark:hover:border-teal-700 transition-all duration-300 h-full">
+              <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-teal-300 dark:hover:border-teal-700 transition-all duration-300 h-full">
                 <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl mb-6 shadow-lg shadow-teal-500/30">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -299,7 +298,7 @@ export default function Home() {
       </section>
 
       {/* Old content below - keeping for reference */}
-      <main className="pt-24 pb-16 px-4 sm:px-6 lg:px-8" style={{display: 'none'}}>
+      <main className="pt-24 pb-16 px-4 sm:px-6 lg:px-8" style={{ display: 'none' }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-sm font-medium mb-6 animate-pulse">
@@ -366,19 +365,19 @@ export default function Home() {
       </main>
 
       {/* Features Section */}
-      <section id="features" className="py-32 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900 min-h-screen flex items-center">
+      <section id="features" className="relative py-16 lg:min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
         <div className="max-w-6xl mx-auto w-full">
           {/* Section Header */}
-          <div className="text-center mb-20">
+          <div className="text-center mb-10">
             <div className="inline-flex items-center px-4 py-2 bg-purple-100/80 dark:bg-purple-900/30 backdrop-blur-sm rounded-full mb-4">
               <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
                 {locale === 'tr' ? '✨ ÖZELLİKLER' : '✨ FEATURES'}
               </span>
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               {locale === 'tr' ? 'Güçlü özellikler, basit kullanım' : 'Powerful features, simple usage'}
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <p className="text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               {locale === 'tr'
                 ? 'Modern web teknolojileri ile donatılmış, kullanıcı dostu arayüz'
                 : 'User-friendly interface equipped with modern web technologies'}
@@ -386,11 +385,11 @@ export default function Home() {
           </div>
 
           {/* Feature Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {/* Feature 1 - AI Powered */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all duration-300 h-full">
+              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all duration-300 h-full">
                 <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl mb-6 shadow-lg shadow-indigo-500/30 group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -406,7 +405,7 @@ export default function Home() {
             {/* Feature 2 - Fast */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-green-300 dark:hover:border-green-700 transition-all duration-300 h-full">
+              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-green-300 dark:hover:border-green-700 transition-all duration-300 h-full">
                 <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl mb-6 shadow-lg shadow-green-500/30 group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -422,7 +421,7 @@ export default function Home() {
             {/* Feature 3 - Customizable */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-rose-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-pink-300 dark:hover:border-pink-700 transition-all duration-300 h-full">
+              <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:border-pink-300 dark:hover:border-pink-700 transition-all duration-300 h-full">
                 <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl mb-6 shadow-lg shadow-pink-500/30 group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
@@ -443,88 +442,109 @@ export default function Home() {
       </section>
 
       {/* Templates Section - Static Website Themes Only */}
-      <section id="templates" className="py-32 bg-gray-50 dark:bg-gray-900 min-h-screen flex items-center">
+      <section id="templates" className="relative py-16 lg:min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
               {locale === 'tr' ? 'Profesyonel Temalar' : 'Professional Themes'}
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300">
+            <p className="text-base text-gray-600 dark:text-gray-300">
               {locale === 'tr' ? 'Statik web siteniz için modern ve şık tasarımlar' : 'Modern and elegant designs for your static website'}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Portfolio Theme */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            {/* Portfolio Creative Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="h-48 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center">
-                <svg className="w-20 h-20 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+              <div className="relative h-48 w-full bg-gradient-to-br from-purple-500 to-pink-500">
+                <Image
+                  src="https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&h=400&fit=crop"
+                  alt="Portfolio Creative Theme Preview"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover"
+                  unoptimized
+                />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {locale === 'tr' ? 'Portfolyo' : 'Portfolio'}
+                  {locale === 'tr' ? 'Yaratıcı Portfolyo' : 'Creative Portfolio'}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  {locale === 'tr' ? 'Kreatif profesyoneller için görsel odaklı tasarım' : 'Visual-focused design for creative professionals'}
+                  {locale === 'tr'
+                    ? 'Yaratıcılar için görsel odaklı tema.'
+                    : 'A visually-driven theme for creatives to showcase their work.'}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full text-sm">
-                    {locale === 'tr' ? 'Galeri' : 'Gallery'}
+                    {locale === 'tr' ? 'Portfolyo' : 'Portfolio'}
                   </span>
                   <span className="px-3 py-1 bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300 rounded-full text-sm">
-                    {locale === 'tr' ? 'Minimalist' : 'Minimal'}
+                    {locale === 'tr' ? 'Yaratıcı' : 'Creative'}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Landing Page Theme */}
+            {/* SaaS Modern Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="h-48 bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500 flex items-center justify-center">
-                <svg className="w-20 h-20 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+              <div className="relative h-48 w-full bg-gradient-to-br from-blue-500 to-cyan-500">
+                <Image
+                  src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=400&fit=crop"
+                  alt="SaaS Modern Theme Preview"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover"
+                  unoptimized
+                />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {locale === 'tr' ? 'Açılış Sayfası' : 'Landing Page'}
+                  {locale === 'tr' ? 'Modern İş' : 'Business Modern'}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  {locale === 'tr' ? 'Ürün ve hizmet tanıtımı için yüksek dönüşüm' : 'High conversion for product and service showcase'}
+                  {locale === 'tr'
+                    ? 'SaaS ve teknoloji şirketleri için modern, sade tema.'
+                    : 'A modern, clean theme for SaaS and technology companies.'}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm">
-                    {locale === 'tr' ? 'Modern' : 'Modern'}
+                    {locale === 'tr' ? 'İş' : 'Business'}
                   </span>
                   <span className="px-3 py-1 bg-cyan-100 dark:bg-cyan-900 text-cyan-700 dark:text-cyan-300 rounded-full text-sm">
-                    CTA
+                    {locale === 'tr' ? 'Modern' : 'Modern'}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Business Theme */}
+            {/* Startup Tech Theme */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="h-48 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex items-center justify-center">
-                <svg className="w-20 h-20 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
+              <div className="relative h-48 w-full bg-gradient-to-br from-indigo-500 to-purple-500">
+                <Image
+                  src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=400&fit=crop"
+                  alt="Startup Tech Theme Preview"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover"
+                  unoptimized
+                />
               </div>
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {locale === 'tr' ? 'İş & Kurumsal' : 'Business & Corporate'}
+                  {locale === 'tr' ? 'Minimal Blog' : 'Blog-Minimal'}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  {locale === 'tr' ? 'Şirketler ve kurumlar için güvenilir tasarım' : 'Reliable design for companies and corporations'}
+                  {locale === 'tr'
+                    ? 'Teknoloji girişimleri için enerjik ve canlı tema.'
+                    : 'A vibrant and energetic theme for tech startups.'}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full text-sm">
-                    {locale === 'tr' ? 'Klasik' : 'Classic'}
+                    {locale === 'tr' ? 'Blog' : 'Blog'}
                   </span>
                   <span className="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-full text-sm">
-                    {locale === 'tr' ? 'Profesyonel' : 'Professional'}
+                    {locale === 'tr' ? 'Minimal' : 'Minimal'}
                   </span>
                 </div>
               </div>
@@ -534,20 +554,20 @@ export default function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-32 bg-white dark:bg-gray-800 min-h-screen flex items-center">
+      <section id="pricing" className="relative py-16 lg:min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
               {locale === 'tr' ? 'Basit ve Şeffaf Fiyatlandırma' : 'Simple and Transparent Pricing'}
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300">
+            <p className="text-base text-gray-600 dark:text-gray-300">
               {locale === 'tr' ? 'İhtiyacınıza uygun planı seçin' : 'Choose the plan that fits your needs'}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {/* Free Plan */}
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 transition-all duration-300">
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 sm:p-8 border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 transition-all duration-300">
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {locale === 'tr' ? 'Başlangıç' : 'Starter'}
               </h3>
@@ -589,7 +609,7 @@ export default function Home() {
             </div>
 
             {/* Pro Plan - Popular */}
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-8 transform scale-105 shadow-2xl relative">
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 sm:p-8 transform scale-105 shadow-2xl relative">
               <div className="absolute top-0 right-0 bg-yellow-400 text-gray-900 px-4 py-1 rounded-bl-lg rounded-tr-lg font-bold text-sm">
                 {locale === 'tr' ? 'Popüler' : 'Popular'}
               </div>
@@ -642,7 +662,7 @@ export default function Home() {
             </div>
 
             {/* Enterprise Plan */}
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 border-2 border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-400 transition-all duration-300">
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 sm:p-8 border-2 border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-400 transition-all duration-300">
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {locale === 'tr' ? 'Kurumsal' : 'Enterprise'}
               </h3>
@@ -695,20 +715,23 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
+      <section className="py-12 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-indigo-600 dark:via-purple-600 dark:to-pink-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
             {locale === 'tr' ? 'Web sitenizi bugün oluşturun' : 'Create your website today'}
           </h2>
-          <p className="text-xl text-indigo-100 mb-8">
-            {locale === 'tr' 
+          <p className="text-base text-gray-600 dark:text-indigo-100 mb-6">
+            {locale === 'tr'
               ? 'AI destekli platformumuzla profesyonel web sitenizi dakikalar içinde hazır hale getirin'
               : 'Get your professional website ready in minutes with our AI-powered platform'
             }
           </p>
-          <button 
-            onClick={() => router.push(session ? '/dashboard' : '/login')}
-            className="inline-flex items-center px-8 py-4 rounded-lg bg-white text-indigo-600 font-bold text-lg hover:bg-gray-100 hover:scale-105 transition-all duration-200 shadow-2xl"
+          <button
+            onClick={() => {
+              setLoading(true);
+              router.push(session ? '/dashboard' : `${locale}/login`);
+            }}
+            className="inline-flex items-center px-8 py-4 rounded-lg bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white dark:bg-white dark:text-indigo-600 dark:bg-none font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-200 shadow-xl"
           >
             {locale === 'tr' ? 'Ücretsiz Başla' : 'Start Free'}
             <svg className="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -718,23 +741,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Scroll to Top Button */}
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-8 right-8 w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group z-50 animate-bounce hover:animate-none"
-          aria-label={locale === 'tr' ? 'Yukarı çık' : 'Scroll to top'}
-        >
-          <svg 
-            className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-          </svg>
-        </button>
-      )}
+
     </div>
   );
 }

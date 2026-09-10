@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 export default function BillingPage() {
   const t = useTranslations();
@@ -42,7 +43,7 @@ export default function BillingPage() {
     // Kart kaydetme işlemi burada yapılacak
     setTimeout(() => {
       setLoading(false);
-      alert("Kart bilgileri kaydedildi! (Demo)");
+      toast.success("Kart bilgileri kaydedildi! (Demo)");
     }, 1500);
   };
 
@@ -123,13 +124,12 @@ export default function BillingPage() {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-xl border-2 p-6 transition-all duration-200 ${
-                plan.popular
+              className={`relative rounded-xl border-2 p-6 transition-all duration-200 ${plan.popular
                   ? "border-indigo-600 shadow-xl scale-105"
                   : plan.current
-                  ? "border-green-500 bg-green-50 dark:bg-green-900/10"
-                  : "border-gray-200 dark:border-gray-700 hover:border-indigo-400"
-              }`}
+                    ? "border-green-500 bg-green-50 dark:bg-green-900/10"
+                    : "border-gray-200 dark:border-gray-700 hover:border-indigo-400"
+                }`}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -167,13 +167,12 @@ export default function BillingPage() {
 
               <button
                 disabled={plan.current}
-                className={`w-full py-3 rounded-lg font-medium transition-all duration-200 ${
-                  plan.current
+                className={`w-full py-3 rounded-lg font-medium transition-all duration-200 ${plan.current
                     ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                     : plan.popular
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg hover:scale-105"
-                    : "border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                }`}
+                      ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg hover:scale-105"
+                      : "border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  }`}
               >
                 {plan.current ? "Aktif Plan" : "Bu Planı Seç"}
               </button>
