@@ -7,44 +7,77 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get('code')
   const next = requestUrl.searchParams.get('next') || '/tr/dashboard'
 
+  // Use NEXT_PUBLIC_APP_URL for redirects to avoid container hostname issues
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || requestUrl.origin
+
   if (code) {
     const cookieStore = await cookies()
-    
-    // Create the response first
-    const response = NextResponse.redirect(new URL(next, requestUrl.origin))
-    
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
+          getAll() {
+            return cookieStore.getAll()
           },
-          set(name: string, value: string, options: CookieOptions) {
-            // Set cookie in both places
-            response.cookies.set(name, value, options)
-          },
-          remove(name: string, options: CookieOptions) {
-            // Remove cookie in both places
-            response.cookies.set(name, '', { ...options, maxAge: 0 })
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                cookieStore.set(name, value, options)
+              })
+            } catch (error) {
+              // Cookie setting might fail in some contexts
+            }
           },
         },
       }
     )
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
-    
-    console.log('Exchange code result:', { error, next })
-    
+
     if (!error) {
-      // Return the response with cookies set
-      return response
+      // Use HTML redirect to avoid Nginx buffer issues with large cookies
+      const redirectUrl = new URL(next, baseUrl).toString()
+      return new NextResponse(
+        `<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="refresh" content="0;url=${redirectUrl}">
+  <script>window.location.href="${redirectUrl}";</script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
+</html>`,
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/html',
+          },
+        }
+      )
     }
-    
-    console.error('Auth callback error:', error)
   }
 
-  // If no code or error, redirect to login
-  return NextResponse.redirect(new URL('/tr/login', requestUrl.origin))
+  // Use HTML redirect for error case too
+  const loginUrl = new URL('/tr/login', baseUrl).toString()
+  return new NextResponse(
+    `<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="refresh" content="0;url=${loginUrl}">
+  <script>window.location.href="${loginUrl}";</script>
+</head>
+<body>
+  <p>Redirecting to login...</p>
+</body>
+</html>`,
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html',
+      },
+    }
+  )
 }

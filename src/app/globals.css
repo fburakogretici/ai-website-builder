@@ -14,11 +14,16 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {
@@ -29,9 +34,12 @@ body {
 
 /* Custom Animations */
 @keyframes gradient {
-  0%, 100% {
+
+  0%,
+  100% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
@@ -42,6 +50,7 @@ body {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -55,4 +64,208 @@ body {
 
 .animate-fade-in {
   animation: fade-in 0.6s ease-out;
+}
+
+/* Toast animations */
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Sonner Toast Custom Styles - FORCED WITH !important */
+[data-sonner-toaster] {
+  font-family: inherit !important;
+}
+
+[data-sonner-toast] {
+  animation: toast-slide-in 0.3s cubic-bezier(0.21, 1.02, 0.73, 1) forwards !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  padding: 14px 16px !important;
+  border-radius: 10px !important;
+  max-width: 420px !important;
+  font-size: 14px !important;
+}
+
+/* Success toast - Yeşil */
+[data-sonner-toast][data-type="success"],
+[data-sonner-toaster] [data-sonner-toast][data-type="success"] {
+  background: #35cf9c !important;
+  color: white !important;
+  border: 1px solid #059669 !important;
+}
+
+[data-sonner-toast][data-type="success"] *,
+[data-sonner-toast][data-type="success"] [data-title],
+[data-sonner-toast][data-type="success"] [data-description],
+[data-sonner-toast][data-type="success"] [data-content] {
+  color: white !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-close-button] {
+  background: rgba(255, 255, 255, 0.5) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-close-button]:hover {
+  background: rgba(255, 255, 255, 0.8) !important;
+  color: #059669 !important;
+}
+
+[data-sonner-toast][data-type="success"] svg {
+  color: white !important;
+}
+
+/* Error toast - Kırmızı */
+[data-sonner-toast][data-type="error"],
+[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
+  background: #ef4444 !important;
+  color: white !important;
+  border: 1px solid #dc2626 !important;
+}
+
+[data-sonner-toast][data-type="error"] *,
+[data-sonner-toast][data-type="error"] [data-title],
+[data-sonner-toast][data-type="error"] [data-description],
+[data-sonner-toast][data-type="error"] [data-content] {
+  color: white !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-close-button] {
+  background: rgba(255, 255, 255, 0.5) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-close-button]:hover {
+  background: rgba(255, 255, 255, 0.8) !important;
+  color: #dc2626 !important;
+}
+
+[data-sonner-toast][data-type="error"] svg {
+  color: white !important;
+}
+
+/* Info/Default toast - Mavi */
+[data-sonner-toast][data-type="info"],
+[data-sonner-toast]:not([data-type]),
+[data-sonner-toaster] [data-sonner-toast][data-type="info"],
+[data-sonner-toaster] [data-sonner-toast]:not([data-type]) {
+  background: #3b82f6 !important;
+  color: white !important;
+  border: 1px solid #2563eb !important;
+}
+
+[data-sonner-toast][data-type="info"] *,
+[data-sonner-toast]:not([data-type]) *,
+[data-sonner-toast][data-type="info"] [data-title],
+[data-sonner-toast][data-type="info"] [data-description],
+[data-sonner-toast][data-type="info"] [data-content],
+[data-sonner-toast]:not([data-type]) [data-title],
+[data-sonner-toast]:not([data-type]) [data-description],
+[data-sonner-toast]:not([data-type]) [data-content] {
+  color: white !important;
+}
+
+[data-sonner-toast][data-type="info"] [data-close-button],
+[data-sonner-toast]:not([data-type]) [data-close-button] {
+  background: rgba(255, 255, 255, 0.5) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-sonner-toast][data-type="info"] [data-close-button]:hover,
+[data-sonner-toast]:not([data-type]) [data-close-button]:hover {
+  background: rgba(255, 255, 255, 0.8) !important;
+  color: #2563eb !important;
+}
+
+[data-sonner-toast][data-type="info"] svg,
+[data-sonner-toast]:not([data-type]) svg {
+  color: white !important;
+}
+
+/* Warning toast - Turuncu */
+[data-sonner-toast][data-type="warning"],
+[data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
+  background: #f59e0b !important;
+  color: white !important;
+  border: 1px solid #d97706 !important;
+}
+
+[data-sonner-toast][data-type="warning"] *,
+[data-sonner-toast][data-type="warning"] [data-title],
+[data-sonner-toast][data-type="warning"] [data-description],
+[data-sonner-toast][data-type="warning"] [data-content] {
+  color: white !important;
+}
+
+[data-sonner-toast][data-type="warning"] [data-close-button] {
+  background: rgba(255, 255, 255, 0.5) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-sonner-toast][data-type="warning"] [data-close-button]:hover {
+  background: rgba(255, 255, 255, 0.8) !important;
+  color: #d97706 !important;
+}
+
+[data-sonner-toast][data-type="warning"] svg {
+  color: white !important;
+}
+
+/* Custom Scrollbar Styles - Premium Design */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+  margin: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgb(209 213 219) 0%, rgb(156 163 175) 100%);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: all 0.3s ease;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgb(156 163 175) 0%, rgb(107 114 128) 100%);
+  border-width: 1px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, rgb(107 114 128) 0%, rgb(75 85 99) 100%);
+}
+
+/* Dark mode scrollbar */
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgb(71 85 105) 0%, rgb(51 65 85) 100%);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgb(100 116 139) 0%, rgb(71 85 105) 100%);
+  border-width: 1px;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, rgb(148 163 184) 0%, rgb(100 116 139) 100%);
+}
+
+/* Scrollbar corner */
+.scrollbar-thin::-webkit-scrollbar-corner {
+  background: transparent;
 }
