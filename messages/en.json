@@ -123,7 +123,8 @@
       "profile": "Profile",
       "security": "Security",
       "billing": "Billing",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "api-keys": "API Keys"
     },
     "profile": {
       "title": "Profile Settings",
@@ -215,6 +216,65 @@
       "saveButton": "Save Preferences",
       "success": "Notification preferences updated!",
       "error": "An error occurred while updating preferences."
+    },
+    "apiKeys": {
+      "title": "AI Connections",
+      "subtitle": "Unlimited access with your own API keys",
+      "advancedReasoning": "Advanced reasoning & analysis",
+      "versatile": "Versatile & widely adopted",
+      "connected": "Connected",
+      "configuration": "Configuration",
+      "connectionActive": "Connection active. You can update by entering a new key.",
+      "enterApiKey": "Enter your API key to establish connection.",
+      "removeConnection": "Remove Connection",
+      "apiKeyLabel": "API Key",
+      "createKey": "Create Key",
+      "encryptionNote": "Your keys are securely stored with AES-256 encryption",
+      "connecting": "Connecting...",
+      "updateKey": "Update Key",
+      "connect": "Connect",
+      "benefits": {
+        "unlimited": "Unlimited Usage",
+        "unlimitedDesc": "Work without rate limits",
+        "allModels": "All Models",
+        "allModelsDesc": "Access the latest models",
+        "security": "Full Security",
+        "securityDesc": "End-to-end encryption"
+      },
+      "errors": {
+        "enterKey": "Please enter an API key",
+        "invalidFormat": "Invalid format. {provider} keys start with \"{prefix}\".",
+        "sessionNotFound": "Session not found",
+        "connectionFailed": "Connection failed",
+        "operationFailed": "Operation failed",
+        "error": "An error occurred"
+      },
+      "success": {
+        "connected": "{provider} connected!",
+        "removed": "Connection removed"
+      }
+    },
+    "modelDescriptions": {
+      "claudeSonnet45": "Smart model for complex agents and coding",
+      "claudeHaiku45": "Fastest model with near-frontier intelligence",
+      "claudeOpus45": "Premium model combining maximum intelligence",
+      "gpt4o": "Most capable multimodal",
+      "gpt4oMini": "Fast & affordable",
+      "gpt4Turbo": "Powerful and fast",
+      "gpt4TurboPreview": "Latest preview",
+      "o1Preview": "Advanced reasoning",
+      "o1Mini": "Efficient reasoning"
     }
+  },
+  "blog": {
+    "title": "Resources & Insights",
+    "resources": "THE BLOG • RESOURCES",
+    "futureOfWeb": "Engineering the future of digital presence.",
+    "subtitle": "Elite insights on AI-driven development, cognitive architectures, and the evolution of no-code engineering.",
+    "backToInsights": "Back to the Lab",
+    "readyToBuild": "Ready to Architect Your Vision?",
+    "ctaSubtitle": "Deploy production-grade digital experiences in minutes with our sophisticated neural design engine.",
+    "getStarted": "Initialize Workspace",
+    "transmissionPending": "Syncing Data Fragments..."
   }
 }
