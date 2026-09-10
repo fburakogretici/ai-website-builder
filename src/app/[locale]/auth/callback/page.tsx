@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@/utils/supabase/client';
 import { useLocale } from 'next-intl';
+import type { Session, AuthError } from '@supabase/supabase-js';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -14,7 +15,8 @@ export default function AuthCallbackPage() {
     const supabase = createBrowserClient();
 
     // Handle the OAuth callback
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    supabase.auth.getSession().then(({ data, error }: { data: { session: Session | null }; error: AuthError | null }) => {
+      const session = data.session;
       if (error) {
         console.error('Auth error:', error);
         setError(error.message);

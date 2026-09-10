@@ -4,19 +4,20 @@ import { useEffect, useState } from "react";
 import { createBrowserClient } from "@/utils/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import type { Session } from "@supabase/supabase-js";
 
 export default function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createBrowserClient();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       if (session) {
         setSession(session);
       } else {
@@ -25,7 +26,7 @@ export default function SettingsLayout({
     });
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (_event: any, session: Session | null) => {
         if (session) {
           setSession(session);
         } else {
@@ -53,10 +54,12 @@ export default function SettingsLayout({
     );
   }
 
+  const locale = pathname?.split('/')[1] || 'tr';
+
   const menuItems = [
     {
-      name: "Profil",
-      href: "/settings/profile",
+      name: locale === 'tr' ? "Profil" : "Profile",
+      href: `/${locale}/settings/profile`,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -64,8 +67,8 @@ export default function SettingsLayout({
       ),
     },
     {
-      name: "Güvenlik",
-      href: "/settings/security",
+      name: locale === 'tr' ? "Güvenlik" : "Security",
+      href: `/${locale}/settings/security`,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -73,8 +76,17 @@ export default function SettingsLayout({
       ),
     },
     {
-      name: "Ödeme",
-      href: "/settings/billing",
+      name: locale === 'tr' ? "API Anahtarları" : "API Keys",
+      href: `/${locale}/settings/api-keys`,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+        </svg>
+      ),
+    },
+    {
+      name: locale === 'tr' ? "Ödeme" : "Billing",
+      href: `/${locale}/settings/billing`,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -82,8 +94,8 @@ export default function SettingsLayout({
       ),
     },
     {
-      name: "Bildirimler",
-      href: "/settings/notifications",
+      name: locale === 'tr' ? "Bildirimler" : "Notifications",
+      href: `/${locale}/settings/notifications`,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -114,7 +126,7 @@ export default function SettingsLayout({
                 <p className="text-xs text-gray-500 dark:text-gray-400">Ayarlar</p>
               </div>
             </button>
-            
+
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => router.push("/dashboard")}
@@ -141,11 +153,10 @@ export default function SettingsLayout({
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200 ${
-                        isActive
-                          ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      }`}
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200 ${isActive
+                        ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        }`}
                     >
                       {item.icon}
                       <span className="font-medium">{item.name}</span>
